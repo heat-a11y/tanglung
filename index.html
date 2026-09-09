@@ -213,21 +213,18 @@
       white-space: nowrap;
     }
     .icon-btn:hover {
-      background: var(--imperial-gold);
-      color: #2b0204;
+      background: rgba(244, 196, 48, 0.25);
     }
 
     .btn-sync {
       background: linear-gradient(135deg, #0984e3 0%, #00cec9 100%);
       color: #fff;
       border-color: #74b9ff;
-      box-shadow: 0 0 10px rgba(9, 132, 227, 0.5);
     }
 
     .btn-projector {
       background: linear-gradient(135deg, #f4c430 0%, #b8860b 100%);
       color: #2b0204;
-      box-shadow: 0 0 10px rgba(244, 196, 48, 0.5);
     }
 
     .btn-recycle {
@@ -334,12 +331,6 @@
       transition: transform 0.15s, background 0.15s;
     }
 
-    .crawl-card:hover {
-      transform: scale(1.02);
-      background: rgba(244, 196, 48, 0.25);
-      border-color: var(--imperial-gold);
-    }
-
     .crawl-card .crawl-tag {
       font-size: 0.85rem;
       color: #ffdca8;
@@ -352,12 +343,6 @@
       font-size: 1.35em;
       letter-spacing: 2px;
       font-family: monospace;
-    }
-
-    .crawl-card .crawl-hint {
-      font-size: 0.7rem;
-      color: #ffdca8;
-      opacity: 0.7;
     }
 
     .crawl-controls {
@@ -1133,7 +1118,8 @@
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
-          <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
+          <div id="p2pStatusTag" class="p2p-status-tag connected">已连接 Firebase 云数据库</div>
+          <div id="modeIndicatorTag" style="margin-top:6px; font-weight:bold; color:var(--imperial-gold);">当前模式: 主控端 (Host)</div>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
@@ -1465,7 +1451,7 @@
         navSoundOff: "🔇 音效: 关",
         navFullscreen: "⛶ 全屏",
         navReset: "↺ 重置",
-        leftBanner: "荣誉榜 · 查看中奖名单",
+        leftBanner: "荣誉榜 · 点击号码直接重抽",
         crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
         speedLabel: "滚动速度:",
         fontLabel: "字体大小:",
@@ -1476,13 +1462,13 @@
         batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
         btnStartRoll: "开 始 滚 动",
         btnStopRoll: "停！(STOP)",
-        vipSpaceHint: "💡 舞台提示：主控端控制摇号中",
+        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
         manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
         manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
         manualInputHint: "输入 1 至 4 位数字按回车或点确认",
         btnConfirmManual: "✓ 确认手动录入",
         btnDrawSingleManual: "🎲 现场补抽 1 个",
-        stageFooterLeft: "中秋提灯晚会 • 观众/显示端实时同步已激活",
+        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
         stageFooterRight: "现场专委会监制",
         bbBanner: "中奖公布栏",
         optBySeq: "按奖品位次 (Prize #)",
@@ -1560,13 +1546,13 @@
         batchEmptyHint: "Menunggu cabutan...",
         btnStartRoll: "Mula Putar",
         btnStopRoll: "BERHENTI! (STOP)",
-        vipSpaceHint: "💡 Mod Paparan: Dikawal oleh Host",
+        vipSpaceHint: "💡 Tip Pentas: Mula / Berhenti",
         manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
         manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
         manualInputHint: "Masukkan 1-4 digit nombor tiket",
         btnConfirmManual: "✓ Sahkan",
         btnDrawSingleManual: "🎲 Cabut Ganti",
-        stageFooterLeft: "Malam Festival Tanglung • Mod Paparan Aktif",
+        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Aktif",
         stageFooterRight: "Jawatankuasa Pengelola",
         bbBanner: "Papan Kenyataan Pemenang",
         optBySeq: "Ikut Kedudukan Hadiah (#)",
@@ -1644,13 +1630,13 @@
         batchEmptyHint: "Waiting for draws...",
         btnStartRoll: "Start Rolling",
         btnStopRoll: "STOP!",
-        vipSpaceHint: "💡 Viewer Mode: Controlled by Master Host",
+        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
         manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
         manualDesc: "Strict duplicate check: automatically excludes already won numbers",
         manualInputHint: "Type 1 to 4 digit ticket number",
         btnConfirmManual: "✓ Confirm Entry",
         btnDrawSingleManual: "🎲 Draw 1 Replacement",
-        stageFooterLeft: "Lantern Gala • Viewer Display Mode Active",
+        stageFooterLeft: "Lantern Gala • Real-time Cloud Sync Active",
         stageFooterRight: "Organizing Committee",
         bbBanner: "Winners Billboard",
         optBySeq: "By Prize Sequence (#)",
@@ -1724,7 +1710,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v23_fixed_pool";
+    const STORAGE_KEY = "tanglung_stage_v24_stable";
 
     let pool = [];
     let winners = [];
@@ -1753,7 +1739,7 @@
     let firebaseDb = null;
     let syncRef = null;
 
-    const syncChannel = new BroadcastChannel('tanglung_sync_v23');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v24');
     let audioCtx = null;
 
     function showToast(msg, isError = false) {
@@ -1892,24 +1878,24 @@
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // FIREBASE STATE SYNCHRONIZATION
+    // ROBUST FIREBASE SYNCHRONIZATION
     function saveAndBroadcast() {
       if (isViewerMode) return;
 
       const payload = {
-        pool,
-        winners,
-        claimedWinners,
-        recycleBin,
-        maxPrizes,
-        poolStart,
-        poolEnd,
-        voidAuditLogs,
-        filterActive,
-        filterStartVal,
-        filterEndVal,
+        pool: Array.isArray(pool) ? pool : [],
+        winners: Array.isArray(winners) ? winners : [],
+        claimedWinners: Array.isArray(claimedWinners) ? claimedWinners : [],
+        recycleBin: Array.isArray(recycleBin) ? recycleBin : [],
+        maxPrizes: Number(maxPrizes),
+        poolStart: Number(poolStart),
+        poolEnd: Number(poolEnd),
+        voidAuditLogs: Array.isArray(voidAuditLogs) ? voidAuditLogs : [],
+        filterActive: Boolean(filterActive),
+        filterStartVal: filterStartVal !== null ? Number(filterStartVal) : null,
+        filterEndVal: filterEndVal !== null ? Number(filterEndVal) : null,
         filterType,
-        isSuspenseMode,
+        isSuspenseMode: Boolean(isSuspenseMode),
         currentLang,
         mainTitle: document.getElementById('appMainTitle').innerText,
         subTitle: document.getElementById('appSubTitle').innerText,
@@ -1920,29 +1906,20 @@
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
       if (syncRef) {
-        syncRef.set(payload).catch(() => {});
+        syncRef.set(payload).catch((err) => console.warn("Firebase Write Error:", err));
       }
-    }
-
-    function load() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const d = JSON.parse(saved);
-          applyStateData(d);
-          return true;
-        } catch(e) { return false; }
-      }
-      return false;
     }
 
     function applyStateData(d) {
       if (!d) return;
-      if (Array.isArray(d.pool)) pool = d.pool;
-      if (Array.isArray(d.winners)) winners = d.winners;
-      if (Array.isArray(d.claimedWinners)) claimedWinners = d.claimedWinners;
-      if (Array.isArray(d.recycleBin)) recycleBin = d.recycleBin;
-      if (Array.isArray(d.voidAuditLogs)) voidAuditLogs = d.voidAuditLogs;
+      
+      // Safely parse arrays from Firebase objects
+      pool = d.pool ? Object.values(d.pool) : [];
+      winners = d.winners ? Object.values(d.winners) : [];
+      claimedWinners = d.claimedWinners ? Object.values(d.claimedWinners) : [];
+      recycleBin = d.recycleBin ? Object.values(d.recycleBin) : [];
+      voidAuditLogs = d.voidAuditLogs ? Object.values(d.voidAuditLogs) : [];
+
       if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
       if (d.poolStart) poolStart = Number(d.poolStart);
       if (d.poolEnd) poolEnd = Number(d.poolEnd);
@@ -1991,7 +1968,7 @@
           firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
         }
         const db = firebase.database();
-        syncRef = db.ref("draw_state_v23");
+        syncRef = db.ref("draw_state_v24");
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('viewer') === 'true') {
@@ -2003,10 +1980,8 @@
           const val = snapshot.val();
           if (val) {
             applyStateData(val);
-          } else if (isViewerMode) {
+          } else if (!isViewerMode) {
             initPool();
-            updateUI();
-          } else {
             saveAndBroadcast();
           }
         });
@@ -2388,7 +2363,6 @@
       });
       const link = document.createElement("a");
       link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
-      const tag = filterActive ? `_${filterStartVal}-${filterEndVal}` : '_all';
       link.download = `lucky_draw_segment${tag}.csv`;
       link.click();
     }
@@ -2523,100 +2497,6 @@
       `).join('');
     }
 
-    function restoreToPool(ticket, index) {
-      if (isViewerMode) return;
-      recycleBin.splice(index, 1);
-      if (!pool.includes(ticket) && !winners.includes(ticket)) {
-        pool.push(ticket);
-        pool.sort((a, b) => Number(a) - Number(b));
-      }
-      saveAndBroadcast();
-      updateUI();
-      renderRecycleList();
-      showToast(`Restored #${ticket} to pool!`);
-    }
-
-    function restoreAsWinner(ticket, index) {
-      if (isViewerMode) return;
-      if (winners.length >= maxPrizes) maxPrizes++;
-      recycleBin.splice(index, 1);
-      winners.push(ticket);
-      const pIdx = pool.indexOf(ticket);
-      if (pIdx !== -1) pool.splice(pIdx, 1);
-
-      saveAndBroadcast();
-      updateUI();
-      renderRecycleList();
-      showToast(`Restored #${ticket} as winner!`);
-    }
-
-    // CRISIS TOOLS
-    function toggleCrisisModal(show) {
-      document.getElementById('crisisModal').style.display = show ? 'flex' : 'none';
-    }
-
-    function excludeBlacklistTicket() {
-      if (isViewerMode) return;
-      const input = document.getElementById('blacklistInput');
-      let val = input.value.trim().padStart(4, '0');
-      if (!val) return;
-      const idx = pool.indexOf(val);
-      if (idx !== -1) {
-        pool.splice(idx, 1);
-        recycleBin.unshift({
-          ticket: val,
-          originalSeq: 'Excluded',
-          time: new Date().toLocaleTimeString()
-        });
-        input.value = '';
-        saveAndBroadcast();
-        updateUI();
-        showToast(`Excluded #${val}`);
-      }
-    }
-
-    function downloadBackupJSON() {
-      const payload = {
-        pool,
-        winners,
-        claimedWinners,
-        recycleBin,
-        maxPrizes,
-        poolStart,
-        poolEnd,
-        voidAuditLogs,
-        mainTitle: document.getElementById('appMainTitle').innerText,
-        subTitle: document.getElementById('appSubTitle').innerText,
-        exportTime: new Date().toISOString()
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `lucky_draw_backup_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'_')}.json`;
-      link.click();
-    }
-
-    function uploadBackupJSON(event) {
-      if (isViewerMode) return;
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const d = JSON.parse(e.target.result);
-          if (Array.isArray(d.pool) && Array.isArray(d.winners)) {
-            applyStateData(d);
-            saveAndBroadcast();
-            toggleCrisisModal(false);
-            showToast("JSON Restored!");
-          }
-        } catch (err) {
-          alert("Import failed!");
-        }
-      };
-      reader.readAsText(file);
-    }
-
     // SCROLLER ENGINE
     let projScrollPos = 0;
     let opScrollPos = 0;
@@ -2715,6 +2595,56 @@
     document.getElementById('projBody').addEventListener('mouseleave', () => isProjPaused = false);
     document.getElementById('opCrawlViewport').addEventListener('mouseenter', () => isOpPaused = true);
     document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
+
+    function updateUI() {
+      document.getElementById('poolCount').textContent = pool.length;
+      document.getElementById('poolMaxLabel').textContent = poolEnd;
+      document.getElementById('wonCount').textContent = winners.length;
+      document.getElementById('maxPrizesLabel').textContent = maxPrizes;
+      document.getElementById('leftCount').textContent = Math.max(0, maxPrizes - winners.length);
+      document.getElementById('bbMaxCount').textContent = maxPrizes;
+
+      document.getElementById('recycleBtnCount').textContent = recycleBin.length;
+      document.getElementById('recycleCount').textContent = recycleBin.length;
+
+      const t = I18N[currentLang];
+      const ribbon = document.getElementById('pacingRibbon');
+      if (winners.length >= (maxPrizes - 10) && winners.length < maxPrizes) {
+        ribbon.textContent = t.pacingGrand;
+        ribbon.style.background = "linear-gradient(90deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%)";
+      } else if (winners.length >= maxPrizes) {
+        ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
+        ribbon.style.background = "linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%)";
+      } else {
+        ribbon.textContent = t.pacingConsolation.replace('{quota}', maxPrizes - 10);
+        ribbon.style.background = "linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%)";
+      }
+
+      const exhausted = winners.length >= maxPrizes || pool.length === 0;
+      const drawBtn = document.getElementById('batchDrawBtn');
+      const vipBtn = document.getElementById('vipToggleBtn');
+      if (drawBtn) drawBtn.disabled = exhausted;
+      if (vipBtn) vipBtn.disabled = exhausted;
+
+      renderFilteredBillboard();
+
+      const auditList = document.getElementById('auditList');
+      if (voidAuditLogs.length === 0) {
+        auditList.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">${t.auditEmpty}</div>`;
+      } else {
+        auditList.innerHTML = voidAuditLogs.map(item => `
+          <div class="modal-item">
+            <div>
+              <strong>#${item.seq}</strong>: <span style="text-decoration:line-through; color:#ff7875;">${item.oldNum}</span> 
+              ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${item.newNum}</strong>
+            </div>
+            <div style="font-size:0.75rem; color:#aaa;">${item.time}</div>
+          </div>
+        `).join('');
+      }
+
+      renderScrollers();
+    }
 
     // Startup
     if (!load()) initPool();
