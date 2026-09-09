@@ -6,7 +6,7 @@
   <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
   <!-- QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- Official Firebase App & Realtime Database SDKs -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style id="mainStyles">
@@ -769,11 +769,6 @@
     .billboard-card.claimed .bb-num {
       color: #2ecc71 !important;
     }
-    .billboard-card.claimed .bb-seq::after {
-      content: " ✓";
-      color: #2ecc71;
-      font-weight: bold;
-    }
 
     .billboard-card.highlight {
       background: var(--imperial-gold) !important;
@@ -1143,6 +1138,7 @@
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
           <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
+          <div id="modeIndicatorTag" style="margin-top:6px; font-weight:bold; color:var(--imperial-gold);"></div>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
@@ -1156,7 +1152,7 @@
     </div>
   </div>
 
-  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP (VIEWERS & MASTER CAN CLAIM) -->
+  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP -->
   <div id="spotlightModal" onclick="closeSpotlight()">
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
@@ -1435,10 +1431,7 @@
       </div>
     </div>
 
-    <!-- Multi-row full window container -->
-    <div class="proj-body" id="projBody">
-      <!-- Generated rows live here -->
-    </div>
+    <div class="proj-body" id="projBody"></div>
   </div>
 
   <script>
@@ -1446,212 +1439,320 @@
     let currentLang = 'BC';
     let isViewerMode = false;
 
-    let maxPrizes = 110;
-    let poolStart = 1;
-    let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v30_rocksolid";
-
-    let pool = [];
-    let winners = [];
-    let claimedWinners = [];
-    let recycleBin = [];
-    let voidAuditLogs = [];
-    let isRolling = false;
-    let rollTimer = null;
-    let soundOn = true;
-    let currentFontSize = 1.35;
-
-    let filterActive = false;
-    let filterStartVal = null;
-    let filterEndVal = null;
-    let filterType = 'seq';
-
-    let isSuspenseMode = false;
-    let claimTimerInterval = null;
-    let claimTimeRemaining = 10;
-    let activeSpotlightTicket = null;
-    let activeSpotlightIndex = -1;
-
-    let activePipWindow = null;
-    let pipScrollPos = 0;
-
-    let projRowPositions = [];
-    let opScrollPos = 0;
-    let projSpeedPx = 1.3;
-    let opSpeedPx = 0.8;
-    let isProjPaused = false;
-    let isOpPaused = false;
-
-    let syncRef = null;
-    let isPushingFirebase = false; // Prevents echo loop
-    const syncChannel = new BroadcastChannel('tanglung_sync_v30');
-    let audioCtx = null;
-
-    function showToast(msg, isError = false) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${isError ? 'error' : ''}`;
-      toast.innerHTML = `<span>${isError ? '⚠️' : '🎉'}</span> <span>${msg}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        if (toast.parentNode) toast.parentNode.removeChild(toast);
-      }, 4000);
-    }
-
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const I18N = {
+      BC: {
+        brandTitle: "中秋提灯节庆典 · 幸运大抽奖",
+        brandSub: "现场大屏幕同步抽奖系统",
+        poolLabel: "号池",
+        wonLabel: "已抽出",
+        leftLabel: "剩余名额",
+        navSync: "📡 联机大厅",
+        navSuspenseOn: "🔒 隐蔽模式: 开",
+        navSuspenseOff: "🔒 隐蔽模式: 关",
+        navRecycle: "回收站",
+        navProj: "📽️ 大屏投影",
+        navPip: "📌 桌面悬浮条",
+        navScript: "📋 司仪口播稿",
+        navCrisis: "🛠️ 应急",
+        navTestSound: "🔔 试音",
+        navSoundOn: "🔊 音效: 开",
+        navSoundOff: "🔇 音效: 关",
+        navFullscreen: "⛶ 全屏",
+        navReset: "↺ 重置",
+        leftBanner: "荣誉榜 · 点击号码核销领奖",
+        crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
+        speedLabel: "滚动速度:",
+        fontLabel: "字体大小:",
+        tabBatch: "⚡ 十连抽模式 (10 Slots)",
+        tabVip: "👑 贵宾大奖台 (VIP Slot)",
+        tabManual: "✍️ 手动录入 / 补抽 (Manual)",
+        btnDraw10: "🎲 摇出 10 位幸运儿",
+        batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
+        btnStartRoll: "开 始 滚 动",
+        btnStopRoll: "停！(STOP)",
+        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
+        vipSpaceHintViewer: "💡 观众端：实时观看主控台摇号中",
+        manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
+        manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
+        manualInputHint: "输入 1 至 4 位数字按回车或点确认",
+        btnConfirmManual: "✓ 确认手动录入",
+        btnDrawSingleManual: "🎲 现场补抽 1 个",
+        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
+        stageFooterRight: "现场专委会监制",
+        bbBanner: "中奖公布栏",
+        optBySeq: "按奖品位次 (Prize #)",
+        optByTicket: "按中奖票号 (Ticket #)",
+        rangeTo: "至",
+        btnFilterAll: "全部",
+        btnExportSegment: "💾 导出",
+        chipAll: "显示全部",
+        chipCustom: "自定义...",
+        btnFocusVerify: "核验定位",
+        bbEmpty: "暂无得奖数据",
+        syncTitle: "跨设备实时云同步",
+        syncStatusLabel: "连接状态:",
+        syncOffline: "离线",
+        syncConnected: "已连接 Firebase 云数据库",
+        scanQr: "副机 / 显示端扫码一键加入:",
+        copyLinkText: "或复制显示端链接分享给副机:",
+        btnCopyLink: "📋 复制显示端链接",
+        spotlightCongrats: "🎉 恭喜中奖 🎉",
+        btnCall10: "⏱️ 现场10秒呼叫",
+        btnVoidRedraw: "⚡ 作废重抽",
+        btnClose: "关 闭",
+        timerCalling: "⏱️ 领奖呼叫:",
+        secondsUnit: "秒",
+        btnRedrawNow: "⚡ 立即作废重抽",
+        btnCancel: "取消",
+        recycleTitle: "作废号码回收站",
+        recycleDesc: "所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：",
+        recycleEmpty: "回收站空空如也",
+        auditTitle: "无人认领 / 作废重抽审核记录",
+        auditEmpty: "暂无作废或重抽记录",
+        crisisTitle: "应急危机处置工具箱",
+        blacklistLabel: "🚫 临时剔除黑名单号码 (提前离场/失票):",
+        btnExclude: "剔除出池",
+        backupLabel: "💾 应急备份与热导入 (防电脑彻底死机):",
+        btnDownloadJson: "📥 下载完整状态 JSON",
+        btnRestoreJson: "📤 导入恢复状态",
+        sponsorLabel: "⚡ 赞助商突击加码:",
+        pacingConsolation: "🏮 当前环节：幸运安慰奖抽取 (第 1 - {quota} 份) 🏮",
+        pacingGrand: "🌟 盛大环节：压轴特奖逐一揭晓 🌟",
+        pacingDone: "🎉 圆满礼成：全部 {quota} 份大奖已全部抽出！ 🎉",
+        prizeItemPrefix: "第 {seq} 份奖品",
+        projWaiting: "准备就绪",
+        projSuspense: "★★★ 精彩即将揭晓 ★★★",
+        btnToggleBgSolid: "🌓 背景: 全彩纯黑",
+        btnToggleBgTrans: "🌓 背景: 透明通道",
+        btnProjFs: "⛶ 全屏",
+        btnProjClose: "✕ 返回",
+        btnClaimVerify: "✓ 领奖核销 (Claim)",
+        btnClaimVerified: "✓ 已领奖 (Claimed)",
+        claimedTag: " ✓已领"
+      },
+      BM: {
+        brandTitle: "Pesta Tanglung · Cabutan Bertuah",
+        brandSub: "Sistem Cabutan Bertuah Langsung",
+        poolLabel: "Kolam Tiket",
+        wonLabel: "Telah Dicabut",
+        leftLabel: "Baki Hadiah",
+        navSync: "📡 Sync Bilik",
+        navSuspenseOn: "🔒 Mod Rahsia: On",
+        navSuspenseOff: "🔒 Mod Rahsia: Off",
+        navRecycle: "Tong Kitar",
+        navProj: "📽️ Projektor",
+        navPip: "📌 Bar Terapung",
+        navScript: "📋 Skrip Juruacara",
+        navCrisis: "🛠️ Kecemasan",
+        navTestSound: "🔔 Uji Bunyi",
+        navSoundOn: "🔊 Bunyi: Hidup",
+        navSoundOff: "🔇 Bunyi: Bisu",
+        navFullscreen: "⛶ Skrin Penuh",
+        navReset: "↺ Tetap Semula",
+        leftBanner: "Senarai Pemenang · Klik untuk Pengesahan",
+        crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
+        speedLabel: "Kelajuan:",
+        fontLabel: "Saiz Fon:",
+        tabBatch: "⚡ Cabut 10 Tiket",
+        tabVip: "👑 Pentas VIP",
+        tabManual: "✍️ Masuk Manual / Ganti",
+        btnDraw10: "🎲 Cabut 10 Pemenang",
+        batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
+        btnStartRoll: "Mula Putar",
+        btnStopRoll: "BERHENTI! (STOP)",
+        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
+        vipSpaceHintViewer: "💡 Mod Penonton: Menonton cabutan secara langsung",
+        manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
+        manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
+        manualInputHint: "Masukkan 1-4 digit nombor tiket",
+        btnConfirmManual: "✓ Sahkan Masukan",
+        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
+        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Segera Aktif",
+        stageFooterRight: "Jawatankuasa Pengelola",
+        bbBanner: "Papan Kenyataan Pemenang",
+        optBySeq: "Ikut Kedudukan Hadiah (#)",
+        optByTicket: "Ikut Nombor Tiket (#)",
+        rangeTo: "hingga",
+        btnFilterAll: "Semua",
+        btnExportSegment: "💾 Eksport",
+        chipAll: "Tunjuk Semua",
+        chipCustom: "Tersuai...",
+        btnFocusVerify: "Cari Tiket",
+        bbEmpty: "Tiada rekod pemenang",
+        syncTitle: "Sinkronisasi Firebase",
+        syncStatusLabel: "Status Sambungan:",
+        syncOffline: "Luar Talian",
+        syncConnected: "Tersambung Google RTDB",
+        scanQr: "Imbas QR untuk Sambung Pantas:",
+        copyLinkText: "Atau kongsi pautan ini:",
+        btnCopyLink: "📋 Salin Pautan",
+        spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
+        btnCall10: "⏱️ Panggilan 10 Saat",
+        btnVoidRedraw: "⚡ Batal & Cabut Semula",
+        btnClose: "Tutup",
+        timerCalling: "⏱️ Panggilan:",
+        secondsUnit: "saat",
+        btnRedrawNow: "⚡ Ganti Sekarang",
+        btnCancel: "Batal",
+        recycleTitle: "Tong Kitar Semula Nombor Batal",
+        recycleDesc: "Semua nombor yang dibatalkan atau pemilik tiada disimpan di sini:",
+        recycleEmpty: "Tong kitar kosong",
+        auditTitle: "Log Audit Pembatalan & Cabutan Semula",
+        auditEmpty: "Tiada rekod pembatalan",
+        crisisTitle: "Kotak Alat Kecemasan",
+        blacklistLabel: "🚫 Keluarkan Tiket Hilang/Awal Balik:",
+        btnExclude: "Keluarkan",
+        backupLabel: "💾 Simpanan Sandaran JSON:",
+        btnDownloadJson: "📥 Muat Turun JSON",
+        btnRestoreJson: "📤 Pulihkan JSON",
+        sponsorLabel: "⚡ Tambah Hadiah Penaja:",
+        pacingConsolation: "🏮 Peringkat Semasa: Hadiah Saguhati (1 - {quota}) 🏮",
+        pacingGrand: "🌟 Peringkat Kemuncak: Hadiah Utama VIP 🌟",
+        pacingDone: "🎉 Tahniah: Kesemua {quota} Hadiah Telah Selesai Dicabut! 🎉",
+        prizeItemPrefix: "Hadiah #{seq}",
+        projWaiting: "Sedia Bermula",
+        projSuspense: "★★★ Nantikan Keputusan! ★★★",
+        btnToggleBgSolid: "🌓 Latar: Warna Penuh",
+        btnToggleBgTrans: "🌓 Latar: Saluran Telus",
+        btnProjFs: "⛶ Skrin Penuh",
+        btnProjClose: "✕ Kembali",
+        btnClaimVerify: "✓ Sahkan Tuntutan",
+        btnClaimVerified: "✓ Telah Dituntut",
+        claimedTag: " ✓Dituntut"
+      },
+      BI: {
+        brandTitle: "Lantern Festival · Lucky Draw",
+        brandSub: "Live Synchronized Lucky Draw System",
+        poolLabel: "Ticket Pool",
+        wonLabel: "Drawn",
+        leftLabel: "Prizes Left",
+        navSync: "📡 Cloud Sync",
+        navSuspenseOn: "🔒 Conceal Mode: On",
+        navSuspenseOff: "🔒 Conceal Mode: Off",
+        navRecycle: "Recycle Bin",
+        navProj: "📽️ Projection",
+        navPip: "📌 Desktop PiP",
+        navScript: "📋 Emcee Script",
+        navCrisis: "🛠️ Emergency",
+        navTestSound: "🔔 Test Sound",
+        navSoundOn: "🔊 Audio: On",
+        navSoundOff: "🔇 Audio: Muted",
+        navFullscreen: "⛶ Fullscreen",
+        navReset: "↺ Reset All",
+        leftBanner: "Winners Board · Click to Verify Claim",
+        crawlWaiting: "Lucky draw has not started yet.<br>Best of luck to everyone!",
+        speedLabel: "Scroll Speed:",
+        fontLabel: "Font Size:",
+        tabBatch: "⚡ Batch 10 Draw",
+        tabVip: "👑 VIP Single Stage",
+        tabManual: "✍️ Manual Entry / Redraw",
+        btnDraw10: "🎲 Draw 10 Winners",
+        batchEmptyHint: "Click button above to draw 10 lucky winners",
+        btnStartRoll: "Start Rolling",
+        btnStopRoll: "STOP!",
+        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
+        vipSpaceHintViewer: "💡 Viewer Mode: Watching live draws from Host",
+        manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
+        manualDesc: "Strict duplicate check: automatically excludes already won numbers",
+        manualInputHint: "Type 1 to 4 digit ticket number",
+        btnConfirmManual: "✓ Confirm Manual Entry",
+        btnDrawSingleManual: "🎲 Draw 1 Replacement",
+        stageFooterLeft: "Lantern Gala • Multi-Device Realtime Cloud Sync Active",
+        stageFooterRight: "Organizing Committee",
+        bbBanner: "Winners Billboard",
+        optBySeq: "By Prize Sequence (#)",
+        optByTicket: "By Ticket Number (#)",
+        rangeTo: "to",
+        btnFilterAll: "All",
+        btnExportSegment: "💾 Export",
+        chipAll: "Show All",
+        chipCustom: "Custom...",
+        btnFocusVerify: "Locate Ticket",
+        bbEmpty: "No winners drawn yet",
+        syncTitle: "Cross-Device Real-Time Cloud Sync",
+        syncStatusLabel: "Connection Status:",
+        syncOffline: "Offline",
+        syncConnected: "Connected to Firebase RTDB",
+        scanQr: "Scan QR code to join instantly:",
+        copyLinkText: "Or copy room share link:",
+        btnCopyLink: "📋 Copy Link",
+        spotlightCongrats: "🎉 CONGRATULATIONS! 🎉",
+        btnCall10: "⏱️ 10s Call Countdown",
+        btnVoidRedraw: "⚡ Void & Redraw",
+        btnClose: "Close",
+        timerCalling: "⏱️ Calling:",
+        secondsUnit: "sec",
+        btnRedrawNow: "⚡ Redraw Now",
+        btnCancel: "Cancel",
+        recycleTitle: "Voided Tickets Recycle Bin",
+        recycleDesc: "All forfeited or absent tickets are archived here. Restore anytime if claimant returns:",
+        recycleEmpty: "Recycle bin is empty",
+        auditTitle: "Void & Redraw Audit Log",
+        auditEmpty: "No redraw history recorded",
+        crisisTitle: "Crisis Emergency Toolkit",
+        blacklistLabel: "🚫 Exclude Lost / Early Departure Tickets:",
+        btnExclude: "Exclude",
+        backupLabel: "💾 Backup & Hot Restore JSON:",
+        btnDownloadJson: "📥 Download JSON",
+        btnRestoreJson: "📤 Restore JSON",
+        sponsorLabel: "⚡ Sponsor Quick Add Prizes:",
+        pacingConsolation: "🏮 Current Stage: Consolation Prizes (1 - {quota}) 🏮",
+        pacingGrand: "🌟 Grand Stage: VIP Top Prizes 🌟",
+        pacingDone: "🎉 Celebration: All {quota} Prizes Successfully Drawn! 🎉",
+        prizeItemPrefix: "Prize #{seq}",
+        projWaiting: "Ready to Draw",
+        projSuspense: "★★★ Drawing in Progress... ★★★",
+        btnToggleBgSolid: "🌓 Background: Solid Black",
+        btnToggleBgTrans: "🌓 Background: Transparent",
+        btnProjFs: "⛶ Fullscreen",
+        btnProjClose: "✕ Return",
+        btnClaimVerify: "✓ Verify Claim",
+        btnClaimVerified: "✓ Claimed",
+        claimedTag: " ✓Claimed"
       }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+    };
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('langSelect').value = lang;
+      applyLanguageUI();
+      if (!isViewerMode) saveAndBroadcast();
     }
 
-    function playTick() {
-      if (!soundOn) return;
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(360, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.04);
-    }
-
-    function playFestiveGong() {
-      if (!soundOn) return;
-      initAudio();
-      [523.25, 587.33, 659.25, 783.99, 880.00].forEach((freq, idx) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.08));
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime + (idx * 0.08));
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (idx * 0.08) + 0.6);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(audioCtx.currentTime + (idx * 0.08));
-        osc.stop(audioCtx.currentTime + (idx * 0.08) + 0.6);
-      });
-    }
-
-    function playBeepCount() {
-      if (!soundOn) return;
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
-    }
-
-    function playBuzzer() {
-      if (!soundOn) return;
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(160, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.6);
-    }
-
-    function testSound() {
-      initAudio();
-      playFestiveGong();
-      showToast(currentLang === 'BM' ? 'Bunyi diuji berjaya!' : (currentLang === 'BI' ? 'Audio tested successfully!' : '音响测试正常！'));
-    }
-
-    function toggleSound() {
-      soundOn = !soundOn;
+    function applyLanguageUI() {
       const t = I18N[currentLang];
-      document.getElementById('soundBtn').textContent = soundOn ? t.navSoundOn : t.navSoundOff;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerHTML = t[key];
+      });
+
+      document.getElementById('appMainTitle').innerText = t.brandTitle;
+      document.getElementById('appSubTitle').innerText = t.brandSub;
+      document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+
+      const pView = document.getElementById('projectorView');
+      const isTrans = pView && pView.classList.contains('transparent-mode');
+      const bgBtn = document.getElementById('projBgBtn');
+      if (bgBtn) {
+        bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
+      }
+      
+      updateUI();
     }
 
-    function initPool() {
+    // RECONSTRUCT POOL INDEPENDENTLY & SAFELY (PREVENTS CORRUPTED EMPTY POOL)
+    function rebuildPool() {
+      const wonSet = new Set(winners);
+      const recycledSet = new Set(recycleBin.map(r => r.ticket));
       pool = [];
       for (let i = poolStart; i <= poolEnd; i++) {
-        pool.push(String(i).padStart(4, '0'));
+        const s = String(i).padStart(4, '0');
+        if (!wonSet.has(s) && !recycledSet.has(s)) {
+          pool.push(s);
+        }
       }
     }
 
-    function editPoolSize() {
-      if (isViewerMode) return alert("Viewer Mode: Only Host can edit pool!");
-      const input = prompt(`当前彩池范围 (Pool Range): ${poolStart} - ${poolEnd}。\n请输入新最大号码 (New Max):`, poolEnd);
-      if (!input) return;
-      const parsed = parseInt(input, 10);
-      if (isNaN(parsed) || parsed <= poolStart) return alert("Invalid Number!");
-      poolEnd = parsed;
-
-      initPool();
-      winners.forEach(w => {
-        const idx = pool.indexOf(w);
-        if (idx !== -1) pool.splice(idx, 1);
-      });
-      updateUI();
-      saveAndBroadcast();
-    }
-
-    function editMaxPrizes() {
-      if (isViewerMode) return alert("Viewer Mode: Only Host can edit prizes!");
-      const input = prompt(`当前奖品总份数: ${maxPrizes}。\n请输入新总额:`, maxPrizes);
-      if (!input) return;
-      const parsed = parseInt(input, 10);
-      if (isNaN(parsed) || parsed < winners.length) return alert("Cannot be less than drawn count!");
-      maxPrizes = parsed;
-      updateUI();
-      saveAndBroadcast();
-    }
-
-    function quickAddPrizes(qty) {
-      if (isViewerMode) return;
-      maxPrizes += qty;
-      updateUI();
-      saveAndBroadcast();
-      showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
-    }
-
-    function sanitizeList(raw) {
-      if (!raw) return [];
-      if (Array.isArray(raw)) return raw.filter(Boolean);
-      return Object.values(raw).filter(Boolean);
-    }
-
-    function getPayload() {
-      return {
-        pool: sanitizeList(pool),
-        winners: sanitizeList(winners),
-        claimedWinners: sanitizeList(claimedWinners),
-        recycleBin: sanitizeList(recycleBin),
-        maxPrizes: Number(maxPrizes),
-        poolStart: Number(poolStart),
-        poolEnd: Number(poolEnd),
-        voidAuditLogs: sanitizeList(voidAuditLogs),
-        filterActive: Boolean(filterActive),
-        filterStartVal: filterStartVal !== null ? Number(filterStartVal) : null,
-        filterEndVal: filterEndVal !== null ? Number(filterEndVal) : null,
-        filterType,
-        isSuspenseMode: Boolean(isSuspenseMode),
-        currentLang,
-        mainTitle: document.getElementById('appMainTitle').innerText,
-        subTitle: document.getElementById('appSubTitle').innerText,
-        timestamp: Date.now()
-      };
-    }
-
-    // DISPATCH STATE TO FIREBASE SAFELY
     function saveAndBroadcast() {
       const payload = getPayload();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -1664,7 +1765,6 @@
             .catch((err) => console.warn("Firebase Push Error:", err))
             .finally(() => { isPushingFirebase = false; });
         } else {
-          // If viewer toggles a claim, update claimedWinners node specifically
           syncRef.child('claimedWinners').set(payload.claimedWinners).catch(() => {});
         }
       }
@@ -1684,7 +1784,6 @@
 
     function applyStateData(d) {
       if (!d) return;
-      pool = sanitizeList(d.pool);
       winners = sanitizeList(d.winners);
       claimedWinners = sanitizeList(d.claimedWinners);
       recycleBin = sanitizeList(d.recycleBin);
@@ -1705,12 +1804,10 @@
         applyLanguageUI();
       }
 
-      if (d.mainTitle) {
-        document.getElementById('appMainTitle').innerText = d.mainTitle;
-        document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
-      }
+      if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
 
+      rebuildPool();
       updateUI();
     }
 
@@ -1732,7 +1829,6 @@
       });
     });
 
-    // SOLID FIREBASE SETUP FIXED TO tanglung_live_state
     function setupFirebaseConnection() {
       try {
         if (!firebase.apps.length) {
@@ -1745,15 +1841,17 @@
         if (urlParams.get('viewer') === 'true') {
           isViewerMode = true;
           enableViewerModeUI();
+        } else {
+          document.getElementById('modeIndicatorTag').textContent = "👑 主控模式 (Master Host - 控制端)";
         }
 
         syncRef.on("value", (snapshot) => {
-          if (isPushingFirebase) return; // Ignore own push feedback
+          if (isPushingFirebase) return;
           const val = snapshot.val();
           if (val) {
             applyStateData(val);
           } else if (!isViewerMode) {
-            initPool();
+            rebuildPool();
             updateUI();
             saveAndBroadcast();
           }
@@ -1775,7 +1873,8 @@
     }
 
     function enableViewerModeUI() {
-      document.getElementById('p2pStatusTag').textContent = "显示端模式 (Viewer Mode - Read Only)";
+      document.getElementById('p2pStatusTag').textContent = "在线同步 (Viewer Mode)";
+      document.getElementById('modeIndicatorTag').textContent = "👀 观众/显示端 (只读显示，支持领奖核销)";
       document.getElementById('appMainTitle').removeAttribute('contenteditable');
       document.getElementById('appSubTitle').removeAttribute('contenteditable');
       
@@ -1794,12 +1893,9 @@
       document.getElementById('poolBadgeEl').removeAttribute('onclick');
       document.getElementById('prizeBadgeEl').style.cursor = 'default';
       document.getElementById('prizeBadgeEl').removeAttribute('onclick');
-
-      showToast("已自动进入【观众/显示端】同步模式，可核销领奖。");
     }
 
     function switchTab(tab) {
-      if (isViewerMode) return;
       if (isRolling) stopVip();
       const btns = document.querySelectorAll('.tab-btn');
       btns[0].classList.toggle('active', tab === 'batch');
@@ -1815,15 +1911,17 @@
       }
     }
 
-    // Mode 1: Batch 10 Draw (OPTIMISTIC IMMEDIATE UPDATE)
+    // MODE 1: BATCH 10 DRAW (OPTIMISTIC INSTANT UPDATE)
     function drawTen() {
       if (isViewerMode) return;
+      rebuildPool();
       const quota = maxPrizes - winners.length;
-      if (quota <= 0) return alert(`All ${maxPrizes} prizes have been won!`);
+      if (quota <= 0) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
 
       const toPick = Math.min(10, quota, pool.length);
-      const batch = [];
+      if (toPick <= 0) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
 
+      const batch = [];
       for (let i = 0; i < toPick; i++) {
         const idx = Math.floor(Math.random() * pool.length);
         const picked = pool.splice(idx, 1)[0];
@@ -1849,10 +1947,10 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`已成功抽出 10 位幸运儿！`);
+      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
     }
 
-    // Mode 2: VIP Picker
+    // MODE 2: VIP SINGLE PICKER
     function toggleVip() {
       if (isViewerMode) return;
       if (isRolling) stopVip();
@@ -1861,8 +1959,9 @@
 
     function startVip() {
       if (isViewerMode) return;
-      if (winners.length >= maxPrizes) return alert(`All ${maxPrizes} prizes concluded!`);
-      if (pool.length === 0) return alert("Pool is empty!");
+      rebuildPool();
+      if (winners.length >= maxPrizes) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      if (pool.length === 0) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
 
       isRolling = true;
       const btn = document.getElementById('vipToggleBtn');
@@ -1887,6 +1986,7 @@
       btn.style.background = "";
       btn.style.color = "";
 
+      rebuildPool();
       const finalIdx = Math.floor(Math.random() * pool.length);
       const picked = pool.splice(finalIdx, 1)[0];
       winners.push(picked);
@@ -1899,43 +1999,42 @@
       showToast(`🏆 ${picked}`);
     }
 
-    // Mode 3: Manual Insertion
+    // MODE 3: MANUAL ENTRY
     function confirmManualEntry() {
       if (isViewerMode) return;
-      if (winners.length >= maxPrizes) return alert(`All ${maxPrizes} prize slots filled!`);
+      if (winners.length >= maxPrizes) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
       
       const input = document.getElementById('manualTicketInput');
       let val = input.value.trim();
-      if (!val) return alert("Please enter ticket number!");
+      if (!val) return alert(I18N[currentLang].manualInputHint);
       
       val = val.padStart(4, '0');
       const numVal = parseInt(val, 10);
 
-      if (numVal < poolStart || numVal > poolEnd) return alert(`Ticket number out of range (${poolStart} - ${poolEnd})!`);
+      if (numVal < poolStart || numVal > poolEnd) return alert(`Range: ${poolStart} - ${poolEnd}`);
 
       const existingIdx = winners.indexOf(val);
       if (existingIdx !== -1) {
-        alert(`Duplicate detected! Ticket ${val} already drawn at prize #${existingIdx + 1}!`);
+        alert(`${val} already won at #${existingIdx + 1}!`);
         input.select();
         return;
       }
 
-      const poolIdx = pool.indexOf(val);
-      if (poolIdx !== -1) pool.splice(poolIdx, 1);
-
       winners.push(val);
+      rebuildPool();
       input.value = '';
       playFestiveGong();
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`Ticket #${val} added!`);
+      showToast(`✓ ${val}`);
     }
 
     function drawSingleManual() {
       if (isViewerMode) return;
-      if (winners.length >= maxPrizes) return alert("All prizes concluded!");
-      if (pool.length === 0) return alert("Pool is empty!");
+      rebuildPool();
+      if (winners.length >= maxPrizes) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      if (pool.length === 0) return alert("Empty pool!");
 
       const finalIdx = Math.floor(Math.random() * pool.length);
       const picked = pool.splice(finalIdx, 1)[0];
@@ -1945,7 +2044,7 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`Replacement drawn: ${picked}`);
+      showToast(`Replacement: ${picked}`);
     }
 
     // ONE-CLICK REDRAW & REPLACEMENT
@@ -1955,14 +2054,13 @@
         return;
       }
 
+      rebuildPool();
       if (pool.length === 0) {
-        showToast("No backup numbers left in pool!", true);
+        showToast("No backup tickets left in pool!", true);
         return false;
       }
 
-      const confirmed = confirm(
-        `【Redraw Confirmation】\nPrize #${index + 1}: Ticket [${ticketNum}] forfeited?\nClick OK to replace in-place immediately!`
-      );
+      const confirmed = confirm(`Prize #${index + 1}: Ticket [${ticketNum}] forfeited? Click OK to replace in-place!`);
 
       if (confirmed) {
         const newIdx = Math.floor(Math.random() * pool.length);
@@ -1989,9 +2087,10 @@
         if (activeSpotlightIndex === index) {
           activeSpotlightTicket = replacement;
           document.getElementById('spotlightNum').textContent = replacement;
-          document.getElementById('spotlightSub').textContent = `Prize #${index + 1} · [${replacement}]`;
+          document.getElementById('spotlightSub').textContent = `${I18N[currentLang].prizeItemPrefix.replace('{seq}', index + 1)} · [${replacement}]`;
         }
 
+        rebuildPool();
         playFestiveGong();
         triggerConfetti();
         updateUI();
@@ -2007,21 +2106,19 @@
       if (activeSpotlightIndex >= 0 && activeSpotlightTicket) {
         stopClaimTimer();
         promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
-      } else {
-        alert("No ticket selected!");
       }
     }
 
-    // TOGGLE CLAIMED PRIZE STATUS (AVAILABLE TO BOTH HOST & VIEWERS)
+    // TOGGLE CLAIMED STATUS (ACCESSIBLE TO BOTH MASTER & VIEWERS)
     function toggleClaimCurrentSpotlight() {
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
         if (idx !== -1) {
           claimedWinners.splice(idx, 1);
-          showToast(currentLang === 'BM' ? `Tuntutan #${activeSpotlightTicket} dibatalkan` : (currentLang === 'BI' ? `Unclaimed #${activeSpotlightTicket}` : `票号 【${activeSpotlightTicket}】 已取消领奖状态`), true);
+          showToast(`[${activeSpotlightTicket}] Unclaimed`);
         } else {
           claimedWinners.push(activeSpotlightTicket);
-          showToast(currentLang === 'BM' ? `✓ #${activeSpotlightTicket} Berjaya Dituntut!` : (currentLang === 'BI' ? `✓ #${activeSpotlightTicket} Claim Verified!` : `✓ 票号 【${activeSpotlightTicket}】 已成功核销领奖！`));
+          showToast(`✓ [${activeSpotlightTicket}] Claimed!`);
         }
         updateUI();
         saveAndBroadcast();
@@ -2120,11 +2217,12 @@
       if (filtered.length === 0) {
         bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
       } else {
+        const tag = I18N[currentLang].claimedTag;
         bb.innerHTML = filtered.map(item => {
           const isClaimed = claimedWinners.includes(item.num);
           return `
-            <div class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${item.num}" title="Click to verify/redraw" onclick="openSpotlight('${item.num}', ${item.seq})">
-              <span class="bb-seq">#${item.seq}</span>
+            <div class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${item.num}" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
+              <span class="bb-seq">#${item.seq}${isClaimed ? tag : ''}</span>
               <span class="bb-num">${item.num}</span>
             </div>
           `;
@@ -2275,10 +2373,7 @@
     function restoreToPool(ticket, index) {
       if (isViewerMode) return;
       recycleBin.splice(index, 1);
-      if (!pool.includes(ticket) && !winners.includes(ticket)) {
-        pool.push(ticket);
-        pool.sort((a, b) => Number(a) - Number(b));
-      }
+      rebuildPool();
       updateUI();
       renderRecycleList();
       saveAndBroadcast();
@@ -2290,9 +2385,7 @@
       if (winners.length >= maxPrizes) maxPrizes++;
       recycleBin.splice(index, 1);
       winners.push(ticket);
-      const pIdx = pool.indexOf(ticket);
-      if (pIdx !== -1) pool.splice(pIdx, 1);
-
+      rebuildPool();
       updateUI();
       renderRecycleList();
       saveAndBroadcast();
@@ -2310,12 +2403,12 @@
       if (!val) return;
       const idx = pool.indexOf(val);
       if (idx !== -1) {
-        pool.splice(idx, 1);
         recycleBin.unshift({
           ticket: val,
           originalSeq: 'Excluded',
           time: new Date().toLocaleTimeString()
         });
+        rebuildPool();
         input.value = '';
         updateUI();
         saveAndBroadcast();
@@ -2412,7 +2505,6 @@
         }
       }
 
-      // Render Desktop PiP (Single row only)
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2433,7 +2525,6 @@
         } catch (e) {}
       }
 
-      // Render Operator Left Vertical Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (opTrack) {
         if (filtered.length === 0) {
@@ -2454,7 +2545,6 @@
     }
 
     function animateScrollers() {
-      // 1. Projection Multi-Row Animation
       if (!isProjPaused && projRowPositions.length > 0) {
         projRowPositions.forEach((pos, rIdx) => {
           const track = document.getElementById(`projTrackRow_${rIdx}`);
@@ -2470,7 +2560,6 @@
         });
       }
 
-      // 2. PiP Single Row Animation
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2483,7 +2572,6 @@
         } catch (e) {}
       }
 
-      // 3. Left Vertical Strip Animation
       const opTrack = document.getElementById('opCrawlTrack');
       if (!isOpPaused && opTrack && winners.length > 0) {
         opScrollPos += opSpeedPx;
@@ -2695,13 +2783,13 @@
         stopClaimTimer();
         closeSpotlight();
         localStorage.removeItem(STORAGE_KEY);
-        initPool();
         winners = [];
         claimedWinners = [];
         recycleBin = [];
         voidAuditLogs = [];
         filterActive = false;
         isSuspenseMode = false;
+        rebuildPool();
         document.getElementById('batchGrid').innerHTML = `
           <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
@@ -2792,8 +2880,10 @@
       });
     }
 
-    // Startup
-    if (!load()) initPool();
+    // STARTUP LIFECYCLE
+    if (!load()) {
+      rebuildPool();
+    }
     checkProjectionModeFromURL();
     setupFirebaseConnection();
     applyLanguageUI();
