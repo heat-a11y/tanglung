@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
+  <title>🏮 中秋提灯节庆典 · 幸运大抽奖 🏮</title>
+  <!-- QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style id="mainStyles">
     :root {
@@ -217,13 +218,13 @@
     }
 
     .btn-sync {
-      background: linear-gradient(135deg, #0984e3 0%, #00cec9 100%);
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
       color: #fff;
-      border-color: #74b9ff;
-      box-shadow: 0 0 10px rgba(9, 132, 227, 0.5);
+      border-color: #2ecc71;
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
     }
     .btn-sync:hover {
-      background: #74b9ff;
+      background: #2ecc71;
       color: #000;
     }
 
@@ -1131,16 +1132,11 @@
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
-          <div id="p2pStatusTag" class="p2p-status-tag disconnected" data-i18n="syncOffline">离线 (未连接)</div>
-          <div id="p2pPeerId" style="font-family:monospace; margin-top:6px; color:#ffdca8; word-break:break-all;"></div>
+          <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 专线</div>
+          <div id="p2pPeerId" style="font-family:monospace; margin-top:6px; color:#ffdca8; word-break:break-all;">数据库: tanglung-firedraw</div>
         </div>
 
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="icon-btn btn-sync" style="flex:1; padding:10px;" onclick="startHostRoom()" data-i18n="btnHost">👑 启动为主控机 (Host)</button>
-          <button class="icon-btn" style="flex:1; padding:10px; border-color:#00cec9;" onclick="joinClientRoomPrompt()" data-i18n="btnJoin">🔗 加入现有主控机 (Join)</button>
-        </div>
-
-        <div id="qrSection" style="display:none; flex-direction:column; align-items:center; background:rgba(255,255,255,0.08); padding:15px; border-radius:8px;">
+        <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
           <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;" data-i18n="scanQr">副机 / 手机扫码一键连接:</div>
           <div id="qrcode" style="background:#fff; padding:8px; border-radius:6px;"></div>
           <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制链接分享给其他电脑:</div>
@@ -1277,7 +1273,7 @@
           <option value="BI">English (BI)</option>
         </select>
 
-        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn" data-i18n="navSync">📡 联机大厅</button>
+        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn">📡 云同步 (已就绪)</button>
         <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" data-i18n="navSuspenseOff">🔒 隐蔽模式: 关</button>
         <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)">♻️ <span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)</button>
         <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">📽️ 大屏投影端</button>
@@ -1439,7 +1435,17 @@
     </div>
   </div>
 
+  <!-- FIREBASE SDKS -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <script>
+    // ==============================================================
+    // HARDCODED FIREBASE URL INTEGRATION
+    // ==============================================================
+    const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
+    const ROOM_ID = "main_hall_draw";
+
     let currentLang = 'BC';
 
     const I18N = {
@@ -1449,7 +1455,7 @@
         poolLabel: "号池",
         wonLabel: "已抽出",
         leftLabel: "剩余名额",
-        navSync: "📡 联机大厅",
+        navSync: "📡 云同步 (已连接)",
         navSuspenseOn: "🔒 隐蔽模式: 开",
         navSuspenseOff: "🔒 隐蔽模式: 关",
         navRecycle: "回收站",
@@ -1491,13 +1497,13 @@
         chipCustom: "自定义...",
         btnFocusVerify: "聚焦核验",
         bbEmpty: "暂无得奖数据",
-        syncTitle: "跨设备多机实时云同步",
+        syncTitle: "Google Firebase 云同步",
         syncStatusLabel: "连接状态:",
         syncOffline: "离线 (未连接)",
-        syncConnected: "在线同步中 (已接入房间)",
-        btnHost: "👑 启动为主控机 (Host)",
-        btnJoin: "🔗 加入现有主控机 (Join)",
-        scanQr: "副机 / 手机扫码一键连接:",
+        syncConnected: "在线同步中 (已连接 Google 专线)",
+        btnHost: "👑 主控端模式",
+        btnJoin: "🔗 副机显示端",
+        scanQr: "手机 / 平板扫码一键加入:",
         copyLinkText: "或复制链接分享给其他电脑:",
         btnCopyLink: "📋 复制直连链接",
         spotlightCongrats: "🎉 恭喜中奖 🎉",
@@ -1533,7 +1539,7 @@
         poolLabel: "Kolam",
         wonLabel: "Disedut",
         leftLabel: "Baki Hadiah",
-        navSync: "📡 Sync Bilik",
+        navSync: "📡 Sync Awan",
         navSuspenseOn: "🔒 Mod Rahsia: On",
         navSuspenseOff: "🔒 Mod Rahsia: Off",
         navRecycle: "Tong Kitar",
@@ -1575,14 +1581,14 @@
         chipCustom: "Tersuai...",
         btnFocusVerify: "Sahkan Tiket",
         bbEmpty: "Tiada rekod pemenang",
-        syncTitle: "Sinkronisasi Awan Berbilang Peranti",
+        syncTitle: "Sinkronisasi Firebase",
         syncStatusLabel: "Status Sambungan:",
-        syncOffline: "Luar Talian (Belum Sambung)",
-        syncConnected: "Tersambung (Bilik Aktif)",
-        btnHost: "👑 Cipta Sebagai Host",
-        btnJoin: "🔗 Sertai Bilik Host",
-        scanQr: "Imbas QR untuk Sambung Pantas:",
-        copyLinkText: "Atau kongsi pautan ini:",
+        syncOffline: "Luar Talian",
+        syncConnected: "Tersambung Google RTDB",
+        btnHost: "👑 Mod Host Utama",
+        btnJoin: "🔗 Mod Paparan",
+        scanQr: "Imbas QR untuk Sambung:",
+        copyLinkText: "Atau kongsi pautan:",
         btnCopyLink: "📋 Salin Pautan",
         spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
         btnCall10: "⏱️ Panggilan 10 Saat",
@@ -1659,14 +1665,14 @@
         chipCustom: "Custom...",
         btnFocusVerify: "Verify",
         bbEmpty: "No winners drawn yet",
-        syncTitle: "Cross-Device Real-Time Cloud Sync",
+        syncTitle: "Firebase Realtime Sync",
         syncStatusLabel: "Connection Status:",
-        syncOffline: "Offline (Not Connected)",
-        syncConnected: "Online & Synced",
-        btnHost: "👑 Start as Master Host",
-        btnJoin: "🔗 Join Existing Room",
-        scanQr: "Scan QR to Pair Instantly:",
-        copyLinkText: "Or share this direct room link:",
+        syncOffline: "Offline",
+        syncConnected: "Connected to Firebase RTDB",
+        btnHost: "👑 Master Host Mode",
+        btnJoin: "🔗 Display Screen Mode",
+        scanQr: "Scan QR code to join instantly:",
+        copyLinkText: "Or copy room share link:",
         btnCopyLink: "📋 Copy Link",
         spotlightCongrats: "🎉 CONGRATULATIONS! 🎉",
         btnCall10: "⏱️ 10s Call Timer",
@@ -1721,7 +1727,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v20_perfect_sync";
+    const STORAGE_KEY = "tanglung_stage_v19_firebase";
     const CHANNEL_NAME = "tanglung_sync_channel";
 
     let pool = [];
@@ -1747,9 +1753,9 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
 
-    let currentRoomId = null;
-    let isHost = false;
-    let sseSource = null;
+    let firebaseDb = null;
+    let syncRef = null;
+    let isHost = true;
 
     const syncChannel = new BroadcastChannel(CHANNEL_NAME);
     let audioCtx = null;
@@ -1887,10 +1893,10 @@
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // DISPATCH DELTA & FULL PAYLOADS RELIABLY
-    function saveAndBroadcast(eventType = 'STATE_SYNC', delta = null) {
+    // FIREBASE SYNC DISPATCHER
+    function saveAndBroadcast() {
       const payload = {
-        poolCount: pool.length,
+        pool,
         winners,
         recycleBin,
         maxPrizes,
@@ -1908,25 +1914,11 @@
         timestamp: Date.now()
       };
 
-      // Save complete state to LocalStorage
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...payload, pool }));
-      
-      // 1. Cross-tab local broadcast
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
-      // 2. High-speed, guaranteed Cloud Event Dispatch via HTTPS PubSub
-      if (currentRoomId && isHost) {
-        const cloudPacket = {
-          type: eventType,
-          delta: delta,
-          state: payload
-        };
-        
-        fetch(`https://ntfy.sh/tanglung_room_${currentRoomId}`, {
-          method: 'POST',
-          headers: { 'Title': 'LotteryEvent', 'Priority': 'max' },
-          body: JSON.stringify(cloudPacket)
-        }).catch(() => {});
+      if (syncRef && isHost) {
+        syncRef.set(payload).catch(() => {});
       }
     }
 
@@ -1935,29 +1927,16 @@
       if (saved) {
         try {
           const d = JSON.parse(saved);
-          pool = Array.isArray(d.pool) ? d.pool : [];
-          winners = Array.isArray(d.winners) ? d.winners : [];
-          recycleBin = Array.isArray(d.recycleBin) ? d.recycleBin : [];
-          voidAuditLogs = Array.isArray(d.voidAuditLogs) ? d.voidAuditLogs : [];
-          if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
-          if (d.poolStart) poolStart = Number(d.poolStart);
-          if (d.poolEnd) poolEnd = Number(d.poolEnd);
-          if (typeof d.filterActive === 'boolean') filterActive = d.filterActive;
-          if (d.filterStartVal !== undefined) filterStartVal = d.filterStartVal;
-          if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
-          if (d.filterType) filterType = d.filterType;
-          if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
-          if (d.currentLang) currentLang = d.currentLang;
-          if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
-          if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
+          applyStateData(d);
           return true;
         } catch(e) { return false; }
       }
       return false;
     }
 
-    function applyIncomingState(d) {
+    function applyStateData(d) {
       if (!d) return;
+      if (Array.isArray(d.pool)) pool = d.pool;
       if (Array.isArray(d.winners)) winners = d.winners;
       if (Array.isArray(d.recycleBin)) recycleBin = d.recycleBin;
       if (Array.isArray(d.voidAuditLogs)) voidAuditLogs = d.voidAuditLogs;
@@ -1982,28 +1961,60 @@
       }
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
 
-      if (d.poolCount !== undefined) {
-        document.getElementById('poolCount').textContent = d.poolCount;
-      }
-
       updateUI();
     }
 
     syncChannel.onmessage = (event) => {
       if (event.data && event.data.type === 'UPDATE_STATE') {
-        applyIncomingState(event.data.data);
+        applyStateData(event.data.data);
       }
     };
 
     window.addEventListener('storage', (e) => {
       if (e.key === STORAGE_KEY && e.newValue) {
-        applyIncomingState(JSON.parse(e.newValue));
+        applyStateData(JSON.parse(e.newValue));
       }
     });
 
     ['appMainTitle', 'appSubTitle'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => saveAndBroadcast());
     });
+
+    // AUTO-CONNECT TO FIREBASE ON LAUNCH
+    function setupFirebaseConnection() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
+        }
+        firebaseDb = firebase.database();
+        syncRef = firebaseDb.ref("draw_state");
+
+        // Listen for realtime database changes from any other device
+        syncRef.on("value", (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            // If we are host and local data is newer or initialized, we can push, else apply incoming
+            applyStateData(val);
+          }
+        }, (error) => {
+          console.warn("Firebase sync warning:", error);
+        });
+
+        // Setup share link & QR Code
+        const shareUrl = new URL(window.location.href);
+        document.getElementById('shareLinkInput').value = shareUrl.toString();
+        const qrContainer = document.getElementById('qrcode');
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, {
+          text: shareUrl.toString(),
+          width: 140,
+          height: 140
+        });
+
+      } catch(err) {
+        console.error("Firebase connection error:", err);
+      }
+    }
 
     function switchTab(tab) {
       if (isRolling) stopVip();
@@ -2052,7 +2063,7 @@
 
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast('BATCH_DRAW', { batch });
+      saveAndBroadcast();
       updateUI();
       showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
     }
@@ -2096,7 +2107,7 @@
       document.getElementById('vipDisplay').textContent = picked;
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast('VIP_DRAW', { ticket: picked });
+      saveAndBroadcast();
       updateUI();
       showToast(`🏆 ${picked}`);
     }
@@ -2128,7 +2139,7 @@
       input.value = '';
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast('MANUAL_ENTRY', { ticket: val });
+      saveAndBroadcast();
       updateUI();
       showToast(`Ticket #${val} added!`);
     }
@@ -2143,7 +2154,7 @@
 
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast('MANUAL_DRAW', { ticket: picked });
+      saveAndBroadcast();
       updateUI();
       showToast(`Replacement drawn: ${picked}`);
     }
@@ -2186,7 +2197,7 @@
 
         playFestiveGong();
         triggerConfetti();
-        saveAndBroadcast('REDRAW_SLOT', { index, oldNum: ticketNum, newNum: replacement });
+        saveAndBroadcast();
         updateUI();
         showToast(`Replaced #${ticketNum} -> #${replacement}!`);
         return true;
@@ -2203,7 +2214,7 @@
       }
     }
 
-    // RANGE FILTER
+    // RANGE FILTER LOGIC
     function applyRangeFilter() {
       filterType = document.getElementById('filterModeSelect').value;
       const sVal = document.getElementById('rangeStart').value.trim();
@@ -2503,7 +2514,7 @@
         try {
           const d = JSON.parse(e.target.result);
           if (Array.isArray(d.pool) && Array.isArray(d.winners)) {
-            applyIncomingState(d);
+            applyStateData(d);
             saveAndBroadcast();
             toggleCrisisModal(false);
             showToast("JSON Restored!");
@@ -2514,138 +2525,6 @@
       };
       reader.readAsText(file);
     }
-
-    // ==============================================================
-    // GUARANTEED REAL-TIME CLOUD STREAM (ZERO WEBRTC / WSS FAILS)
-    // ==============================================================
-    function toggleSyncModal(show) {
-      document.getElementById('syncModal').style.display = show ? 'flex' : 'none';
-    }
-
-    function updateSyncUI(status, text) {
-      const tag = document.getElementById('p2pStatusTag');
-      tag.className = `p2p-status-tag ${status}`;
-      tag.textContent = text;
-      const navBtn = document.getElementById('syncNavBtn');
-      if (status === 'connected') {
-        navBtn.style.background = '#27ae60';
-        navBtn.textContent = '📡 Synced';
-      } else if (status === 'waiting') {
-        navBtn.style.background = '#e67e22';
-        navBtn.textContent = '📡 Syncing...';
-      }
-    }
-
-    function connectCloudChannel(roomId, asHost) {
-      isHost = asHost;
-      currentRoomId = roomId;
-
-      if (sseSource) {
-        try { sseSource.close(); } catch(e) {}
-      }
-
-      updateSyncUI('waiting', `Connecting Room: ${roomId}...`);
-      document.getElementById('p2pPeerId').textContent = `Room ID: ${roomId}`;
-
-      // Open Real-Time HTTPS Server-Sent Event stream
-      const topicUrl = `https://ntfy.sh/tanglung_room_${roomId}/sse`;
-      sseSource = new EventSource(topicUrl);
-
-      sseSource.onopen = () => {
-        updateSyncUI('connected', `${I18N[currentLang].syncConnected} [${roomId}]`);
-        showToast(`Real-Time Cloud Connected (Room: ${roomId})!`);
-        if (isHost) {
-          saveAndBroadcast('STATE_SYNC');
-        } else {
-          // Client pulls immediate latest state snapshot
-          fetch(`https://ntfy.sh/tanglung_room_${roomId}/json?poll=1`)
-            .then(res => res.text())
-            .then(text => {
-              const lines = text.trim().split('\n');
-              for (let i = lines.length - 1; i >= 0; i--) {
-                try {
-                  const entry = JSON.parse(lines[i]);
-                  if (entry.message) {
-                    const parsed = JSON.parse(entry.message);
-                    if (parsed.state) {
-                      applyIncomingState(parsed.state);
-                      break;
-                    }
-                  }
-                } catch(e) {}
-              }
-            }).catch(() => {});
-        }
-      };
-
-      sseSource.onmessage = (event) => {
-        try {
-          const packet = JSON.parse(event.data);
-          if (packet.message) {
-            const parsed = JSON.parse(packet.message);
-            if (parsed.state && !isHost) {
-              applyIncomingState(parsed.state);
-            }
-          }
-        } catch(e) {}
-      };
-
-      sseSource.onerror = () => {
-        updateSyncUI('waiting', 'Reconnecting cloud stream in 3s...');
-      };
-    }
-
-    function startHostRoom() {
-      const roomId = "tanglung" + Math.floor(1000 + Math.random() * 9000);
-      connectCloudChannel(roomId, true);
-
-      // Create QR Code & Share Link
-      const shareUrl = new URL(window.location.href);
-      shareUrl.searchParams.set('room', roomId);
-      document.getElementById('shareLinkInput').value = shareUrl.toString();
-      
-      document.getElementById('qrSection').style.display = 'flex';
-      const qrContainer = document.getElementById('qrcode');
-      qrContainer.innerHTML = '';
-      new QRCode(qrContainer, {
-        text: shareUrl.toString(),
-        width: 140,
-        height: 140
-      });
-    }
-
-    function joinClientRoomPrompt() {
-      const room = prompt("Enter Room ID (e.g. tanglung8888):");
-      if (room && room.trim()) {
-        connectCloudChannel(room.trim(), false);
-      }
-    }
-
-    function copyShareLink() {
-      const input = document.getElementById('shareLinkInput');
-      input.select();
-      navigator.clipboard.writeText(input.value).then(() => {
-        showToast("Copied pairing link!");
-      });
-    }
-
-    function checkUrlForAutoJoin() {
-      const params = new URLSearchParams(window.location.search);
-      const room = params.get('room') || params.get('join');
-      if (room) {
-        connectCloudChannel(room.trim(), false);
-      }
-    }
-
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select') {
-          e.preventDefault();
-          toggleVip();
-        }
-      }
-    });
 
     // SCROLLER ENGINE
     let projScrollPos = 0;
@@ -2673,11 +2552,9 @@
         `).join('');
       }
 
-      // Projection Display Track
       const projTrack = document.getElementById('projTrack');
       projTrack.innerHTML = cardsHtml + cardsHtml;
 
-      // Update Desktop PiP
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2685,7 +2562,6 @@
         } catch (e) {}
       }
 
-      // Operator Left Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (filtered.length === 0) {
         opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
@@ -2721,7 +2597,6 @@
         }
       }
 
-      // PiP Scroller
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2888,6 +2763,7 @@
     }
 
     function toggleProjTransparent() {
+      document.getElementById('projectorView').classList.transparentMode = !document.getElementById('projectorView').classList.contains('transparent-mode');
       document.getElementById('projectorView').classList.toggle('transparent-mode');
     }
 
@@ -2964,7 +2840,7 @@
           </div>`;
         document.getElementById('vipDisplay').textContent = '----';
         document.getElementById('searchInput').value = '';
-        saveAndBroadcast('RESET_ALL');
+        saveAndBroadcast();
         updateUI();
         showToast("Reset Completed!");
       }
@@ -3022,9 +2898,10 @@
       }
     });
 
+    // Startup
     if (!load()) initPool();
     checkProjectionModeFromURL();
-    checkUrlForAutoJoin();
+    setupFirebaseConnection();
     applyLanguageUI();
     updateUI();
     requestAnimationFrame(animateScrollers);
