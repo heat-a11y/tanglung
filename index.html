@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>🏮 中秋提灯节庆典 · 幸运大抽奖 🏮</title>
+  <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
+  <!-- QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -351,6 +352,12 @@
       font-size: 1.35em;
       letter-spacing: 2px;
       font-family: monospace;
+    }
+
+    .crawl-card .crawl-hint {
+      font-size: 0.7rem;
+      color: #ffdca8;
+      opacity: 0.7;
     }
 
     .crawl-controls {
@@ -769,7 +776,7 @@
       color: #2ecc71 !important;
     }
     .billboard-card.claimed .bb-seq::after {
-      content: " ✓已领";
+      content: " ✓";
       color: #2ecc71;
       font-weight: bold;
     }
@@ -983,6 +990,16 @@
       background: #140103;
       flex-direction: column;
       pointer-events: auto;
+      transition: background 0.3s ease;
+    }
+
+    #projectorView.transparent-mode {
+      background: transparent !important;
+    }
+
+    #projectorView.transparent-mode .proj-body {
+      background: transparent !important;
+      box-shadow: none !important;
     }
 
     #projectorView.widget-overlay-mode {
@@ -1005,10 +1022,6 @@
     #projectorView.widget-overlay-mode .proj-toolbar,
     #projectorView.widget-overlay-mode .proj-body {
       pointer-events: auto;
-    }
-
-    #projectorView.transparent-mode .proj-body {
-      background: rgba(20, 2, 4, 0.82) !important;
     }
 
     .proj-toolbar {
@@ -1109,6 +1122,13 @@
     .proj-body.vertical .proj-card .p-num {
       font-size: 2.2rem;
     }
+
+    /* VIEWER MODE DISABLED STYLES */
+    .viewer-disabled {
+      opacity: 0.55 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+    }
   </style>
 </head>
 <body>
@@ -1140,7 +1160,7 @@
     </div>
   </div>
 
-  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP -->
+  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP (ACCESSIBLE TO BOTH MASTER & VIEWERS) -->
   <div id="spotlightModal" onclick="closeSpotlight()">
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
@@ -1148,9 +1168,9 @@
       <div style="font-size:1.15rem; color:#ffdca8;" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:#2ecc71; color:#fff; border-color:#2ecc71;" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()">⏱️ 现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()">⚡ 作废重抽</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废重抽</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()" data-i18n="btnClose">关 闭</button>
       </div>
     </div>
   </div>
@@ -1159,8 +1179,8 @@
   <div class="timer-overlay" id="timerOverlay">
     <span data-i18n="timerCalling">⏱️ 领奖呼叫:</span>
     <span id="timerSeconds" style="font-size:1.8rem; font-family:monospace; color:var(--imperial-gold);">10</span> <span data-i18n="secondsUnit">秒</span>
-    <button class="btn-timer-redraw" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">⚡ 立即作废重抽</button>
-    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()">取消</button>
+    <button class="btn-timer-redraw" id="timerRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">⚡ 立即作废重抽</button>
+    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()" data-i18n="btnCancel">取消</button>
   </div>
 
   <!-- 1. RECYCLE BIN MODAL -->
@@ -1218,7 +1238,7 @@
         </div>
 
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong data-i18n="sponsorLabel">⚡ 赞助商突击加码 (Quick Add Prizes):</strong>
+          <strong data-i18n="sponsorLabel">⚡ 赞助商突击加码:</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
             <button class="icon-btn" onclick="quickAddPrizes(1)">+1</button>
             <button class="icon-btn" onclick="quickAddPrizes(5)">+5</button>
@@ -1260,6 +1280,7 @@
       </div>
 
       <div class="top-actions">
+        <!-- TRILINGUAL TOGGLE BM / BI / BC -->
         <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
           <option value="BC">华文 (BC)</option>
           <option value="BM">B. Melayu (BM)</option>
@@ -1286,7 +1307,7 @@
       <!-- 1. LEFT COLUMN: VERTICAL RUNNING STRIP -->
       <div class="traditional-frame crawl-column">
         <div class="column-banner" id="leftBannerText">
-          <span>🏮</span> <span data-i18n="leftBanner">荣誉榜 · 点击号码直接重抽</span> <span>🏮</span>
+          <span>🏮</span> <span data-i18n="leftBanner">荣誉榜 · 点击号码直接核对</span> <span>🏮</span>
         </div>
         <div class="crawl-viewport" id="opCrawlViewport">
           <div class="crawl-track" id="opCrawlTrack">
@@ -1310,7 +1331,7 @@
         </div>
       </div>
 
-      <!-- 2. CENTER COLUMN: MAIN STAGE -->
+      <!-- 2. CENTER COLUMN: MAIN STAGE (FULL VISIBILITY ON BOTH HOST & VIEWER) -->
       <div class="main-stage">
         <div class="pacing-ribbon" id="pacingRibbon">
           🏮 当前环节：幸运安慰奖抽取 🏮
@@ -1336,7 +1357,7 @@
         <div id="vipPanel" class="panel">
           <div class="vip-display" id="vipDisplay">----</div>
           <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()" data-i18n="btnStartRoll">开 始 滚 动</button>
-          <div style="font-size:0.85rem; color:#8c6810; font-weight:bold;" data-i18n="vipSpaceHint">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
+          <div style="font-size:0.85rem; color:#8c6810; font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
         </div>
 
         <!-- Mode 3: Manual Insertion -->
@@ -1351,8 +1372,8 @@
               <span style="font-size:0.75rem; color:#888;" data-i18n="manualInputHint">输入 1 至 4 位数字按回车或点确认</span>
             </div>
             <div class="manual-actions">
-              <button class="btn-manual-confirm" onclick="confirmManualEntry()" data-i18n="btnConfirmManual">✓ 确认手动录入</button>
-              <button class="btn-manual-redraw" onclick="drawSingleManual()" data-i18n="btnDrawSingleManual">🎲 现场补抽 1 个</button>
+              <button class="btn-manual-confirm" id="manualConfirmBtn" onclick="confirmManualEntry()" data-i18n="btnConfirmManual">✓ 确认手动录入</button>
+              <button class="btn-manual-redraw" id="manualRedrawBtn" onclick="drawSingleManual()" data-i18n="btnDrawSingleManual">🎲 现场补抽 1 个</button>
             </div>
           </div>
         </div>
@@ -1413,7 +1434,7 @@
         <button class="icon-btn" onclick="toggleWidgetOverlay()" data-i18n="btnToggleWidget">🖼️ 切换条形挂件/全屏</button>
         <button class="icon-btn" onclick="toggleDockPosition()" data-i18n="btnToggleDock">↕ 置顶/置底</button>
         <button class="icon-btn" onclick="toggleProjLayout()" data-i18n="btnToggleHV">⇄ 横向/竖向</button>
-        <button class="icon-btn" onclick="toggleProjTransparent()" data-i18n="btnToggleTrans">🌓 背景半透明/纯色</button>
+        <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">🌓 背景: 全彩纯黑</button>
         <button class="icon-btn" onclick="adjustProjSpeed(-15)">⏩</button>
         <button class="icon-btn" onclick="adjustProjSpeed(15)">⏪</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
@@ -1453,7 +1474,7 @@
         navSoundOff: "🔇 音效: 关",
         navFullscreen: "⛶ 全屏",
         navReset: "↺ 重置",
-        leftBanner: "荣誉榜 · 点击号码直接重抽",
+        leftBanner: "荣誉榜 · 点击号码直接核对",
         crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
         speedLabel: "滚动速度:",
         fontLabel: "字体大小:",
@@ -1465,6 +1486,7 @@
         btnStartRoll: "开 始 滚 动",
         btnStopRoll: "停！(STOP)",
         vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
+        vipSpaceHintViewer: "💡 观众端：实时观看主控台摇号中",
         manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
         manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
         manualInputHint: "输入 1 至 4 位数字按回车或点确认",
@@ -1486,9 +1508,7 @@
         syncStatusLabel: "连接状态:",
         syncOffline: "离线",
         syncConnected: "已连接 Firebase 云数据库",
-        btnHost: "👑 主控端模式",
-        btnJoin: "🔗 显示端模式",
-        scanQr: "手机 / 平板扫码一键加入:",
+        scanQr: "副机 / 显示端扫码一键加入:",
         copyLinkText: "或复制显示端链接分享给副机:",
         btnCopyLink: "📋 复制显示端链接",
         spotlightCongrats: "🎉 恭喜中奖 🎉",
@@ -1510,13 +1530,22 @@
         backupLabel: "💾 应急备份与热导入 (防电脑彻底死机):",
         btnDownloadJson: "📥 下载完整状态 JSON",
         btnRestoreJson: "📤 导入恢复状态",
-        sponsorLabel: "⚡ 赞助商突击加码 (Quick Add Prizes):",
+        sponsorLabel: "⚡ 赞助商突击加码:",
         pacingConsolation: "🏮 当前环节：幸运安慰奖抽取 (DRAWS #1 - #{quota}) 🏮",
         pacingGrand: "🌟 盛大环节：压轴特奖 (VIP 逐一揭晓) 🌟",
         pacingDone: "🎉 圆满礼成：全部 {quota} 份大奖已全部抽出！ 🎉",
         prizeItemPrefix: "第 {seq} 份奖品",
         projWaiting: "准备就绪",
-        projSuspense: "★★★ 正在摇号，即将揭晓 ★★★"
+        projSuspense: "★★★ 正在摇号，即将揭晓 ★★★",
+        btnToggleWidget: "🖼️ 切换条形挂件/全屏",
+        btnToggleDock: "↕ 置顶/置底",
+        btnToggleHV: "⇄ 横向/竖向",
+        btnToggleBgTrans: "🌓 背景: 全彩纯黑",
+        btnToggleBgSolid: "🌓 背景: 透明通道",
+        btnProjFs: "⛶ 全屏",
+        btnProjClose: "✕ 返回",
+        btnClaimVerify: "✓ 领奖核销 (Claim)",
+        btnClaimVerified: "✓ 已领奖 (Claimed)"
       },
       BM: {
         brandTitle: "Pesta Tanglung · Cabutan Bertuah",
@@ -1524,7 +1553,7 @@
         poolLabel: "Kolam",
         wonLabel: "Disedut",
         leftLabel: "Baki Hadiah",
-        navSync: "📡 Sync Awan",
+        navSync: "📡 Sync Bilik",
         navSuspenseOn: "🔒 Mod Rahsia: On",
         navSuspenseOff: "🔒 Mod Rahsia: Off",
         navRecycle: "Tong Kitar",
@@ -1537,7 +1566,7 @@
         navSoundOff: "🔇 Bunyi: Mute",
         navFullscreen: "⛶ Skrin Penuh",
         navReset: "↺ Reset",
-        leftBanner: "Senarai Pemenang",
+        leftBanner: "Senarai Pemenang · Klik Nombor untuk Pengesahan",
         crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
         speedLabel: "Kelajuan:",
         fontLabel: "Saiz Fon:",
@@ -1545,16 +1574,17 @@
         tabVip: "👑 Pentas VIP (Satu persatu)",
         tabManual: "✍️ Masuk Manual / Ganti",
         btnDraw10: "🎲 Cabut 10 Pemenang",
-        batchEmptyHint: "Menunggu cabutan...",
+        batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
         btnStartRoll: "Mula Putar",
         btnStopRoll: "BERHENTI! (STOP)",
-        vipSpaceHint: "💡 Tip Pentas: Mula / Berhenti",
+        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
+        vipSpaceHintViewer: "💡 Mod Penonton: Menonton cabutan secara langsung",
         manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
         manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
         manualInputHint: "Masukkan 1-4 digit nombor tiket",
-        btnConfirmManual: "✓ Sahkan",
-        btnDrawSingleManual: "🎲 Cabut Ganti",
-        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Aktif",
+        btnConfirmManual: "✓ Sahkan Masukan",
+        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
+        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Segera Aktif",
         stageFooterRight: "Jawatankuasa Pengelola",
         bbBanner: "Papan Kenyataan Pemenang",
         optBySeq: "Ikut Kedudukan Hadiah (#)",
@@ -1570,10 +1600,8 @@
         syncStatusLabel: "Status Sambungan:",
         syncOffline: "Luar Talian",
         syncConnected: "Tersambung Google RTDB",
-        btnHost: "👑 Mod Host Utama",
-        btnJoin: "🔗 Mod Paparan",
-        scanQr: "Imbas QR untuk Sambung:",
-        copyLinkText: "Atau kongsi pautan:",
+        scanQr: "Imbas QR untuk Sambung Pantas:",
+        copyLinkText: "Atau kongsi pautan ini:",
         btnCopyLink: "📋 Salin Pautan",
         spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
         btnCall10: "⏱️ Panggilan 10 Saat",
@@ -1600,7 +1628,16 @@
         pacingDone: "🎉 Selesai: Semua {quota} Hadiah Telah Dimenangi! 🎉",
         prizeItemPrefix: "Hadiah #{seq}",
         projWaiting: "Sedia Bermula",
-        projSuspense: "★★★ Sedang Berputar... Nantikan! ★★★"
+        projSuspense: "★★★ Sedang Berputar... Nantikan! ★★★",
+        btnToggleWidget: "🖼️ Tukar Bar/Penuh",
+        btnToggleDock: "↕ Atas/Bawah",
+        btnToggleHV: "⇄ Mengufuk/Menegak",
+        btnToggleBgTrans: "🌓 Latar: Warna Penuh",
+        btnToggleBgSolid: "🌓 Latar: Saluran Telus",
+        btnProjFs: "⛶ Skrin Penuh",
+        btnProjClose: "✕ Kembali",
+        btnClaimVerify: "✓ Sahkan Tuntutan (Claim)",
+        btnClaimVerified: "✓ Telah Dituntut (Claimed)"
       },
       BI: {
         brandTitle: "Tanglung Lantern Festival · Lucky Draw",
@@ -1621,7 +1658,7 @@
         navSoundOff: "🔇 Audio: Muted",
         navFullscreen: "⛶ Fullscreen",
         navReset: "↺ Reset All",
-        leftBanner: "Winners Board",
+        leftBanner: "Winners Board · Click to Verify",
         crawlWaiting: "Lucky Draw has not started yet.<br>Best of luck to everyone!",
         speedLabel: "Scroll Speed:",
         fontLabel: "Font Size:",
@@ -1629,16 +1666,17 @@
         tabVip: "👑 VIP Stage Slot",
         tabManual: "✍️ Manual Entry / Replace",
         btnDraw10: "🎲 Draw 10 Winners",
-        batchEmptyHint: "Waiting for draws...",
+        batchEmptyHint: "Click button above to draw 10 lucky winners",
         btnStartRoll: "Start Rolling",
         btnStopRoll: "STOP!",
         vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
+        vipSpaceHintViewer: "💡 Viewer Mode: Watching live draws from Host",
         manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
         manualDesc: "Strict duplicate check: automatically excludes already won numbers",
         manualInputHint: "Type 1 to 4 digit ticket number",
         btnConfirmManual: "✓ Confirm Entry",
         btnDrawSingleManual: "🎲 Draw 1 Replacement",
-        stageFooterLeft: "Lantern Gala • Real-time Cloud Sync Active",
+        stageFooterLeft: "Lantern Gala • Multi-Device Realtime Cloud Sync Active",
         stageFooterRight: "Organizing Committee",
         bbBanner: "Winners Billboard",
         optBySeq: "By Prize Sequence (#)",
@@ -1654,8 +1692,6 @@
         syncStatusLabel: "Connection Status:",
         syncOffline: "Offline",
         syncConnected: "Connected to Firebase RTDB",
-        btnHost: "👑 Master Host Mode",
-        btnJoin: "🔗 Display Screen Mode",
         scanQr: "Scan QR code to join instantly:",
         copyLinkText: "Or copy room share link:",
         btnCopyLink: "📋 Copy Link",
@@ -1684,7 +1720,16 @@
         pacingDone: "🎉 All {quota} Prizes Successfully Concluded! 🎉",
         prizeItemPrefix: "Prize #{seq}",
         projWaiting: "Ready to Draw",
-        projSuspense: "★★★ Drawing in Progress... Stay Tuned! ★★★"
+        projSuspense: "★★★ Drawing in Progress... Stay Tuned! ★★★",
+        btnToggleWidget: "🖼️ Toggle Bar/Fullscreen",
+        btnToggleDock: "↕ Dock Top/Bottom",
+        btnToggleHV: "⇄ Horizontal/Vertical",
+        btnToggleBgTrans: "🌓 Background: Full Color",
+        btnToggleBgSolid: "🌓 Background: Transparent",
+        btnProjFs: "⛶ Fullscreen",
+        btnProjClose: "✕ Return",
+        btnClaimVerify: "✓ Verify Claim",
+        btnClaimVerified: "✓ Claimed"
       }
     };
 
@@ -1705,6 +1750,13 @@
       document.getElementById('appMainTitle').innerText = t.brandTitle;
       document.getElementById('appSubTitle').innerText = t.brandSub;
       document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+
+      const pView = document.getElementById('projectorView');
+      const isTrans = pView && pView.classList.contains('transparent-mode');
+      const bgBtn = document.getElementById('projBgBtn');
+      if (bgBtn) {
+        bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
+      }
       
       updateUI();
     }
@@ -1712,7 +1764,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v26_fixed";
+    const STORAGE_KEY = "tanglung_stage_v27_stable";
 
     let pool = [];
     let winners = [];
@@ -1739,7 +1791,7 @@
     let pipScrollPos = 0;
 
     let syncRef = null;
-    const syncChannel = new BroadcastChannel('tanglung_sync_v26');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v27');
     let audioCtx = null;
 
     function showToast(msg, isError = false) {
@@ -1826,7 +1878,7 @@
     function testSound() {
       initAudio();
       playFestiveGong();
-      showToast("音响测试正常！");
+      showToast(currentLang === 'BM' ? 'Bunyi diuji berjaya!' : (currentLang === 'BI' ? 'Audio tested successfully!' : '音响测试正常！'));
     }
 
     function toggleSound() {
@@ -1878,7 +1930,6 @@
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // ROBUST DATA CLEANER TO PREVENT FIREBASE CRASHES
     function sanitizeList(raw) {
       if (!raw) return [];
       if (Array.isArray(raw)) return raw.filter(Boolean);
@@ -1907,9 +1958,7 @@
       };
     }
 
-    // ATOMIC SAVE AND BROADCAST
     function saveAndBroadcast() {
-      if (isViewerMode) return;
       const payload = getPayload();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
@@ -2021,25 +2070,34 @@
       }
     }
 
+    // VIEWER MODE: SHOW CENTER CONSOLE BUT DISABLE BUTTONS
     function enableViewerModeUI() {
       document.getElementById('p2pStatusTag').textContent = "显示端模式 (Viewer Mode - Read Only)";
       document.getElementById('appMainTitle').removeAttribute('contenteditable');
       document.getElementById('appSubTitle').removeAttribute('contenteditable');
-      document.getElementById('tabGroupEl').style.display = 'none';
-      document.getElementById('batchPanel').style.display = 'none';
-      document.getElementById('vipPanel').style.display = 'none';
-      document.getElementById('manualPanel').style.display = 'none';
+      
+      // Center stage is kept visible for viewers, but actions are disabled
+      document.getElementById('batchDrawBtn').classList.add('viewer-disabled');
+      document.getElementById('vipToggleBtn').classList.add('viewer-disabled');
+      document.getElementById('manualTicketInput').disabled = true;
+      document.getElementById('manualConfirmBtn').classList.add('viewer-disabled');
+      document.getElementById('manualRedrawBtn').classList.add('viewer-disabled');
+      document.getElementById('vipHintText').textContent = I18N[currentLang].vipSpaceHintViewer;
+
+      // Disable destructive admin controls
+      document.getElementById('spotlightRedrawBtn').style.display = 'none';
+      document.getElementById('timerRedrawBtn').style.display = 'none';
       document.getElementById('crisisBtn').style.display = 'none';
       document.getElementById('resetBtn').style.display = 'none';
       document.getElementById('poolBadgeEl').style.cursor = 'default';
       document.getElementById('poolBadgeEl').removeAttribute('onclick');
       document.getElementById('prizeBadgeEl').style.cursor = 'default';
       document.getElementById('prizeBadgeEl').removeAttribute('onclick');
-      showToast("已自动进入【观众/显示端】同步模式，所有抽奖操作由主控端控制。");
+
+      showToast("已自动进入【观众/显示端】同步模式，可核销领奖。");
     }
 
     function switchTab(tab) {
-      if (isViewerMode) return;
       if (isRolling) stopVip();
       const btns = document.querySelectorAll('.tab-btn');
       btns[0].classList.toggle('active', tab === 'batch');
@@ -2050,12 +2108,12 @@
       document.getElementById('vipPanel').classList.toggle('active', tab === 'vip');
       document.getElementById('manualPanel').classList.toggle('active', tab === 'manual');
 
-      if (tab === 'manual') {
+      if (tab === 'manual' && !isViewerMode) {
         setTimeout(() => document.getElementById('manualTicketInput').focus(), 50);
       }
     }
 
-    // Mode 1: Batch 10 Draw (OPTIMISTIC IMMEDIATE UPDATE)
+    // Mode 1: Batch 10 Draw
     function drawTen() {
       if (isViewerMode) return;
       const quota = maxPrizes - winners.length;
@@ -2089,7 +2147,7 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`已成功抽出 10 位幸运儿！`);
+      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
     }
 
     // Mode 2: VIP Picker
@@ -2252,17 +2310,16 @@
       }
     }
 
-    // TOGGLE CLAIMED PRIZE STATUS
+    // TOGGLE CLAIMED PRIZE STATUS (ALLOWED FOR BOTH MASTER & VIEWERS)
     function toggleClaimCurrentSpotlight() {
-      if (isViewerMode) return;
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
         if (idx !== -1) {
           claimedWinners.splice(idx, 1);
-          showToast(`票号 【${activeSpotlightTicket}】 已取消领奖状态`, true);
+          showToast(currentLang === 'BM' ? `Tuntutan #${activeSpotlightTicket} dibatalkan` : (currentLang === 'BI' ? `Unclaimed #${activeSpotlightTicket}` : `票号 【${activeSpotlightTicket}】 已取消领奖状态`), true);
         } else {
           claimedWinners.push(activeSpotlightTicket);
-          showToast(`✓ 票号 【${activeSpotlightTicket}】 已成功核销领奖！`);
+          showToast(currentLang === 'BM' ? `✓ #${activeSpotlightTicket} Berjaya Dituntut!` : (currentLang === 'BI' ? `✓ #${activeSpotlightTicket} Claim Verified!` : `✓ 票号 【${activeSpotlightTicket}】 已成功核销领奖！`));
         }
         updateUI();
         saveAndBroadcast();
@@ -2388,7 +2445,7 @@
       link.click();
     }
 
-    // SPOTLIGHT VERIFICATION
+    // SPOTLIGHT VERIFICATION (VIEWERS CAN CLAIM)
     function openSpotlight(ticket, seq) {
       activeSpotlightTicket = ticket;
       activeSpotlightIndex = seq - 1;
@@ -2400,15 +2457,14 @@
       const claimBtn = document.getElementById('spotlightClaimBtn');
       const redrawBtn = document.getElementById('spotlightRedrawBtn');
       if (isViewerMode) {
-        claimBtn.style.display = 'none';
         redrawBtn.style.display = 'none';
       }
 
       if (claimedWinners.includes(ticket)) {
-        claimBtn.textContent = "✓ 已领奖 (Claimed)";
+        claimBtn.textContent = I18N[currentLang].btnClaimVerified;
         claimBtn.style.background = "#27ae60";
       } else {
-        claimBtn.textContent = "○ 标为已领奖 (Verify Claim)";
+        claimBtn.textContent = I18N[currentLang].btnClaimVerify;
         claimBtn.style.background = "#7f8c8d";
       }
 
@@ -2467,6 +2523,7 @@
       document.getElementById('timerOverlay').style.display = 'none';
     }
 
+    // SUSPENSE MODE
     function toggleSuspenseMode() {
       if (isViewerMode) return;
       isSuspenseMode = !isSuspenseMode;
@@ -2477,6 +2534,7 @@
       saveAndBroadcast();
     }
 
+    // EMCEE SCRIPT
     function copyEmceeScript() {
       if (winners.length === 0) return alert("No winners yet!");
       const filtered = getFilteredWinnersList();
@@ -2487,6 +2545,7 @@
       }).catch(() => alert(script));
     }
 
+    // RECYCLE BIN
     function toggleRecycleModal(show) {
       document.getElementById('recycleModal').style.display = show ? 'flex' : 'none';
       renderRecycleList();
@@ -2542,6 +2601,7 @@
       showToast(`Restored #${ticket} as winner!`);
     }
 
+    // CRISIS TOOLS
     function toggleCrisisModal(show) {
       document.getElementById('crisisModal').style.display = show ? 'flex' : 'none';
     }
@@ -2596,7 +2656,7 @@
       reader.readAsText(file);
     }
 
-    // SCROLLER ENGINE
+    // SCROLLER ENGINE (CLAIMED NUMBERS ARE OMITTED FROM LIVE STRIP & VIEWERS CAN VERIFY)
     let projScrollPos = 0;
     let opScrollPos = 0;
     let projSpeedPx = 1.2;
@@ -2623,7 +2683,7 @@
       }
 
       const projTrack = document.getElementById('projTrack');
-      projTrack.innerHTML = cardsHtml + cardsHtml;
+      if (projTrack) projTrack.innerHTML = cardsHtml + cardsHtml;
 
       if (activePipWindow && !activePipWindow.closed) {
         try {
@@ -2633,28 +2693,30 @@
       }
 
       const opTrack = document.getElementById('opCrawlTrack');
-      if (filtered.length === 0) {
-        opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
-      } else {
-        const opCards = filtered.map(item => `
-          <div class="crawl-card" title="Click to redraw" onclick="promptRedrawSlot('${item.num}', ${item.seq - 1})">
-            <div>
-              <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
-              <div class="crawl-hint">⚡ Redraw</div>
+      if (opTrack) {
+        if (filtered.length === 0) {
+          opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
+        } else {
+          const opCards = filtered.map(item => `
+            <div class="crawl-card" title="Click to verify/redraw" onclick="openSpotlight('${item.num}', ${item.seq})">
+              <div>
+                <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
+                <div class="crawl-hint">⚡ ${I18N[currentLang].btnFocusVerify}</div>
+              </div>
+              <span class="crawl-num">${item.num}</span>
             </div>
-            <span class="crawl-num">${item.num}</span>
-          </div>
-        `).join('');
-        opTrack.innerHTML = opCards + opCards;
+          `).join('');
+          opTrack.innerHTML = opCards + opCards;
+        }
       }
     }
 
     function animateScrollers() {
       const pBody = document.getElementById('projBody');
       const projTrack = document.getElementById('projTrack');
-      const isHorizontal = pBody.classList.contains('horizontal');
+      const isHorizontal = pBody && pBody.classList.contains('horizontal');
 
-      if (!isProjPaused && projTrack.children.length > 0) {
+      if (!isProjPaused && projTrack && projTrack.children.length > 0) {
         projScrollPos += projSpeedPx;
         if (isHorizontal) {
           const halfWidth = projTrack.scrollWidth / 2;
@@ -2715,15 +2777,15 @@
         ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
         ribbon.style.background = "linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%)";
       } else {
-        ribbon.textContent = t.pacingConsolation.replace('{quota}', maxPrizes - 10);
+        ribbon.textContent = t.pacingConsolation.replace('{quota}', Math.max(0, maxPrizes - 10));
         ribbon.style.background = "linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%)";
       }
 
       const exhausted = winners.length >= maxPrizes || pool.length === 0;
       const drawBtn = document.getElementById('batchDrawBtn');
       const vipBtn = document.getElementById('vipToggleBtn');
-      if (drawBtn) drawBtn.disabled = exhausted;
-      if (vipBtn) vipBtn.disabled = exhausted;
+      if (drawBtn && !isViewerMode) drawBtn.disabled = exhausted;
+      if (vipBtn && !isViewerMode) vipBtn.disabled = exhausted;
 
       renderFilteredBillboard();
 
@@ -2792,7 +2854,6 @@
         document.getElementById('operatorView').style.display = 'none';
         const pView = document.getElementById('projectorView');
         pView.style.display = 'flex';
-        pView.classList.add('widget-overlay-mode', 'dock-top', 'transparent-mode');
       }
     }
 
@@ -2834,8 +2895,15 @@
       renderScrollers();
     }
 
+    // PROJECTION BACKGROUND: FULL COLOR VS TRANSPARENT
     function toggleProjTransparent() {
-      document.getElementById('projectorView').classList.toggle('transparent-mode');
+      const pView = document.getElementById('projectorView');
+      pView.classList.toggle('transparent-mode');
+      const isTrans = pView.classList.contains('transparent-mode');
+      const bgBtn = document.getElementById('projBgBtn');
+      const t = I18N[currentLang];
+      bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
+      showToast(isTrans ? (currentLang === 'BM' ? 'Latar telus aktif' : (currentLang === 'BI' ? 'Transparent Mode Activated' : '已开启透明通道模式')) : (currentLang === 'BM' ? 'Latar penuh aktif' : (currentLang === 'BI' ? 'Full Color Background Activated' : '已开启全彩黑底模式')));
     }
 
     async function openPiPOverlay() {
