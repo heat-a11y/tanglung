@@ -875,7 +875,7 @@
       cursor: pointer;
     }
     .btn-recycle-action:hover {
-      background: var(--imperial-gold);
+      background: rgba(244, 196, 48, 0.00);
       color: #000;
     }
 
@@ -989,28 +989,6 @@
     #projectorView.transparent-mode .proj-body {
       background: transparent !important;
       box-shadow: none !important;
-    }
-
-    #projectorView.widget-overlay-mode {
-      background: transparent !important;
-      pointer-events: none;
-    }
-
-    #projectorView.widget-overlay-mode.dock-top {
-      height: 110px !important;
-      bottom: auto !important;
-      top: 0;
-    }
-
-    #projectorView.widget-overlay-mode.dock-bottom {
-      height: 110px !important;
-      top: auto !important;
-      bottom: 0;
-    }
-
-    #projectorView.widget-overlay-mode .proj-toolbar,
-    #projectorView.widget-overlay-mode .proj-body {
-      pointer-events: auto;
     }
 
     .proj-toolbar {
@@ -1161,7 +1139,7 @@
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:#2ecc71; color:#fff; border-color:#2ecc71;" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废重抽</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()" data-i18n="btnClose">关 闭</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
   </div>
@@ -1171,7 +1149,7 @@
     <span data-i18n="timerCalling">⏱️ 领奖呼叫:</span>
     <span id="timerSeconds" style="font-size:1.8rem; font-family:monospace; color:var(--imperial-gold);">10</span> <span data-i18n="secondsUnit">秒</span>
     <button class="btn-timer-redraw" id="timerRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">⚡ 立即作废重抽</button>
-    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()" data-i18n="btnCancel">取消</button>
+    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()">取消</button>
   </div>
 
   <!-- 1. RECYCLE BIN MODAL -->
@@ -1440,9 +1418,8 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v32_verified";
+    const STORAGE_KEY = "tanglung_stage_v34_stable";
 
-    let pool = [];
     let winners = [];
     let claimedWinners = [];
     let recycleBin = [];
@@ -1475,112 +1452,308 @@
 
     let syncRef = null;
     let isPushingFirebase = false;
-    let isApplyingState = false;
-    let lastAppliedTimestamp = 0;
-    let hasInitialized = false;
-    const syncChannel = new BroadcastChannel('tanglung_sync_v32');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v34');
     let audioCtx = null;
-    let renderScrollersPending = false;
-    let activeConfettiId = null;
-    let cachedProjWidths = [];
-    let cachedOpHeight = 0;
-    let cachedPipWidth = 0;
 
-    function showToast(msg, isError = false) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast ${isError ? 'error' : ''}`;
-      toast.innerHTML = `<span>${isError ? '⚠️' : '🎉'}</span> <span>${msg}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
-        if (toast.parentNode) toast.parentNode.removeChild(toast);
-      }, 4000);
-    }
-
-    function initAudio() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const I18N = {
+      BC: {
+        brandTitle: "中秋提灯节庆典 · 幸运大抽奖",
+        brandSub: "现场大屏幕同步抽奖系统",
+        poolLabel: "号池",
+        wonLabel: "已抽出",
+        leftLabel: "剩余名额",
+        navSync: "📡 联机大厅",
+        navSuspenseOn: "🔒 隐蔽模式: 开",
+        navSuspenseOff: "🔒 隐蔽模式: 关",
+        navRecycle: "回收站",
+        navProj: "📽️ 大屏投影",
+        navPip: "📌 桌面悬浮条",
+        navScript: "📋 司仪口播稿",
+        navCrisis: "🛠️ 应急",
+        navTestSound: "🔔 试音",
+        navSoundOn: "🔊 音效: 开",
+        navSoundOff: "🔇 音效: 关",
+        navFullscreen: "⛶ 全屏",
+        navReset: "↺ 重置",
+        leftBanner: "荣誉榜 · 点击号码核销领奖",
+        crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
+        speedLabel: "滚动速度:",
+        fontLabel: "字体大小:",
+        tabBatch: "⚡ 十连抽模式 (10 Slots)",
+        tabVip: "👑 贵宾大奖台 (VIP Slot)",
+        tabManual: "✍️ 手动录入 / 补抽 (Manual)",
+        btnDraw10: "🎲 摇出 10 位幸运儿",
+        batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
+        btnStartRoll: "开 始 滚 动",
+        btnStopRoll: "停！(STOP)",
+        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
+        vipSpaceHintViewer: "💡 观众端：实时观看主控台摇号中",
+        manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
+        manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
+        manualInputHint: "输入 1 至 4 位数字按回车或点确认",
+        btnConfirmManual: "✓ 确认手动录入",
+        btnDrawSingleManual: "🎲 现场补抽 1 个",
+        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
+        stageFooterRight: "现场专委会监制",
+        bbBanner: "中奖公布栏",
+        optBySeq: "按奖品位次 (Prize #)",
+        optByTicket: "按中奖票号 (Ticket #)",
+        rangeTo: "至",
+        btnFilterAll: "全部",
+        btnExportSegment: "💾 导出",
+        chipAll: "显示全部",
+        chipCustom: "自定义...",
+        btnFocusVerify: "核验定位",
+        bbEmpty: "暂无得奖数据",
+        syncTitle: "跨设备实时云同步",
+        syncStatusLabel: "连接状态:",
+        syncOffline: "离线",
+        syncConnected: "已连接 Firebase 云数据库",
+        scanQr: "副机 / 显示端扫码一键加入:",
+        copyLinkText: "或复制显示端链接分享给副机:",
+        btnCopyLink: "📋 复制显示端链接",
+        spotlightCongrats: "🎉 恭喜中奖 🎉",
+        btnCall10: "⏱️ 现场10秒呼叫",
+        btnVoidRedraw: "⚡ 作废重抽",
+        btnClose: "关 闭",
+        timerCalling: "⏱️ 领奖呼叫:",
+        secondsUnit: "秒",
+        btnRedrawNow: "⚡ 立即作废重抽",
+        btnCancel: "取消",
+        recycleTitle: "作废号码回收站",
+        recycleDesc: "所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：",
+        recycleEmpty: "回收站空空如也",
+        auditTitle: "无人认领 / 作废重抽审核记录",
+        auditEmpty: "暂无作废或重抽记录",
+        crisisTitle: "应急危机处置工具箱",
+        blacklistLabel: "🚫 临时剔除黑名单号码 (提前离场/失票):",
+        btnExclude: "剔除出池",
+        backupLabel: "💾 应急备份与热导入 (防电脑彻底死机):",
+        btnDownloadJson: "📥 下载完整状态 JSON",
+        btnRestoreJson: "📤 导入恢复状态",
+        sponsorLabel: "⚡ 赞助商突击加码:",
+        pacingConsolation: "🏮 当前环节：幸运安慰奖抽取 (第 1 - {quota} 份) 🏮",
+        pacingGrand: "🌟 盛大环节：压轴特奖逐一揭晓 🌟",
+        pacingDone: "🎉 圆满礼成：全部 {quota} 份大奖已全部抽出！ 🎉",
+        prizeItemPrefix: "第 {seq} 份奖品",
+        projWaiting: "准备就绪",
+        projSuspense: "★★★ 精彩即将揭晓 ★★★",
+        btnToggleBgSolid: "🌓 背景: 全彩纯黑",
+        btnToggleBgTrans: "🌓 背景: 透明通道",
+        btnProjFs: "⛶ 全屏",
+        btnProjClose: "✕ 返回",
+        btnClaimVerify: "✓ 领奖核销 (Claim)",
+        btnClaimVerified: "✓ 已领奖 (Claimed)",
+        claimedTag: " ✓已领"
+      },
+      BM: {
+        brandTitle: "Pesta Tanglung · Cabutan Bertuah",
+        brandSub: "Sistem Cabutan Bertuah Langsung",
+        poolLabel: "Kolam Tiket",
+        wonLabel: "Telah Dicabut",
+        leftLabel: "Baki Hadiah",
+        navSync: "📡 Sync Bilik",
+        navSuspenseOn: "🔒 Mod Rahsia: On",
+        navSuspenseOff: "🔒 Mod Rahsia: Off",
+        navRecycle: "Tong Kitar",
+        navProj: "📽️ Projektor",
+        navPip: "📌 Bar Terapung",
+        navScript: "📋 Skrip Juruacara",
+        navCrisis: "🛠️ Kecemasan",
+        navTestSound: "🔔 Uji Bunyi",
+        navSoundOn: "🔊 Bunyi: Hidup",
+        navSoundOff: "🔇 Bunyi: Bisu",
+        navFullscreen: "⛶ Skrin Penuh",
+        navReset: "↺ Tetap Semula",
+        leftBanner: "Senarai Pemenang · Klik untuk Pengesahan",
+        crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
+        speedLabel: "Kelajuan:",
+        fontLabel: "Saiz Fon:",
+        tabBatch: "⚡ Cabut 10 Tiket",
+        tabVip: "👑 Pentas VIP",
+        tabManual: "✍️ Masuk Manual / Ganti",
+        btnDraw10: "🎲 Cabut 10 Pemenang",
+        batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
+        btnStartRoll: "Mula Putar",
+        btnStopRoll: "BERHENTI! (STOP)",
+        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
+        vipSpaceHintViewer: "💡 Mod Penonton: Menonton cabutan secara langsung",
+        manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
+        manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
+        manualInputHint: "Masukkan 1-4 digit nombor tiket",
+        btnConfirmManual: "✓ Sahkan Masukan",
+        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
+        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Segera Aktif",
+        stageFooterRight: "Jawatankuasa Pengelola",
+        bbBanner: "Papan Kenyataan Pemenang",
+        optBySeq: "Ikut Kedudukan Hadiah (#)",
+        optByTicket: "Ikut Nombor Tiket (#)",
+        rangeTo: "hingga",
+        btnFilterAll: "Semua",
+        btnExportSegment: "💾 Eksport",
+        chipAll: "Tunjuk Semua",
+        chipCustom: "Tersuai...",
+        btnFocusVerify: "Cari Tiket",
+        bbEmpty: "Tiada rekod pemenang",
+        syncTitle: "Sinkronisasi Firebase",
+        syncStatusLabel: "Status Sambungan:",
+        syncOffline: "Luar Talian",
+        syncConnected: "Tersambung Google RTDB",
+        scanQr: "Imbas QR untuk Sambung Pantas:",
+        copyLinkText: "Atau kongsi pautan ini:",
+        btnCopyLink: "📋 Salin Pautan",
+        spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
+        btnCall10: "⏱️ Panggilan 10 Saat",
+        btnVoidRedraw: "⚡ Batal & Cabut Semula",
+        btnClose: "Tutup",
+        timerCalling: "⏱️ Panggilan:",
+        secondsUnit: "saat",
+        btnRedrawNow: "⚡ Ganti Sekarang",
+        btnCancel: "Batal",
+        recycleTitle: "Tong Kitar Semula Nombor Batal",
+        recycleDesc: "Semua nombor yang dibatalkan atau pemilik tiada disimpan di sini:",
+        recycleEmpty: "Tong kitar kosong",
+        auditTitle: "Log Audit Pembatalan & Cabutan Semula",
+        auditEmpty: "Tiada rekod pembatalan",
+        crisisTitle: "Kotak Alat Kecemasan",
+        blacklistLabel: "🚫 Keluarkan Tiket Hilang/Awal Balik:",
+        btnExclude: "Keluarkan",
+        backupLabel: "💾 Simpanan Sandaran JSON:",
+        btnDownloadJson: "📥 Muat Turun JSON",
+        btnRestoreJson: "📤 Pulihkan JSON",
+        sponsorLabel: "⚡ Tambah Hadiah Penaja:",
+        pacingConsolation: "🏮 Peringkat Semasa: Hadiah Saguhati (1 - {quota}) 🏮",
+        pacingGrand: "🌟 Peringkat Kemuncak: Hadiah Utama VIP 🌟",
+        pacingDone: "🎉 Tahniah: Kesemua {quota} Hadiah Telah Selesai Dicabut! 🎉",
+        prizeItemPrefix: "Hadiah #{seq}",
+        projWaiting: "Sedia Bermula",
+        projSuspense: "★★★ Sedang Berputar... Nantikan! ★★★",
+        btnToggleBgSolid: "🌓 Latar: Warna Penuh",
+        btnToggleBgTrans: "🌓 Latar: Saluran Telus",
+        btnProjFs: "⛶ Skrin Penuh",
+        btnProjClose: "✕ Kembali",
+        btnClaimVerify: "✓ Sahkan Tuntutan",
+        btnClaimVerified: "✓ Telah Dituntut",
+        claimedTag: " ✓Dituntut"
+      },
+      BI: {
+        brandTitle: "Lantern Festival · Lucky Draw",
+        brandSub: "Live Synchronized Lucky Draw System",
+        poolLabel: "Ticket Pool",
+        wonLabel: "Drawn",
+        leftLabel: "Prizes Left",
+        navSync: "📡 Cloud Sync",
+        navSuspenseOn: "🔒 Conceal Mode: On",
+        navSuspenseOff: "🔒 Conceal Mode: Off",
+        navRecycle: "Recycle Bin",
+        navProj: "📽️ Projection",
+        navPip: "📌 Desktop PiP",
+        navScript: "📋 Emcee Script",
+        navCrisis: "🛠️ Emergency",
+        navTestSound: "🔔 Test Sound",
+        navSoundOn: "🔊 Audio: On",
+        navSoundOff: "🔇 Audio: Muted",
+        navFullscreen: "⛶ Fullscreen",
+        navReset: "↺ Reset All",
+        leftBanner: "Winners Board · Click to Verify Claim",
+        crawlWaiting: "Lucky draw has not started yet.<br>Best of luck to everyone!",
+        speedLabel: "Scroll Speed:",
+        fontLabel: "Font Size:",
+        tabBatch: "⚡ Batch 10 Draw",
+        tabVip: "👑 VIP Single Stage",
+        tabManual: "✍️ Manual Entry / Redraw",
+        btnDraw10: "🎲 Draw 10 Winners",
+        batchEmptyHint: "Click button above to draw 10 lucky winners",
+        btnStartRoll: "Start Rolling",
+        btnStopRoll: "STOP!",
+        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
+        vipSpaceHintViewer: "💡 Viewer Mode: Watching live draws from Host",
+        manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
+        manualDesc: "Strict duplicate check: automatically excludes already won numbers",
+        manualInputHint: "Type 1 to 4 digit ticket number",
+        btnConfirmManual: "✓ Confirm Manual Entry",
+        btnDrawSingleManual: "🎲 Draw 1 Replacement",
+        stageFooterLeft: "Lantern Gala • Multi-Device Realtime Cloud Sync Active",
+        stageFooterRight: "Organizing Committee",
+        bbBanner: "Winners Billboard",
+        optBySeq: "By Prize Sequence (#)",
+        optByTicket: "By Ticket Number (#)",
+        rangeTo: "to",
+        btnFilterAll: "All",
+        btnExportSegment: "💾 Segment",
+        chipAll: "Show All",
+        chipCustom: "Custom...",
+        btnFocusVerify: "Locate Ticket",
+        bbEmpty: "No winners drawn yet",
+        syncTitle: "Cross-Device Real-Time Cloud Sync",
+        syncStatusLabel: "Connection Status:",
+        syncOffline: "Offline",
+        syncConnected: "Connected to Firebase RTDB",
+        scanQr: "Scan QR code to join instantly:",
+        copyLinkText: "Or copy room share link:",
+        btnCopyLink: "📋 Copy Link",
+        spotlightCongrats: "🎉 CONGRATULATIONS! 🎉",
+        btnCall10: "⏱️ 10s Call Countdown",
+        btnVoidRedraw: "⚡ Void & Redraw",
+        btnClose: "Close",
+        timerCalling: "⏱️ Calling:",
+        secondsUnit: "sec",
+        btnRedrawNow: "⚡ Redraw Now",
+        btnCancel: "Cancel",
+        recycleTitle: "Voided Tickets Recycle Bin",
+        recycleDesc: "All forfeited or absent tickets are archived here. Restore anytime if claimant returns:",
+        recycleEmpty: "Recycle bin is empty",
+        auditTitle: "Void & Redraw Audit Log",
+        auditEmpty: "No redraw history recorded",
+        crisisTitle: "Crisis Emergency Toolkit",
+        blacklistLabel: "🚫 Exclude Lost / Early Departure Tickets:",
+        btnExclude: "Exclude",
+        backupLabel: "💾 Backup & Hot Restore JSON:",
+        btnDownloadJson: "📥 Download JSON",
+        btnRestoreJson: "📤 Restore JSON",
+        sponsorLabel: "⚡ Sponsor Quick Add Prizes:",
+        pacingConsolation: "🏮 Current Stage: Consolation Prizes (1 - {quota}) 🏮",
+        pacingGrand: "🌟 Grand Stage: VIP Top Prizes 🌟",
+        pacingDone: "🎉 Celebration: All {quota} Prizes Successfully Drawn! 🎉",
+        prizeItemPrefix: "Prize #{seq}",
+        projWaiting: "Ready to Draw",
+        projSuspense: "★★★ Drawing in Progress... ★★★",
+        btnToggleBgSolid: "🌓 Background: Solid Black",
+        btnToggleBgTrans: "🌓 Background: Transparent",
+        btnProjFs: "⛶ Fullscreen",
+        btnProjClose: "✕ Return",
+        btnClaimVerify: "✓ Verify Claim",
+        btnClaimVerified: "✓ Claimed",
+        claimedTag: " ✓Claimed"
       }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
+    };
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('langSelect').value = lang;
+      applyLanguageUI();
+      if (!isViewerMode) saveAndBroadcast();
     }
 
-    let lastTickTime = 0;
-    function playTick() {
-      if (!soundOn) return;
-      const now = Date.now();
-      if (now - lastTickTime < 90) return;
-      lastTickTime = now;
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(360, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.04);
-    }
-
-    function playFestiveGong() {
-      if (!soundOn) return;
-      initAudio();
-      [523.25, 587.33, 659.25, 783.99, 880.00].forEach((freq, idx) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.08));
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime + (idx * 0.08));
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (idx * 0.08) + 0.6);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(audioCtx.currentTime + (idx * 0.08));
-        osc.stop(audioCtx.currentTime + (idx * 0.08) + 0.6);
-      });
-    }
-
-    function playBeepCount() {
-      if (!soundOn) return;
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
-    }
-
-    function playBuzzer() {
-      if (!soundOn) return;
-      initAudio();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(160, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.6);
-    }
-
-    function testSound() {
-      initAudio();
-      playFestiveGong();
-      showToast(currentLang === 'BM' ? 'Bunyi diuji berjaya!' : (currentLang === 'BI' ? 'Audio tested successfully!' : '音响测试正常！'));
-    }
-
-    function toggleSound() {
-      soundOn = !soundOn;
+    function applyLanguageUI() {
       const t = I18N[currentLang];
-      document.getElementById('soundBtn').textContent = soundOn ? t.navSoundOn : t.navSoundOff;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerHTML = t[key];
+      });
+
+      document.getElementById('appMainTitle').innerText = t.brandTitle;
+      document.getElementById('appSubTitle').innerText = t.brandSub;
+      document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+
+      const pView = document.getElementById('projectorView');
+      const isTrans = pView && pView.classList.contains('transparent-mode');
+      const bgBtn = document.getElementById('projBgBtn');
+      if (bgBtn) {
+        bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
+      }
+      
+      updateUI();
     }
 
     function sanitizeList(raw) {
@@ -1589,17 +1762,18 @@
       return Object.values(raw).filter(Boolean);
     }
 
-    // PURE RECONSTRUCTION: DETERMINISTIC POOL (PREVENTS EMPTY ARRAYS)
-    function rebuildPool() {
-      const wonSet = new Set(winners);
-      const recycledSet = new Set(recycleBin.map(r => r.ticket));
-      pool = [];
+    // DETERMINISTIC POOL GENERATOR (NEVER FAILS OR BLOCKS CLICKS)
+    function getAvailablePool() {
+      const wonSet = new Set(sanitizeList(winners));
+      const recycledSet = new Set(sanitizeList(recycleBin).map(r => r.ticket));
+      const available = [];
       for (let i = poolStart; i <= poolEnd; i++) {
         const s = String(i).padStart(4, '0');
         if (!wonSet.has(s) && !recycledSet.has(s)) {
-          pool.push(s);
+          available.push(s);
         }
       }
+      return available;
     }
 
     function editPoolSize() {
@@ -1610,7 +1784,6 @@
       if (isNaN(parsed) || parsed <= poolStart) return alert("Invalid Number!");
       poolEnd = parsed;
 
-      rebuildPool();
       updateUI();
       saveAndBroadcast();
     }
@@ -1657,7 +1830,6 @@
 
     function saveAndBroadcast() {
       const payload = getPayload();
-      lastAppliedTimestamp = payload.timestamp;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
@@ -1665,7 +1837,7 @@
         if (!isViewerMode) {
           isPushingFirebase = true;
           syncRef.set(payload)
-            .catch((err) => console.warn("Firebase Write Warning:", err))
+            .catch((err) => console.warn("Firebase Write Error:", err))
             .finally(() => { setTimeout(() => { isPushingFirebase = false; }, 100); });
         } else {
           syncRef.child('claimedWinners').set(payload.claimedWinners).catch(() => {});
@@ -1686,12 +1858,7 @@
     }
 
     function applyStateData(d) {
-      if (!d || isApplyingState) return;
-      if (d.timestamp && d.timestamp <= lastAppliedTimestamp) return;
-      isApplyingState = true;
-
-      if (d.timestamp) lastAppliedTimestamp = d.timestamp;
-
+      if (!d) return;
       winners = sanitizeList(d.winners);
       claimedWinners = sanitizeList(d.claimedWinners);
       recycleBin = sanitizeList(d.recycleBin);
@@ -1715,12 +1882,7 @@
       if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
 
-      try {
-        rebuildPool();
-        updateUI();
-      } finally {
-        isApplyingState = false;
-      }
+      updateUI();
     }
 
     syncChannel.onmessage = (event) => {
@@ -1762,15 +1924,9 @@
           const val = snapshot.val();
           if (val) {
             applyStateData(val);
-          } else if (!isViewerMode && !hasInitialized) {
-            hasInitialized = true;
-            rebuildPool();
+          } else if (!isViewerMode) {
             updateUI();
             saveAndBroadcast();
-          } else if (!hasInitialized) {
-            hasInitialized = true;
-            rebuildPool();
-            updateUI();
           }
         });
 
@@ -1831,20 +1987,22 @@
       }
     }
 
-    // MODE 1: BATCH 10 DRAW (INSTANT SAFE DRAW)
+    // MODE 1: BATCH 10 DRAW (GUARANTEED NON-FREEZING)
     function drawTen() {
       if (isViewerMode) return;
-      rebuildPool();
+      const candidates = getAvailablePool();
       const quota = maxPrizes - winners.length;
-      if (quota <= 0) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
 
-      const toPick = Math.min(10, quota, pool.length);
-      if (toPick <= 0) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      if (quota <= 0 || candidates.length === 0) {
+        return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      }
 
+      const count = Math.min(10, quota, candidates.length);
       const batch = [];
-      for (let i = 0; i < toPick; i++) {
-        const idx = Math.floor(Math.random() * pool.length);
-        const picked = pool.splice(idx, 1)[0];
+
+      for (let i = 0; i < count; i++) {
+        const idx = Math.floor(Math.random() * candidates.length);
+        const picked = candidates.splice(idx, 1)[0];
         batch.push(picked);
         winners.push(picked);
       }
@@ -1865,13 +2023,12 @@
 
       playFestiveGong();
       triggerConfetti();
-      rebuildPool();
       updateUI();
       saveAndBroadcast();
-      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
+      showToast(`已成功抽出 10 位幸运儿！`);
     }
 
-    // MODE 2: VIP SINGLE PICKER
+    // MODE 2: VIP ROLLER
     function toggleVip() {
       if (isViewerMode) return;
       if (isRolling) stopVip();
@@ -1880,9 +2037,10 @@
 
     function startVip() {
       if (isViewerMode) return;
-      rebuildPool();
-      if (winners.length >= maxPrizes) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
-      if (pool.length === 0) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      const candidates = getAvailablePool();
+      if (winners.length >= maxPrizes || candidates.length === 0) {
+        return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      }
 
       isRolling = true;
       const btn = document.getElementById('vipToggleBtn');
@@ -1891,8 +2049,8 @@
       btn.style.color = "#fff";
 
       rollTimer = setInterval(() => {
-        const tempIdx = Math.floor(Math.random() * pool.length);
-        document.getElementById('vipDisplay').textContent = pool[tempIdx] || "----";
+        const tempIdx = Math.floor(Math.random() * candidates.length);
+        document.getElementById('vipDisplay').textContent = candidates[tempIdx] || "----";
         playTick();
       }, 50);
     }
@@ -1907,16 +2065,15 @@
       btn.style.background = "";
       btn.style.color = "";
 
-      rebuildPool();
-      if (pool.length === 0) return;
-      const finalIdx = Math.floor(Math.random() * pool.length);
-      const picked = pool.splice(finalIdx, 1)[0];
+      const candidates = getAvailablePool();
+      if (candidates.length === 0) return;
+      const finalIdx = Math.floor(Math.random() * candidates.length);
+      const picked = candidates.splice(finalIdx, 1)[0];
       winners.push(picked);
 
       document.getElementById('vipDisplay').textContent = picked;
       playFestiveGong();
       triggerConfetti();
-      rebuildPool();
       updateUI();
       saveAndBroadcast();
       showToast(`🏆 ${picked}`);
@@ -1944,42 +2101,41 @@
       }
 
       winners.push(val);
-      rebuildPool();
       input.value = '';
       playFestiveGong();
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`✓ ${val}`);
+      showToast(`Ticket #${val} added!`);
     }
 
     function drawSingleManual() {
       if (isViewerMode) return;
-      rebuildPool();
-      if (winners.length >= maxPrizes) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
-      if (pool.length === 0) return alert("Empty pool!");
+      const candidates = getAvailablePool();
+      if (winners.length >= maxPrizes || candidates.length === 0) {
+        return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      }
 
-      const finalIdx = Math.floor(Math.random() * pool.length);
-      const picked = pool.splice(finalIdx, 1)[0];
+      const finalIdx = Math.floor(Math.random() * candidates.length);
+      const picked = candidates.splice(finalIdx, 1)[0];
       winners.push(picked);
 
       playFestiveGong();
       triggerConfetti();
-      rebuildPool();
       updateUI();
       saveAndBroadcast();
-      showToast(`Replacement: ${picked}`);
+      showToast(`Replacement drawn: ${picked}`);
     }
 
-    // ONE-CLICK REDRAW & REPLACEMENT
+    // ONE-CLICK REDRAW
     function promptRedrawSlot(ticketNum, index) {
       if (isViewerMode) {
         openSpotlight(ticketNum, index + 1);
         return;
       }
 
-      rebuildPool();
-      if (pool.length === 0) {
+      const candidates = getAvailablePool();
+      if (candidates.length === 0) {
         showToast("No backup tickets left in pool!", true);
         return false;
       }
@@ -1987,8 +2143,8 @@
       const confirmed = confirm(`Prize #${index + 1}: Ticket [${ticketNum}] forfeited? Click OK to replace in-place!`);
 
       if (confirmed) {
-        const newIdx = Math.floor(Math.random() * pool.length);
-        const replacement = pool.splice(newIdx, 1)[0];
+        const newIdx = Math.floor(Math.random() * candidates.length);
+        const replacement = candidates.splice(newIdx, 1)[0];
 
         recycleBin.unshift({
           ticket: ticketNum,
@@ -2014,7 +2170,6 @@
           document.getElementById('spotlightSub').textContent = `${I18N[currentLang].prizeItemPrefix.replace('{seq}', index + 1)} · [${replacement}]`;
         }
 
-        rebuildPool();
         playFestiveGong();
         triggerConfetti();
         updateUI();
@@ -2033,7 +2188,6 @@
       }
     }
 
-    // TOGGLE CLAIMED STATUS
     function toggleClaimCurrentSpotlight() {
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
@@ -2050,7 +2204,6 @@
       }
     }
 
-    // RANGE FILTER LOGIC
     function applyRangeFilter() {
       filterType = document.getElementById('filterModeSelect').value;
       const sVal = document.getElementById('rangeStart').value.trim();
@@ -2168,7 +2321,6 @@
       link.click();
     }
 
-    // SPOTLIGHT VERIFICATION
     function openSpotlight(ticket, seq) {
       activeSpotlightTicket = ticket;
       activeSpotlightIndex = seq - 1;
@@ -2297,7 +2449,6 @@
     function restoreToPool(ticket, index) {
       if (isViewerMode) return;
       recycleBin.splice(index, 1);
-      rebuildPool();
       updateUI();
       renderRecycleList();
       saveAndBroadcast();
@@ -2309,7 +2460,6 @@
       if (winners.length >= maxPrizes) maxPrizes++;
       recycleBin.splice(index, 1);
       winners.push(ticket);
-      rebuildPool();
       updateUI();
       renderRecycleList();
       saveAndBroadcast();
@@ -2325,19 +2475,15 @@
       const input = document.getElementById('blacklistInput');
       let val = input.value.trim().padStart(4, '0');
       if (!val) return;
-      const idx = pool.indexOf(val);
-      if (idx !== -1) {
-        recycleBin.unshift({
-          ticket: val,
-          originalSeq: 'Excluded',
-          time: new Date().toLocaleTimeString()
-        });
-        rebuildPool();
-        input.value = '';
-        updateUI();
-        saveAndBroadcast();
-        showToast(`Excluded #${val}`);
-      }
+      recycleBin.unshift({
+        ticket: val,
+        originalSeq: 'Excluded',
+        time: new Date().toLocaleTimeString()
+      });
+      input.value = '';
+      updateUI();
+      saveAndBroadcast();
+      showToast(`Excluded #${val}`);
     }
 
     function downloadBackupJSON() {
@@ -2357,7 +2503,7 @@
       reader.onload = (e) => {
         try {
           const d = JSON.parse(e.target.result);
-          if (d) {
+          if (d && (d.winners || d.recycleBin)) {
             applyStateData(d);
             saveAndBroadcast();
             toggleCrisisModal(false);
@@ -2370,7 +2516,7 @@
       reader.readAsText(file);
     }
 
-    // MULTI-ROW FULL PROJECTION & SINGLE ROW PIP ENGINE
+    // MULTI-ROW PROJECTION & SINGLE ROW PIP ENGINE
     function renderScrollers() {
       const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
       const t = I18N[currentLang];
@@ -2383,14 +2529,12 @@
               <div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>
             </div>`;
           projRowPositions = [0];
-          cachedProjWidths = [0];
         } else if (filtered.length === 0) {
           projBody.innerHTML = `
             <div class="proj-multi-row" style="justify-content:center;">
               <div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>
             </div>`;
           projRowPositions = [0];
-          cachedProjWidths = [0];
         } else {
           const winHeight = window.innerHeight;
           let rowCount = 2;
@@ -2428,11 +2572,9 @@
           if (projRowPositions.length !== rowCount) {
             projRowPositions = Array.from({ length: rowCount }, () => 0);
           }
-          cachedProjWidths = Array.from({ length: rowCount }, () => 0);
         }
       }
 
-      // Render Desktop PiP (Single row only)
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2449,17 +2591,14 @@
               `).join('');
             }
             pipTrack.innerHTML = cardsHtml + cardsHtml + cardsHtml;
-            cachedPipWidth = pipTrack.scrollWidth / 3;
           }
         } catch (e) {}
       }
 
-      // Render Left Running Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (opTrack) {
         if (filtered.length === 0) {
           opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
-          cachedOpHeight = 0;
         } else {
           const opCards = filtered.map(item => `
             <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
@@ -2471,18 +2610,8 @@
             </div>
           `).join('');
           opTrack.innerHTML = opCards + opCards;
-          cachedOpHeight = opTrack.scrollHeight / 2;
         }
       }
-    }
-
-    function scheduleRenderScrollers() {
-      if (renderScrollersPending) return;
-      renderScrollersPending = true;
-      requestAnimationFrame(() => {
-        renderScrollersPending = false;
-        renderScrollers();
-      });
     }
 
     function animateScrollers() {
@@ -2492,10 +2621,7 @@
           if (track && track.children.length > 0) {
             const speed = projSpeedPx * (1 + (rIdx * 0.08));
             projRowPositions[rIdx] += speed;
-            if (cachedProjWidths[rIdx] <= 0) {
-              cachedProjWidths[rIdx] = track.scrollWidth / 3;
-            }
-            const singleSetWidth = cachedProjWidths[rIdx];
+            const singleSetWidth = track.scrollWidth / 3;
             if (projRowPositions[rIdx] >= singleSetWidth) {
               projRowPositions[rIdx] = 0;
             }
@@ -2509,10 +2635,7 @@
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack && pipTrack.children.length > 0) {
             pipScrollPos += projSpeedPx;
-            if (cachedPipWidth <= 0) {
-              cachedPipWidth = pipTrack.scrollWidth / 3;
-            }
-            const singleSetWidth = cachedPipWidth;
+            const singleSetWidth = pipTrack.scrollWidth / 3;
             if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
             pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
           }
@@ -2522,10 +2645,7 @@
       const opTrack = document.getElementById('opCrawlTrack');
       if (!isOpPaused && opTrack && winners.length > 0) {
         opScrollPos += opSpeedPx;
-        if (cachedOpHeight <= 0) {
-          cachedOpHeight = opTrack.scrollHeight / 2;
-        }
-        const halfOp = cachedOpHeight;
+        const halfOp = opTrack.scrollHeight / 2;
         if (opScrollPos >= halfOp) opScrollPos = 0;
         opTrack.style.transform = `translateY(-${opScrollPos}px)`;
       }
@@ -2539,7 +2659,8 @@
     document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
 
     function updateUI() {
-      document.getElementById('poolCount').textContent = pool.length;
+      const available = getAvailablePool();
+      document.getElementById('poolCount').textContent = available.length;
       document.getElementById('poolMaxLabel').textContent = poolEnd;
       document.getElementById('wonCount').textContent = winners.length;
       document.getElementById('maxPrizesLabel').textContent = maxPrizes;
@@ -2562,7 +2683,7 @@
         ribbon.style.background = "linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%)";
       }
 
-      const exhausted = winners.length >= maxPrizes || pool.length === 0;
+      const exhausted = winners.length >= maxPrizes || available.length === 0;
       const drawBtn = document.getElementById('batchDrawBtn');
       const vipBtn = document.getElementById('vipToggleBtn');
       if (drawBtn && !isViewerMode) drawBtn.disabled = exhausted;
@@ -2585,7 +2706,7 @@
         `).join('');
       }
 
-      scheduleRenderScrollers();
+      renderScrollers();
     }
 
     function searchTicket(val) {
@@ -2684,7 +2805,7 @@
           activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
           pipScrollPos = 0;
           renderScrollers();
-          showToast(currentLang === 'BM' ? 'Bar PiP 1-Baris Dibuka!' : (currentLang === 'BI' ? '1-Row PiP Opened!' : '已开启单行桌面悬浮条！'));
+          showToast("PiP Bar Opened!");
           return;
         } catch (err) {}
       }
@@ -2720,7 +2841,6 @@
         voidAuditLogs = [];
         filterActive = false;
         isSuspenseMode = false;
-        rebuildPool();
         document.getElementById('batchGrid').innerHTML = `
           <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
@@ -2734,10 +2854,6 @@
     }
 
     function triggerConfetti() {
-      if (activeConfettiId !== null) {
-        cancelAnimationFrame(activeConfettiId);
-        activeConfettiId = null;
-      }
       const canvas = document.getElementById('confettiCanvas');
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
@@ -2776,14 +2892,10 @@
           ctx.stroke();
         });
         frames++;
-        if (frames < 80) {
-          activeConfettiId = requestAnimationFrame(render);
-        } else {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          activeConfettiId = null;
-        }
+        if (frames < 80) requestAnimationFrame(render);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
-      activeConfettiId = requestAnimationFrame(render);
+      render();
     }
 
     window.addEventListener('beforeunload', (e) => {
@@ -2793,21 +2905,8 @@
       }
     });
 
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select') {
-          e.preventDefault();
-          toggleVip();
-        }
-      }
-    });
-
     window.addEventListener('resize', () => {
-      cachedProjWidths = [];
-      cachedOpHeight = 0;
-      cachedPipWidth = 0;
-      scheduleRenderScrollers();
+      renderScrollers();
     });
 
     function toggleSyncModal(show) {
@@ -2822,14 +2921,13 @@
       });
     }
 
-    // STARTUP LIFECYCLE
+    // BOOTSTRAP
     if (!load()) {
-      rebuildPool();
+      updateUI();
     }
     checkProjectionModeFromURL();
     setupFirebaseConnection();
     applyLanguageUI();
-    updateUI();
     requestAnimationFrame(animateScrollers);
   </script>
 </body>
