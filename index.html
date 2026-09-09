@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>🏮 中秋提灯节庆典幸运大抽奖 🏮</title>
-  <!-- Free CDN for PeerJS & QRCode (Enables multi-device P2P cloud sync without a backend server) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+  <!-- Fast, reliable MQTT over WSS client + QRCode generator (Works on all devices across any network) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style id="mainStyles">
     :root {
@@ -482,7 +482,7 @@
       box-shadow: none;
     }
 
-    /* Mode 1: 10-Grid Responsive */
+    /* Mode 1: 10-Grid */
     .batch-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -893,7 +893,7 @@
       color: #000;
     }
 
-    /* P2P SYNC MODAL */
+    /* P2P CLOUD SYNC TAGS */
     .p2p-status-tag {
       display: inline-block;
       padding: 3px 8px;
@@ -1130,11 +1130,11 @@
   <canvas id="confettiCanvas"></canvas>
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- MULTI-USER P2P SYNC MODAL -->
+  <!-- MULTI-USER CLOUD SYNC MODAL -->
   <div class="modal-backdrop" id="syncModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:#00cec9;">📡 跨设备多机实时云同步 (P2P Room)</h3>
+        <h3 style="color:#00cec9;">📡 跨设备多机实时云同步 (Cloud Sync)</h3>
         <button class="icon-btn" onclick="toggleSyncModal(false)">✕ 关闭</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
@@ -1279,7 +1279,7 @@
       </div>
 
       <div class="top-actions">
-        <!-- P2P Multi-Device Cloud Sync Button -->
+        <!-- P2P Cloud Sync Button -->
         <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn">📡 联机大厅</button>
         <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" title="开启后大屏投影处于神秘保密状态，避免提前穿帮">🔒 隐蔽模式: 关</button>
         <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)">♻️ 回收站 (<span id="recycleBtnCount">0</span>)</button>
@@ -1450,7 +1450,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v15_webrtc_sync";
+    const STORAGE_KEY = "tanglung_stage_v16_mqtt_fixed";
     const CHANNEL_NAME = "tanglung_sync_channel";
 
     let pool = [];
@@ -1479,10 +1479,12 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
 
-    // WebRTC PeerJS State
-    let peer = null;
+    // ==========================================================
+    // RELIABLE MQTT OVER SECURE WEBSOCKET PUBSUB
+    // ==========================================================
+    let mqttClient = null;
+    let activeRoomTopic = null;
     let isHost = false;
-    let peerConnections = [];
 
     const syncChannel = new BroadcastChannel(CHANNEL_NAME);
     let audioCtx = null;
@@ -1649,16 +1651,19 @@
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       
-      // 1. Broadcast locally (cross tabs)
+      // 1. Cross-tab local broadcast
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
-      // 2. Broadcast via WebRTC P2P to other computers if host
-      if (isHost && peerConnections.length > 0) {
-        peerConnections.forEach(conn => {
-          if (conn.open) {
-            conn.send({ type: 'UPDATE_STATE', data: payload });
-          }
-        });
+      // 2. Cross-device cloud sync via MQTT WebSocket
+      if (mqttClient && mqttClient.isConnected() && activeRoomTopic && isHost) {
+        try {
+          const message = new Paho.MQTT.Message(JSON.stringify({ type: 'UPDATE_STATE', data: payload }));
+          message.destinationName = activeRoomTopic;
+          message.retained = true; // Retain state so new screens instantly sync on join
+          mqttClient.send(message);
+        } catch (e) {
+          console.warn("MQTT Publish Error:", e);
+        }
       }
     }
 
@@ -1695,9 +1700,9 @@
       winners = d.winners;
       recycleBin = d.recycleBin || [];
       voidAuditLogs = d.voidAuditLogs || [];
-      if (d.maxPrizes) maxPrizes = d.maxPrizes;
-      if (d.poolStart) poolStart = d.poolStart;
-      if (d.poolEnd) poolEnd = d.poolEnd;
+      if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
+      if (d.poolStart) poolStart = Number(d.poolStart);
+      if (d.poolEnd) poolEnd = Number(d.poolEnd);
       if (typeof d.filterActive === 'boolean') filterActive = d.filterActive;
       if (d.filterStartVal !== undefined) filterStartVal = d.filterStartVal;
       if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
@@ -2277,7 +2282,7 @@
     }
 
     // ==============================================================
-    // PEERJS WEBRTC MULTI-DEVICE CLOUD SYNC (ZERO SERVER SETUP)
+    // ROBUST MQTT WEBSOCKET PUBSUB ENGINE (NO MORE WEBRTC NAT CRASHES)
     // ==============================================================
     function toggleSyncModal(show) {
       document.getElementById('syncModal').style.display = show ? 'flex' : 'none';
@@ -2291,91 +2296,90 @@
       if (status === 'connected') {
         navBtn.style.background = '#27ae60';
         navBtn.textContent = '📡 联机中 (已同步)';
+      } else if (status === 'waiting') {
+        navBtn.style.background = '#e67e22';
+        navBtn.textContent = '📡 连接中...';
       }
     }
 
-    function startHostRoom() {
-      if (peer) peer.destroy();
-      const hostId = "tanglung-" + Math.floor(1000 + Math.random() * 9000);
-      peer = new Peer(hostId);
+    function initMQTTClient(roomId, asHost) {
+      if (mqttClient) {
+        try { mqttClient.disconnect(); } catch(e) {}
+      }
 
-      peer.on('open', (id) => {
-        isHost = true;
-        updateP2PStatus('waiting', `主控房就绪 (房间号: ${id})`);
-        document.getElementById('p2pPeerId').textContent = `房间码: ${id}`;
-        
-        // Build share link & QR code
-        const shareUrl = new URL(window.location.href);
-        shareUrl.searchParams.set('join', id);
-        document.getElementById('shareLinkInput').value = shareUrl.toString();
-        
-        document.getElementById('qrSection').style.display = 'flex';
-        const qrContainer = document.getElementById('qrcode');
-        qrContainer.innerHTML = '';
-        new QRCode(qrContainer, {
-          text: shareUrl.toString(),
-          width: 140,
-          height: 140
-        });
+      isHost = asHost;
+      activeRoomTopic = "tanglung/festival/room/" + roomId;
+      const clientId = "client_" + (asHost ? "host_" : "sub_") + Math.random().toString(16).substr(2, 8);
 
-        showToast(`主控房间创建成功！房间码：${id}`);
-      });
+      // Connect securely via WSS over port 8884
+      mqttClient = new Paho.MQTT.Client("broker.hivemq.com", 8884, "/mqtt", clientId);
 
-      peer.on('connection', (conn) => {
-        peerConnections.push(conn);
-        conn.on('open', () => {
-          updateP2PStatus('connected', `已联机 (当前连接数: ${peerConnections.length})`);
-          showToast("有新设备成功连入当前大奖控台！");
-          // Send current state to newly joined device immediately
-          saveAndBroadcast();
-        });
-        conn.on('close', () => {
-          peerConnections = peerConnections.filter(c => c !== conn);
-          updateP2PStatus(peerConnections.length > 0 ? 'connected' : 'waiting', `已联机 (连接数: ${peerConnections.length})`);
-        });
-      });
+      mqttClient.onConnectionLost = (responseObject) => {
+        updateP2PStatus('disconnected', '连接中断，3秒后自动重试...');
+        setTimeout(() => initMQTTClient(roomId, asHost), 3000);
+      };
 
-      peer.on('error', (err) => {
-        console.warn("PeerJS Host Error:", err);
-        updateP2PStatus('disconnected', `连接异常: ${err.type || '重试中'}`);
+      mqttClient.onMessageArrived = (message) => {
+        try {
+          const payload = JSON.parse(message.payloadString);
+          if (payload && payload.type === 'UPDATE_STATE') {
+            // Apply state directly
+            applyIncomingState(payload.data);
+          }
+        } catch (e) {
+          console.warn("MQTT Parse error:", e);
+        }
+      };
+
+      updateP2PStatus('waiting', '正在连入公共加密云节点 (WSS)...');
+
+      mqttClient.connect({
+        useSSL: true,
+        timeout: 10,
+        keepAliveInterval: 30,
+        cleanSession: false,
+        onSuccess: () => {
+          updateP2PStatus('connected', `已成功接入房间: ${roomId}`);
+          document.getElementById('p2pPeerId').textContent = `房间码: ${roomId}`;
+          showToast(`跨设备云同步成功连接！房间: ${roomId}`);
+          
+          mqttClient.subscribe(activeRoomTopic, { qos: 0 });
+
+          // If Host, broadcast current state right away
+          if (isHost) {
+            saveAndBroadcast();
+          }
+        },
+        onFailure: (err) => {
+          updateP2PStatus('disconnected', `连接失败: ${err.errorMessage || '请检查网络'}`);
+          setTimeout(() => initMQTTClient(roomId, asHost), 4000);
+        }
       });
     }
 
-    function connectToHost(hostId) {
-      if (peer) peer.destroy();
-      peer = new Peer();
+    function startHostRoom() {
+      const roomId = "tanglung-" + Math.floor(1000 + Math.random() * 9000);
+      initMQTTClient(roomId, true);
 
-      peer.on('open', () => {
-        updateP2PStatus('waiting', `正在连接主控房间 【${hostId}】...`);
-        const conn = peer.connect(hostId);
-
-        conn.on('open', () => {
-          isHost = false;
-          updateP2PStatus('connected', `已成功同步至主控机 (${hostId})`);
-          showToast(`已成功连入主控机，开始实时同屏更新！`);
-        });
-
-        conn.on('data', (data) => {
-          if (data && data.type === 'UPDATE_STATE') {
-            applyIncomingState(data.data);
-          }
-        });
-
-        conn.on('close', () => {
-          updateP2PStatus('disconnected', `与主控机连接断开，正在重连...`);
-          setTimeout(() => connectToHost(hostId), 3000);
-        });
-
-        conn.on('error', () => {
-          updateP2PStatus('disconnected', `连接失败，请确认主控机仍在运行！`);
-        });
+      // Build share link & QR code
+      const shareUrl = new URL(window.location.href);
+      shareUrl.searchParams.set('room', roomId);
+      document.getElementById('shareLinkInput').value = shareUrl.toString();
+      
+      document.getElementById('qrSection').style.display = 'flex';
+      const qrContainer = document.getElementById('qrcode');
+      qrContainer.innerHTML = '';
+      new QRCode(qrContainer, {
+        text: shareUrl.toString(),
+        width: 140,
+        height: 140
       });
     }
 
     function joinClientRoomPrompt() {
-      const room = prompt("请输入主控机显示的 4 位房间码或完整 ID (如 tanglung-8888):");
-      if (room) {
-        connectToHost(room.trim());
+      const room = prompt("请输入主控机显示的房间码 (例如: tanglung-8888):");
+      if (room && room.trim()) {
+        initMQTTClient(room.trim(), false);
       }
     }
 
@@ -2389,9 +2393,9 @@
 
     function checkUrlForAutoJoin() {
       const params = new URLSearchParams(window.location.search);
-      const joinRoom = params.get('join');
-      if (joinRoom) {
-        connectToHost(joinRoom.trim());
+      const roomParam = params.get('room') || params.get('join');
+      if (roomParam) {
+        initMQTTClient(roomParam.trim(), false);
       }
     }
 
@@ -2659,7 +2663,6 @@
             height: 90
           });
 
-          // Inject styles without crashing CORS
           const pipStyle = activePipWindow.document.createElement('style');
           const mainStyleEl = document.getElementById('mainStyles');
           pipStyle.textContent = mainStyleEl ? mainStyleEl.textContent : '';
@@ -2697,7 +2700,6 @@
         }
       }
 
-      // Universal Popup Fallback
       const popupUrl = new URL(window.location.href);
       popupUrl.searchParams.set('projection', 'true');
       const popup = window.open(
