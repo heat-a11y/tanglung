@@ -354,12 +354,6 @@
       font-family: monospace;
     }
 
-    .crawl-card .crawl-hint {
-      font-size: 0.7rem;
-      color: #ffdca8;
-      opacity: 0.7;
-    }
-
     .crawl-controls {
       background: #100102;
       border-top: 1px solid rgba(244, 196, 48, 0.3);
@@ -982,6 +976,7 @@
       color: var(--cinnabar-red);
     }
 
+    /* FULL WINDOW MULTI-ROW PROJECTION OVERLAY */
     #projectorView {
       display: none;
       position: fixed;
@@ -1054,25 +1049,29 @@
       position: relative;
       overflow: hidden;
       display: flex;
+      flex-direction: column;
       background: #190103;
       box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      padding: 10px 0;
+      justify-content: space-around;
     }
 
-    .proj-viewport {
+    .proj-multi-row {
       width: 100%;
-      height: 100%;
       position: relative;
       overflow: hidden;
       display: flex;
+      align-items: center;
+      flex: 1;
+      margin: 4px 0;
     }
 
-    .proj-body.horizontal .proj-track-wrapper {
+    .proj-track-row {
       display: flex;
       position: absolute;
-      top: 0;
+      top: 50%;
+      transform: translateY(-50%);
       left: 0;
-      height: 100%;
-      align-items: center;
       white-space: nowrap;
       will-change: transform;
     }
@@ -1085,7 +1084,7 @@
       display: inline-flex;
       align-items: center;
       gap: 12px;
-      margin: 0 8px;
+      margin: 0 10px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
 
@@ -1102,28 +1101,26 @@
       letter-spacing: 2px;
     }
 
-    .proj-body.vertical .proj-track-wrapper {
-      display: flex;
-      flex-direction: column;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
+    /* SINGLE-ROW STYLING DEDICATED TO DESKTOP PIP */
+    .pip-single-row-body {
+      height: 100%;
       width: 100%;
-      max-width: 550px;
+      display: flex;
+      align-items: center;
+      background: #140103;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .pip-track {
+      position: absolute;
+      display: flex;
+      height: 100%;
+      align-items: center;
+      white-space: nowrap;
       will-change: transform;
     }
 
-    .proj-body.vertical .proj-card {
-      margin: 6px 0;
-      justify-content: space-between;
-      display: flex;
-      padding: 12px 20px;
-    }
-    .proj-body.vertical .proj-card .p-num {
-      font-size: 2.2rem;
-    }
-
-    /* VIEWER MODE DISABLED STYLES */
     .viewer-disabled {
       opacity: 0.55 !important;
       cursor: not-allowed !important;
@@ -1160,7 +1157,7 @@
     </div>
   </div>
 
-  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP (ACCESSIBLE TO BOTH MASTER & VIEWERS) -->
+  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP (VIEWERS & MASTER CAN CLAIM) -->
   <div id="spotlightModal" onclick="closeSpotlight()">
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
@@ -1425,15 +1422,12 @@
   </div>
 
   <!-- ============================================================== -->
-  <!-- 2. PROJECTION & WIDGET OVERLAY SCREEN (Station 2 / Backdrop)   -->
+  <!-- 2. FULL WINDOW MULTI-ROW PROJECTION OVERLAY (Station 2)         -->
   <!-- ============================================================== -->
   <div id="projectorView">
     <div class="proj-toolbar">
-      <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影条</div>
+      <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影</div>
       <div class="proj-btn-group">
-        <button class="icon-btn" onclick="toggleWidgetOverlay()" data-i18n="btnToggleWidget">🖼️ 切换条形挂件/全屏</button>
-        <button class="icon-btn" onclick="toggleDockPosition()" data-i18n="btnToggleDock">↕ 置顶/置底</button>
-        <button class="icon-btn" onclick="toggleProjLayout()" data-i18n="btnToggleHV">⇄ 横向/竖向</button>
         <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">🌓 背景: 全彩纯黑</button>
         <button class="icon-btn" onclick="adjustProjSpeed(-15)">⏩</button>
         <button class="icon-btn" onclick="adjustProjSpeed(15)">⏪</button>
@@ -1442,10 +1436,9 @@
       </div>
     </div>
 
-    <div class="proj-body horizontal" id="projBody">
-      <div class="proj-viewport" id="projViewport">
-        <div class="proj-track-wrapper" id="projTrack"></div>
-      </div>
+    <!-- Multi-row full window container -->
+    <div class="proj-body" id="projBody">
+      <!-- Generated rows live here -->
     </div>
   </div>
 
@@ -1454,317 +1447,10 @@
     let currentLang = 'BC';
     let isViewerMode = false;
 
-    const I18N = {
-      BC: {
-        brandTitle: "中秋提灯节庆典 · 幸运大抽奖",
-        brandSub: "Tanglung Festival Grand Lucky Draw",
-        poolLabel: "号池",
-        wonLabel: "已抽出",
-        leftLabel: "剩余名额",
-        navSync: "📡 联机大厅",
-        navSuspenseOn: "🔒 隐蔽模式: 开",
-        navSuspenseOff: "🔒 隐蔽模式: 关",
-        navRecycle: "回收站",
-        navProj: "📽️ 大屏投影端",
-        navPip: "📌 桌面悬浮条",
-        navScript: "📋 司仪口播稿",
-        navCrisis: "🛠️ 应急",
-        navTestSound: "🔔 试音",
-        navSoundOn: "🔊 音效: 开",
-        navSoundOff: "🔇 音效: 关",
-        navFullscreen: "⛶ 全屏",
-        navReset: "↺ 重置",
-        leftBanner: "荣誉榜 · 点击号码直接核对",
-        crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
-        speedLabel: "滚动速度:",
-        fontLabel: "字体大小:",
-        tabBatch: "⚡ 十连抽模式 (10 Slots)",
-        tabVip: "👑 贵宾抽奖台 (VIP Slot)",
-        tabManual: "✍️ 手动录入 / 补抽 (Manual)",
-        btnDraw10: "🎲 摇出 10 位幸运儿",
-        batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
-        btnStartRoll: "开 始 滚 动",
-        btnStopRoll: "停！(STOP)",
-        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
-        vipSpaceHintViewer: "💡 观众端：实时观看主控台摇号中",
-        manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
-        manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
-        manualInputHint: "输入 1 至 4 位数字按回车或点确认",
-        btnConfirmManual: "✓ 确认手动录入",
-        btnDrawSingleManual: "🎲 现场补抽 1 个",
-        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
-        stageFooterRight: "现场专委会监制",
-        bbBanner: "中奖公布栏",
-        optBySeq: "按奖品位次 (Prize #)",
-        optByTicket: "按中奖票号 (Ticket #)",
-        rangeTo: "至",
-        btnFilterAll: "全部",
-        btnExportSegment: "💾 段导",
-        chipAll: "显示全部",
-        chipCustom: "自定义...",
-        btnFocusVerify: "聚焦核验",
-        bbEmpty: "暂无得奖数据",
-        syncTitle: "跨设备实时云同步",
-        syncStatusLabel: "连接状态:",
-        syncOffline: "离线",
-        syncConnected: "已连接 Firebase 云数据库",
-        scanQr: "副机 / 显示端扫码一键加入:",
-        copyLinkText: "或复制显示端链接分享给副机:",
-        btnCopyLink: "📋 复制显示端链接",
-        spotlightCongrats: "🎉 恭喜中奖 🎉",
-        btnCall10: "⏱️ 现场10秒呼叫",
-        btnVoidRedraw: "⚡ 作废重抽",
-        btnClose: "关 闭",
-        timerCalling: "⏱️ 领奖呼叫:",
-        secondsUnit: "秒",
-        btnRedrawNow: "⚡ 立即作废重抽",
-        btnCancel: "取消",
-        recycleTitle: "作废号码回收站",
-        recycleDesc: "所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：",
-        recycleEmpty: "回收站空空如也",
-        auditTitle: "无人认领 / 作废重抽审核记录",
-        auditEmpty: "暂无作废或重抽记录",
-        crisisTitle: "应急危机处置工具箱",
-        blacklistLabel: "🚫 临时剔除黑名单号码 (提前离场/失票):",
-        btnExclude: "剔除出池",
-        backupLabel: "💾 应急备份与热导入 (防电脑彻底死机):",
-        btnDownloadJson: "📥 下载完整状态 JSON",
-        btnRestoreJson: "📤 导入恢复状态",
-        sponsorLabel: "⚡ 赞助商突击加码:",
-        pacingConsolation: "🏮 当前环节：幸运安慰奖抽取 (DRAWS #1 - #{quota}) 🏮",
-        pacingGrand: "🌟 盛大环节：压轴特奖 (VIP 逐一揭晓) 🌟",
-        pacingDone: "🎉 圆满礼成：全部 {quota} 份大奖已全部抽出！ 🎉",
-        prizeItemPrefix: "第 {seq} 份奖品",
-        projWaiting: "准备就绪",
-        projSuspense: "★★★ 正在摇号，即将揭晓 ★★★",
-        btnToggleWidget: "🖼️ 切换条形挂件/全屏",
-        btnToggleDock: "↕ 置顶/置底",
-        btnToggleHV: "⇄ 横向/竖向",
-        btnToggleBgTrans: "🌓 背景: 全彩纯黑",
-        btnToggleBgSolid: "🌓 背景: 透明通道",
-        btnProjFs: "⛶ 全屏",
-        btnProjClose: "✕ 返回",
-        btnClaimVerify: "✓ 领奖核销 (Claim)",
-        btnClaimVerified: "✓ 已领奖 (Claimed)"
-      },
-      BM: {
-        brandTitle: "Pesta Tanglung · Cabutan Bertuah",
-        brandSub: "Grand Lucky Draw Festival Tanglung",
-        poolLabel: "Kolam",
-        wonLabel: "Disedut",
-        leftLabel: "Baki Hadiah",
-        navSync: "📡 Sync Bilik",
-        navSuspenseOn: "🔒 Mod Rahsia: On",
-        navSuspenseOff: "🔒 Mod Rahsia: Off",
-        navRecycle: "Tong Kitar",
-        navProj: "📽️ Skrin Projektor",
-        navPip: "📌 Bar Terapung",
-        navScript: "📋 Skrip Juruacara",
-        navCrisis: "🛠️ Kecemasan",
-        navTestSound: "🔔 Uji Bunyi",
-        navSoundOn: "🔊 Bunyi: On",
-        navSoundOff: "🔇 Bunyi: Mute",
-        navFullscreen: "⛶ Skrin Penuh",
-        navReset: "↺ Reset",
-        leftBanner: "Senarai Pemenang · Klik Nombor untuk Pengesahan",
-        crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
-        speedLabel: "Kelajuan:",
-        fontLabel: "Saiz Fon:",
-        tabBatch: "⚡ Cabut 10 Sekaligus",
-        tabVip: "👑 Pentas VIP (Satu persatu)",
-        tabManual: "✍️ Masuk Manual / Ganti",
-        btnDraw10: "🎲 Cabut 10 Pemenang",
-        batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
-        btnStartRoll: "Mula Putar",
-        btnStopRoll: "BERHENTI! (STOP)",
-        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
-        vipSpaceHintViewer: "💡 Mod Penonton: Menonton cabutan secara langsung",
-        manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
-        manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
-        manualInputHint: "Masukkan 1-4 digit nombor tiket",
-        btnConfirmManual: "✓ Sahkan Masukan",
-        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
-        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Segera Aktif",
-        stageFooterRight: "Jawatankuasa Pengelola",
-        bbBanner: "Papan Kenyataan Pemenang",
-        optBySeq: "Ikut Kedudukan Hadiah (#)",
-        optByTicket: "Ikut Nombor Tiket (#)",
-        rangeTo: "hingga",
-        btnFilterAll: "Semua",
-        btnExportSegment: "💾 Eksport",
-        chipAll: "Semua",
-        chipCustom: "Tersuai...",
-        btnFocusVerify: "Sahkan Tiket",
-        bbEmpty: "Tiada rekod pemenang",
-        syncTitle: "Sinkronisasi Firebase",
-        syncStatusLabel: "Status Sambungan:",
-        syncOffline: "Luar Talian",
-        syncConnected: "Tersambung Google RTDB",
-        scanQr: "Imbas QR untuk Sambung Pantas:",
-        copyLinkText: "Atau kongsi pautan ini:",
-        btnCopyLink: "📋 Salin Pautan",
-        spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
-        btnCall10: "⏱️ Panggilan 10 Saat",
-        btnVoidRedraw: "⚡ Batal & Cabut Semula",
-        btnClose: "Tutup",
-        timerCalling: "⏱️ Panggilan:",
-        secondsUnit: "saat",
-        btnRedrawNow: "⚡ Ganti Sekarang",
-        btnCancel: "Batal",
-        recycleTitle: "Tong Kitar Semula Nombor Batal",
-        recycleDesc: "Semua nombor yang dibatalkan atau pemilik tiada disimpan di sini:",
-        recycleEmpty: "Tong kitar kosong",
-        auditTitle: "Log Audit Pembatalan & Cabutan Semula",
-        auditEmpty: "Tiada rekod pembatalan",
-        crisisTitle: "Kotak Alat Kecemasan",
-        blacklistLabel: "🚫 Keluarkan Tiket Hilang/Awal Balik:",
-        btnExclude: "Keluarkan",
-        backupLabel: "💾 Simpanan Sandaran JSON:",
-        btnDownloadJson: "📥 Muat Turun JSON",
-        btnRestoreJson: "📤 Pulihkan JSON",
-        sponsorLabel: "⚡ Tambah Hadiah Penaja:",
-        pacingConsolation: "🏮 Fasa: Hadiah Saguhati (DRAWS #1 - #{quota}) 🏮",
-        pacingGrand: "🌟 Fasa: Hadiah Utama VIP 🌟",
-        pacingDone: "🎉 Selesai: Semua {quota} Hadiah Telah Dimenangi! 🎉",
-        prizeItemPrefix: "Hadiah #{seq}",
-        projWaiting: "Sedia Bermula",
-        projSuspense: "★★★ Sedang Berputar... Nantikan! ★★★",
-        btnToggleWidget: "🖼️ Tukar Bar/Penuh",
-        btnToggleDock: "↕ Atas/Bawah",
-        btnToggleHV: "⇄ Mengufuk/Menegak",
-        btnToggleBgTrans: "🌓 Latar: Warna Penuh",
-        btnToggleBgSolid: "🌓 Latar: Saluran Telus",
-        btnProjFs: "⛶ Skrin Penuh",
-        btnProjClose: "✕ Kembali",
-        btnClaimVerify: "✓ Sahkan Tuntutan (Claim)",
-        btnClaimVerified: "✓ Telah Dituntut (Claimed)"
-      },
-      BI: {
-        brandTitle: "Tanglung Lantern Festival · Lucky Draw",
-        brandSub: "Grand Annual Lantern Festival Celebration",
-        poolLabel: "Pool",
-        wonLabel: "Drawn",
-        leftLabel: "Prizes Left",
-        navSync: "📡 Cloud Sync",
-        navSuspenseOn: "🔒 Conceal: On",
-        navSuspenseOff: "🔒 Conceal: Off",
-        navRecycle: "Recycle Bin",
-        navProj: "📽️ Projection",
-        navPip: "📌 Desktop PiP",
-        navScript: "📋 Emcee Script",
-        navCrisis: "🛠️ Crisis Kit",
-        navTestSound: "🔔 Sound Test",
-        navSoundOn: "🔊 Audio: On",
-        navSoundOff: "🔇 Audio: Muted",
-        navFullscreen: "⛶ Fullscreen",
-        navReset: "↺ Reset All",
-        leftBanner: "Winners Board · Click to Verify",
-        crawlWaiting: "Lucky Draw has not started yet.<br>Best of luck to everyone!",
-        speedLabel: "Scroll Speed:",
-        fontLabel: "Font Size:",
-        tabBatch: "⚡ Batch 10 Slots",
-        tabVip: "👑 VIP Stage Slot",
-        tabManual: "✍️ Manual Entry / Replace",
-        btnDraw10: "🎲 Draw 10 Winners",
-        batchEmptyHint: "Click button above to draw 10 lucky winners",
-        btnStartRoll: "Start Rolling",
-        btnStopRoll: "STOP!",
-        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
-        vipSpaceHintViewer: "💡 Viewer Mode: Watching live draws from Host",
-        manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
-        manualDesc: "Strict duplicate check: automatically excludes already won numbers",
-        manualInputHint: "Type 1 to 4 digit ticket number",
-        btnConfirmManual: "✓ Confirm Entry",
-        btnDrawSingleManual: "🎲 Draw 1 Replacement",
-        stageFooterLeft: "Lantern Gala • Multi-Device Realtime Cloud Sync Active",
-        stageFooterRight: "Organizing Committee",
-        bbBanner: "Winners Billboard",
-        optBySeq: "By Prize Sequence (#)",
-        optByTicket: "By Ticket Number (#)",
-        rangeTo: "to",
-        btnFilterAll: "All",
-        btnExportSegment: "💾 Segment",
-        chipAll: "All Prizes",
-        chipCustom: "Custom...",
-        btnFocusVerify: "Verify",
-        bbEmpty: "No winners drawn yet",
-        syncTitle: "Firebase Realtime Sync",
-        syncStatusLabel: "Connection Status:",
-        syncOffline: "Offline",
-        syncConnected: "Connected to Firebase RTDB",
-        scanQr: "Scan QR code to join instantly:",
-        copyLinkText: "Or copy room share link:",
-        btnCopyLink: "📋 Copy Link",
-        spotlightCongrats: "🎉 CONGRATULATIONS! 🎉",
-        btnCall10: "⏱️ 10s Call Timer",
-        btnVoidRedraw: "⚡ Void & Redraw",
-        btnClose: "Close",
-        timerCalling: "⏱️ Calling:",
-        secondsUnit: "sec",
-        btnRedrawNow: "⚡ Redraw Now",
-        btnCancel: "Cancel",
-        recycleTitle: "Voided Tickets Recycle Bin",
-        recycleDesc: "All forfeited or absent tickets are archived here. Restore anytime if claimant returns:",
-        recycleEmpty: "Recycle bin is empty",
-        auditTitle: "Void & Redraw Audit Log",
-        auditEmpty: "No redraw history recorded",
-        crisisTitle: "Crisis Emergency Toolkit",
-        blacklistLabel: "🚫 Exclude Lost / Early Departure Tickets:",
-        btnExclude: "Exclude",
-        backupLabel: "💾 Backup & Hot Restore JSON:",
-        btnDownloadJson: "📥 Export JSON",
-        btnRestoreJson: "📤 Import JSON",
-        sponsorLabel: "⚡ Sponsor Quick Add Prizes:",
-        pacingConsolation: "🏮 Stage: Consolation Prizes (DRAWS #1 - #{quota}) 🏮",
-        pacingGrand: "🌟 Grand Stage: VIP Top Prizes 🌟",
-        pacingDone: "🎉 All {quota} Prizes Successfully Concluded! 🎉",
-        prizeItemPrefix: "Prize #{seq}",
-        projWaiting: "Ready to Draw",
-        projSuspense: "★★★ Drawing in Progress... Stay Tuned! ★★★",
-        btnToggleWidget: "🖼️ Toggle Bar/Fullscreen",
-        btnToggleDock: "↕ Dock Top/Bottom",
-        btnToggleHV: "⇄ Horizontal/Vertical",
-        btnToggleBgTrans: "🌓 Background: Full Color",
-        btnToggleBgSolid: "🌓 Background: Transparent",
-        btnProjFs: "⛶ Fullscreen",
-        btnProjClose: "✕ Return",
-        btnClaimVerify: "✓ Verify Claim",
-        btnClaimVerified: "✓ Claimed"
-      }
-    };
-
-    function changeLanguage(lang) {
-      currentLang = lang;
-      document.getElementById('langSelect').value = lang;
-      applyLanguageUI();
-      if (!isViewerMode) saveAndBroadcast();
-    }
-
-    function applyLanguageUI() {
-      const t = I18N[currentLang];
-      document.querySelectorAll('[data-i18n]').forEach(el => {
-        const key = el.getAttribute('data-i18n');
-        if (t[key]) el.innerHTML = t[key];
-      });
-
-      document.getElementById('appMainTitle').innerText = t.brandTitle;
-      document.getElementById('appSubTitle').innerText = t.brandSub;
-      document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
-
-      const pView = document.getElementById('projectorView');
-      const isTrans = pView && pView.classList.contains('transparent-mode');
-      const bgBtn = document.getElementById('projBgBtn');
-      if (bgBtn) {
-        bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
-      }
-      
-      updateUI();
-    }
-
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v27_stable";
+    const STORAGE_KEY = "tanglung_stage_v28_final";
 
     let pool = [];
     let winners = [];
@@ -1790,8 +1476,16 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
 
+    // Multi-row scrolling positions array
+    let projRowPositions = [];
+    let opScrollPos = 0;
+    let projSpeedPx = 1.3;
+    let opSpeedPx = 0.8;
+    let isProjPaused = false;
+    let isOpPaused = false;
+
     let syncRef = null;
-    const syncChannel = new BroadcastChannel('tanglung_sync_v27');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v28');
     let audioCtx = null;
 
     function showToast(msg, isError = false) {
@@ -1959,6 +1653,7 @@
     }
 
     function saveAndBroadcast() {
+      if (isViewerMode) return;
       const payload = getPayload();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
@@ -2070,7 +1765,6 @@
       }
     }
 
-    // VIEWER MODE: SHOW CENTER CONSOLE BUT DISABLE BUTTONS
     function enableViewerModeUI() {
       document.getElementById('p2pStatusTag').textContent = "显示端模式 (Viewer Mode - Read Only)";
       document.getElementById('appMainTitle').removeAttribute('contenteditable');
@@ -2098,6 +1792,7 @@
     }
 
     function switchTab(tab) {
+      if (isViewerMode) return;
       if (isRolling) stopVip();
       const btns = document.querySelectorAll('.tab-btn');
       btns[0].classList.toggle('active', tab === 'batch');
@@ -2147,7 +1842,7 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
+      showToast(`已成功抽出 10 位幸运儿！`);
     }
 
     // Mode 2: VIP Picker
@@ -2310,7 +2005,7 @@
       }
     }
 
-    // TOGGLE CLAIMED PRIZE STATUS (ALLOWED FOR BOTH MASTER & VIEWERS)
+    // TOGGLE CLAIMED PRIZE STATUS
     function toggleClaimCurrentSpotlight() {
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
@@ -2440,12 +2135,11 @@
       });
       const link = document.createElement("a");
       link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
-      const tag = filterActive ? `_${filterStartVal}-${filterEndVal}` : '_all';
-      link.download = `lucky_draw_segment${tag}.csv`;
+      link.download = `lucky_draw_segment.csv`;
       link.click();
     }
 
-    // SPOTLIGHT VERIFICATION (VIEWERS CAN CLAIM)
+    // SPOTLIGHT VERIFICATION
     function openSpotlight(ticket, seq) {
       activeSpotlightTicket = ticket;
       activeSpotlightIndex = seq - 1;
@@ -2523,7 +2217,6 @@
       document.getElementById('timerOverlay').style.display = 'none';
     }
 
-    // SUSPENSE MODE
     function toggleSuspenseMode() {
       if (isViewerMode) return;
       isSuspenseMode = !isSuspenseMode;
@@ -2534,7 +2227,6 @@
       saveAndBroadcast();
     }
 
-    // EMCEE SCRIPT
     function copyEmceeScript() {
       if (winners.length === 0) return alert("No winners yet!");
       const filtered = getFilteredWinnersList();
@@ -2545,7 +2237,6 @@
       }).catch(() => alert(script));
     }
 
-    // RECYCLE BIN
     function toggleRecycleModal(show) {
       document.getElementById('recycleModal').style.display = show ? 'flex' : 'none';
       renderRecycleList();
@@ -2601,7 +2292,6 @@
       showToast(`Restored #${ticket} as winner!`);
     }
 
-    // CRISIS TOOLS
     function toggleCrisisModal(show) {
       document.getElementById('crisisModal').style.display = show ? 'flex' : 'none';
     }
@@ -2656,49 +2346,100 @@
       reader.readAsText(file);
     }
 
-    // SCROLLER ENGINE (CLAIMED NUMBERS ARE OMITTED FROM LIVE STRIP & VIEWERS CAN VERIFY)
-    let projScrollPos = 0;
-    let opScrollPos = 0;
-    let projSpeedPx = 1.2;
-    let opSpeedPx = 0.8;
-    let isProjPaused = false;
-    let isOpPaused = false;
-
+    // ==============================================================
+    // MULTI-ROW PROJECTION & 1-ROW PIP ENGINE
+    // ==============================================================
     function renderScrollers() {
       const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
       const t = I18N[currentLang];
-      let cardsHtml = '';
 
-      if (isSuspenseMode) {
-        cardsHtml = `<div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>`;
-      } else if (filtered.length === 0) {
-        cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
-      } else {
-        cardsHtml = filtered.map(item => `
-          <div class="proj-card">
-            <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
-            <span class="p-num">${item.num}</span>
-          </div>
-        `).join('');
+      // 1. Render Multi-row Full Window Projection
+      const projBody = document.getElementById('projBody');
+      if (projBody) {
+        if (isSuspenseMode) {
+          projBody.innerHTML = `
+            <div class="proj-multi-row" style="justify-content:center;">
+              <div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>
+            </div>`;
+          projRowPositions = [0];
+        } else if (filtered.length === 0) {
+          projBody.innerHTML = `
+            <div class="proj-multi-row" style="justify-content:center;">
+              <div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>
+            </div>`;
+          projRowPositions = [0];
+        } else {
+          // Compute number of rows depending on screen height (from 2 up to 5 rows)
+          const winHeight = window.innerHeight;
+          let rowCount = 2;
+          if (winHeight >= 1000) rowCount = 5;
+          else if (winHeight >= 750) rowCount = 4;
+          else if (winHeight >= 550) rowCount = 3;
+
+          // Bucket cards into rows
+          const rowsCards = Array.from({ length: rowCount }, () => []);
+          filtered.forEach((item, idx) => {
+            rowsCards[idx % rowCount].push(item);
+          });
+
+          // Build HTML for each row
+          let html = '';
+          rowsCards.forEach((rowItems, rIdx) => {
+            let rowHtml = '';
+            if (rowItems.length === 0) {
+              rowHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
+            } else {
+              rowHtml = rowItems.map(item => `
+                <div class="proj-card">
+                  <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
+                  <span class="p-num">${item.num}</span>
+                </div>
+              `).join('');
+            }
+            html += `
+              <div class="proj-multi-row">
+                <div class="proj-track-row" id="projTrackRow_${rIdx}">
+                  ${rowHtml + rowHtml + rowHtml}
+                </div>
+              </div>`;
+          });
+          projBody.innerHTML = html;
+
+          if (projRowPositions.length !== rowCount) {
+            projRowPositions = Array.from({ length: rowCount }, () => 0);
+          }
+        }
       }
 
-      const projTrack = document.getElementById('projTrack');
-      if (projTrack) projTrack.innerHTML = cardsHtml + cardsHtml;
-
+      // 2. Render PiP (Strictly 1 Row)
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
-          if (pipTrack) pipTrack.innerHTML = cardsHtml + cardsHtml;
+          if (pipTrack) {
+            let cardsHtml = '';
+            if (filtered.length === 0) {
+              cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
+            } else {
+              cardsHtml = filtered.map(item => `
+                <div class="proj-card">
+                  <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
+                  <span class="p-num">${item.num}</span>
+                </div>
+              `).join('');
+            }
+            pipTrack.innerHTML = cardsHtml + cardsHtml + cardsHtml;
+          }
         } catch (e) {}
       }
 
+      // 3. Render Operator Left Running Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (opTrack) {
         if (filtered.length === 0) {
           opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
         } else {
           const opCards = filtered.map(item => `
-            <div class="crawl-card" title="Click to verify/redraw" onclick="openSpotlight('${item.num}', ${item.seq})">
+            <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
               <div>
                 <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
                 <div class="crawl-hint">⚡ ${I18N[currentLang].btnFocusVerify}</div>
@@ -2712,35 +2453,37 @@
     }
 
     function animateScrollers() {
-      const pBody = document.getElementById('projBody');
-      const projTrack = document.getElementById('projTrack');
-      const isHorizontal = pBody && pBody.classList.contains('horizontal');
-
-      if (!isProjPaused && projTrack && projTrack.children.length > 0) {
-        projScrollPos += projSpeedPx;
-        if (isHorizontal) {
-          const halfWidth = projTrack.scrollWidth / 2;
-          if (projScrollPos >= halfWidth) projScrollPos = 0;
-          projTrack.style.transform = `translateX(-${projScrollPos}px)`;
-        } else {
-          const halfHeight = projTrack.scrollHeight / 2;
-          if (projScrollPos >= halfHeight) projScrollPos = 0;
-          projTrack.style.transform = `translate(-50%, -${projScrollPos}px)`;
-        }
+      // 1. Animate Projection Rows Right-to-Left
+      if (!isProjPaused && projRowPositions.length > 0) {
+        projRowPositions.forEach((pos, rIdx) => {
+          const track = document.getElementById(`projTrackRow_${rIdx}`);
+          if (track && track.children.length > 0) {
+            // Give each row slight speed variety for natural visual rhythm
+            const speed = projSpeedPx * (1 + (rIdx * 0.08));
+            projRowPositions[rIdx] += speed;
+            const singleSetWidth = track.scrollWidth / 3;
+            if (projRowPositions[rIdx] >= singleSetWidth) {
+              projRowPositions[rIdx] = 0;
+            }
+            track.style.transform = `translateY(-50%) translateX(-${projRowPositions[rIdx]}px)`;
+          }
+        });
       }
 
+      // 2. Animate Desktop PiP 1-Row
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack && pipTrack.children.length > 0) {
             pipScrollPos += projSpeedPx;
-            const halfPip = pipTrack.scrollWidth / 2;
-            if (pipScrollPos >= halfPip) pipScrollPos = 0;
+            const singleSetWidth = pipTrack.scrollWidth / 3;
+            if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
             pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
           }
         } catch (e) {}
       }
 
+      // 3. Animate Left Vertical Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (!isOpPaused && opTrack && winners.length > 0) {
         opScrollPos += opSpeedPx;
@@ -2883,15 +2626,7 @@
     }
 
     function toggleProjLayout() {
-      const pBody = document.getElementById('projBody');
-      projScrollPos = 0;
-      if (pBody.classList.contains('horizontal')) {
-        pBody.classList.remove('horizontal');
-        pBody.classList.add('vertical');
-      } else {
-        pBody.classList.remove('vertical');
-        pBody.classList.add('horizontal');
-      }
+      // Re-trigger layout rebuild
       renderScrollers();
     }
 
@@ -2903,9 +2638,10 @@
       const bgBtn = document.getElementById('projBgBtn');
       const t = I18N[currentLang];
       bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
-      showToast(isTrans ? (currentLang === 'BM' ? 'Latar telus aktif' : (currentLang === 'BI' ? 'Transparent Mode Activated' : '已开启透明通道模式')) : (currentLang === 'BM' ? 'Latar penuh aktif' : (currentLang === 'BI' ? 'Full Color Background Activated' : '已开启全彩黑底模式')));
+      showToast(isTrans ? (currentLang === 'BM' ? 'Latar telus aktif' : (currentLang === 'BI' ? 'Transparent Mode Activated' : '已开启透明通道模式')) : (currentLang === 'BM' ? 'Latar penuh aktif' : (currentLang === 'BI' ? 'Full Color Background Activated' : '已开启全彩纯黑底色模式')));
     }
 
+    // DESKTOP PIP: STRICTLY 1 ROW
     async function openPiPOverlay() {
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
@@ -2925,23 +2661,20 @@
               margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
               overflow: hidden !important; background: #140103 !important;
             }
-            .proj-viewport { width: 100% !important; height: 100% !important; display: flex !important; }
-            .proj-track-wrapper { position: absolute !important; display: flex !important; height: 100% !important; align-items: center !important; }
           `;
           activePipWindow.document.head.appendChild(extraReset);
 
+          // Render strictly 1 row container for Desktop PiP
           activePipWindow.document.body.innerHTML = `
-            <div class="proj-body horizontal" style="height:100%; width:100%; display:flex; align-items:center; background:#140103;">
-              <div class="proj-viewport">
-                <div class="proj-track-wrapper" id="pipTrack"></div>
-              </div>
+            <div class="pip-single-row-body">
+              <div class="pip-track" id="pipTrack"></div>
             </div>
           `;
 
           activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
           pipScrollPos = 0;
           renderScrollers();
-          showToast("PiP Bar Opened!");
+          showToast(currentLang === 'BM' ? 'Bar PiP 1-Baris Dibuka!' : (currentLang === 'BI' ? '1-Row PiP Opened!' : '已开启单行桌面悬浮条！'));
           return;
         } catch (err) {}
       }
@@ -3050,6 +2783,10 @@
           toggleVip();
         }
       }
+    });
+
+    window.addEventListener('resize', () => {
+      renderScrollers();
     });
 
     function toggleSyncModal(show) {
