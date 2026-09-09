@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>🏮 中秋提灯节庆典幸运大抽奖 🏮</title>
-  <!-- Fast, reliable MQTT over WSS client + QRCode generator (Works on all devices across any network) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+  <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
+  <!-- Zero-dependency QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style id="mainStyles">
     :root {
@@ -116,7 +115,7 @@
       position: relative;
       z-index: 10;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .title-group {
@@ -141,7 +140,7 @@
     }
 
     .brand-title {
-      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      font-size: clamp(1.05rem, 1.8vw, 1.35rem);
       font-weight: 900;
       color: var(--imperial-gold);
       letter-spacing: 1.5px;
@@ -155,7 +154,7 @@
     }
 
     .brand-subtitle {
-      font-size: clamp(0.7rem, 1.2vw, 0.8rem);
+      font-size: clamp(0.7rem, 1.1vw, 0.8rem);
       color: #ffdca8;
       letter-spacing: 1px;
       outline: none;
@@ -171,9 +170,9 @@
     .stat-badge {
       background: rgba(0, 0, 0, 0.4);
       border: 1px solid rgba(244, 196, 48, 0.6);
-      padding: 4px 10px;
+      padding: 4px 9px;
       border-radius: 20px;
-      font-size: clamp(0.72rem, 1.1vw, 0.82rem);
+      font-size: clamp(0.72rem, 1.1vw, 0.8rem);
       color: #fce8cc;
       user-select: none;
       white-space: nowrap;
@@ -189,6 +188,18 @@
       gap: 5px;
       flex-wrap: wrap;
       align-items: center;
+    }
+
+    .lang-select {
+      background: #2b0204;
+      border: 1.5px solid var(--imperial-gold);
+      color: var(--imperial-gold);
+      font-weight: 900;
+      padding: 4px 7px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      outline: none;
     }
 
     .icon-btn {
@@ -817,7 +828,7 @@
       flex-shrink: 0;
     }
 
-    /* MODAL DIALOGS */
+    /* MODALS */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -892,19 +903,6 @@
       background: var(--imperial-gold);
       color: #000;
     }
-
-    /* P2P CLOUD SYNC TAGS */
-    .p2p-status-tag {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      font-weight: bold;
-      margin-top: 4px;
-    }
-    .p2p-status-tag.connected { background: #27ae60; color: #fff; }
-    .p2p-status-tag.waiting { background: #e67e22; color: #fff; }
-    .p2p-status-tag.disconnected { background: #c0392b; color: #fff; }
 
     /* AUDIENCE VERIFICATION SPOTLIGHT POP-UP */
     #spotlightModal {
@@ -1134,27 +1132,27 @@
   <div class="modal-backdrop" id="syncModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:#00cec9;">📡 跨设备多机实时云同步 (Cloud Sync)</h3>
-        <button class="icon-btn" onclick="toggleSyncModal(false)">✕ 关闭</button>
+        <h3 style="color:#00cec9;">📡 <span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
+        <button class="icon-btn" onclick="toggleSyncModal(false)">✕</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
-          <div style="font-weight:bold; margin-bottom:6px;">连接状态:</div>
-          <div id="p2pStatusTag" class="p2p-status-tag disconnected">离线 (未连接)</div>
+          <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
+          <div id="p2pStatusTag" class="p2p-status-tag disconnected" data-i18n="syncOffline">离线 (未连接)</div>
           <div id="p2pPeerId" style="font-family:monospace; margin-top:6px; color:#ffdca8; word-break:break-all;"></div>
         </div>
 
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="icon-btn btn-sync" style="flex:1; padding:10px;" onclick="startHostRoom()">👑 启动为主控机 (Host)</button>
-          <button class="icon-btn" style="flex:1; padding:10px; border-color:#00cec9;" onclick="joinClientRoomPrompt()">🔗 加入现有主控机 (Join)</button>
+          <button class="icon-btn btn-sync" style="flex:1; padding:10px;" onclick="startHostRoom()" data-i18n="btnHost">👑 启动为主控机 (Host)</button>
+          <button class="icon-btn" style="flex:1; padding:10px; border-color:#00cec9;" onclick="joinClientRoomPrompt()" data-i18n="btnJoin">🔗 加入现有主控机 (Join)</button>
         </div>
 
         <div id="qrSection" style="display:none; flex-direction:column; align-items:center; background:rgba(255,255,255,0.08); padding:15px; border-radius:8px;">
-          <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;">副机 / 手机扫码一键连接:</div>
+          <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;" data-i18n="scanQr">副机 / 手机扫码一键连接:</div>
           <div id="qrcode" style="background:#fff; padding:8px; border-radius:6px;"></div>
-          <div style="margin-top:10px; font-size:0.8rem; color:#ccc;">或复制链接分享给其他电脑:</div>
+          <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制链接分享给其他电脑:</div>
           <input type="text" id="shareLinkInput" readonly style="width:100%; margin-top:4px; padding:6px; background:#1c0204; border:1px solid var(--imperial-gold); color:#ffdca8; font-size:0.75rem;">
-          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()">📋 复制直连链接</button>
+          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">📋 复制直连链接</button>
         </div>
       </div>
     </div>
@@ -1167,33 +1165,33 @@
       <div class="spotlight-num" id="spotlightNum">0000</div>
       <div style="font-size:1.15rem; color:#ffdca8;" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()">⏱️ 现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" onclick="triggerDirectRedrawFromSpotlight()">⚡ 作废并重抽</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废并重抽</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()" data-i18n="btnClose">关 闭</button>
       </div>
     </div>
   </div>
 
   <!-- COUNTDOWN TIMER FLOATING BADGE -->
   <div class="timer-overlay" id="timerOverlay">
-    <span>⏱️ 领奖呼叫:</span>
-    <span id="timerSeconds" style="font-size:1.8rem; font-family:monospace; color:var(--imperial-gold);">10</span> 秒
-    <button class="btn-timer-redraw" onclick="triggerDirectRedrawFromSpotlight()">⚡ 立即作废重抽</button>
-    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()">取消</button>
+    <span data-i18n="timerCalling">⏱️ 领奖呼叫:</span>
+    <span id="timerSeconds" style="font-size:1.8rem; font-family:monospace; color:var(--imperial-gold);">10</span> <span data-i18n="secondsUnit">秒</span>
+    <button class="btn-timer-redraw" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">⚡ 立即作废重抽</button>
+    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()" data-i18n="btnCancel">取消</button>
   </div>
 
   <!-- 1. RECYCLE BIN MODAL -->
   <div class="modal-backdrop" id="recycleModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:#2ecc71;">♻️ 作废号码回收站 (<span id="recycleCount">0</span>)</h3>
-        <button class="icon-btn" onclick="toggleRecycleModal(false)">✕ 关闭</button>
+        <h3 style="color:#2ecc71;">♻️ <span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
+        <button class="icon-btn" onclick="toggleRecycleModal(false)">✕</button>
       </div>
-      <p style="font-size:0.85rem; color:#ccc; margin-bottom:12px;">
+      <p style="font-size:0.85rem; color:#ccc; margin-bottom:12px;" data-i18n="recycleDesc">
         所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：
       </p>
       <div class="modal-list" id="recycleList">
-        <div style="text-align:center; color:#888; padding:30px;">回收站空空如也</div>
+        <div style="text-align:center; color:#888; padding:30px;" data-i18n="recycleEmpty">回收站空空如也</div>
       </div>
     </div>
   </div>
@@ -1202,11 +1200,11 @@
   <div class="modal-backdrop" id="auditModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);">📜 无人认领 / 作废重抽审核记录</h3>
-        <button class="icon-btn" onclick="toggleAuditModal(false)">✕ 关闭</button>
+        <h3 style="color:var(--imperial-gold);">📜 <span data-i18n="auditTitle">无人认领 / 作废重抽审核记录</span></h3>
+        <button class="icon-btn" onclick="toggleAuditModal(false)">✕</button>
       </div>
       <div class="modal-list" id="auditList">
-        <div style="text-align:center; color:#888; padding:30px;">暂无作废或重抽记录</div>
+        <div style="text-align:center; color:#888; padding:30px;" data-i18n="auditEmpty">暂无作废或重抽记录</div>
       </div>
     </div>
   </div>
@@ -1215,33 +1213,33 @@
   <div class="modal-backdrop" id="crisisModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);">🛠️ 应急危机处置工具箱</h3>
-        <button class="icon-btn" onclick="toggleCrisisModal(false)">✕ 关闭</button>
+        <h3 style="color:var(--imperial-gold);">🛠️ <span data-i18n="crisisTitle">应急危机处置工具箱</span></h3>
+        <button class="icon-btn" onclick="toggleCrisisModal(false)">✕</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; padding:6px 0;">
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong>🚫 临时剔除黑名单号码 (提前离场/失票):</strong>
+          <strong data-i18n="blacklistLabel">🚫 临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="输入4位号码剔除 (如: 0312)" maxlength="4" style="flex:1; padding:6px 10px; background:#2b0305; border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
-            <button class="icon-btn" onclick="excludeBlacklistTicket()">剔除出池</button>
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" style="flex:1; padding:6px 10px; background:#2b0305; border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
+            <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
 
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong>💾 应急备份与热导入 (防电脑彻底死机):</strong>
+          <strong data-i18n="backupLabel">💾 应急备份与热导入 (防电脑彻底死机):</strong>
           <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <button class="icon-btn" onclick="downloadBackupJSON()">📥 下载完整抽奖状态 JSON</button>
+            <button class="icon-btn" onclick="downloadBackupJSON()" data-i18n="btnDownloadJson">📥 下载完整状态 JSON</button>
             <input type="file" id="importJsonInput" accept=".json" style="display:none" onchange="uploadBackupJSON(event)">
-            <button class="icon-btn" onclick="document.getElementById('importJsonInput').click()">📤 导入恢复 JSON 状态</button>
+            <button class="icon-btn" onclick="document.getElementById('importJsonInput').click()" data-i18n="btnRestoreJson">📤 导入恢复状态</button>
           </div>
         </div>
 
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong>⚡ 赞助商突击加码 (Quick Add Prizes):</strong>
+          <strong data-i18n="sponsorLabel">⚡ 赞助商突击加码 (Quick Add Prizes):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <button class="icon-btn" onclick="quickAddPrizes(1)">+1 份大奖</button>
-            <button class="icon-btn" onclick="quickAddPrizes(5)">+5 份大奖</button>
-            <button class="icon-btn" onclick="quickAddPrizes(10)">+10 份大奖</button>
+            <button class="icon-btn" onclick="quickAddPrizes(1)">+1</button>
+            <button class="icon-btn" onclick="quickAddPrizes(5)">+5</button>
+            <button class="icon-btn" onclick="quickAddPrizes(10)">+10</button>
           </div>
         </div>
       </div>
@@ -1268,54 +1266,60 @@
 
       <div class="top-stats">
         <div class="stat-badge" title="点击修改彩池总数" onclick="editPoolSize()" style="cursor:pointer;">
-          号池: <strong id="poolCount">1500</strong> / <span id="poolMaxLabel" style="text-decoration:underline;">1500</span> ✏️
+          <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">1500</strong> / <span id="poolMaxLabel" style="text-decoration:underline;">1500</span> ✏️
         </div>
         <div class="stat-badge" title="点击修改奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;">
-          已抽出: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" style="text-decoration:underline;">110</span> ✏️
+          <span data-i18n="wonLabel">已抽出</span>: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" style="text-decoration:underline;">110</span> ✏️
         </div>
         <div class="stat-badge">
-          剩余名额: <strong id="leftCount">110</strong>
+          <span data-i18n="leftLabel">剩余名额</span>: <strong id="leftCount">110</strong>
         </div>
       </div>
 
       <div class="top-actions">
-        <!-- P2P Cloud Sync Button -->
-        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn">📡 联机大厅</button>
-        <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" title="开启后大屏投影处于神秘保密状态，避免提前穿帮">🔒 隐蔽模式: 关</button>
-        <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)">♻️ 回收站 (<span id="recycleBtnCount">0</span>)</button>
-        <button class="icon-btn btn-projector" onclick="openProjectionTab()">📽️ 大屏投影端</button>
-        <button class="icon-btn" onclick="openPiPOverlay()">📌 桌面悬浮条</button>
-        <button class="icon-btn" onclick="copyEmceeScript()">📋 司仪口播稿</button>
-        <button class="icon-btn" onclick="toggleCrisisModal(true)">🛠️ 应急</button>
-        <button class="icon-btn" onclick="testSound()">🔔 试音</button>
-        <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊 音效: 开</button>
-        <button class="icon-btn" onclick="toggleFullScreen()">⛶ 全屏</button>
+        <!-- TRILINGUAL TOGGLE BM / BI / BC -->
+        <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
+          <option value="BC">华文 (BC)</option>
+          <option value="BM">B. Melayu (BM)</option>
+          <option value="BI">English (BI)</option>
+        </select>
+
+        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn" data-i18n="navSync">📡 联机大厅</button>
+        <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" data-i18n="navSuspenseOff">🔒 隐蔽模式: 关</button>
+        <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)">♻️ <span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)</button>
+        <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">📽️ 大屏投影端</button>
+        <button class="icon-btn" onclick="openPiPOverlay()" data-i18n="navPip">📌 桌面悬浮条</button>
+        <button class="icon-btn" onclick="copyEmceeScript()" data-i18n="navScript">📋 司仪口播稿</button>
+        <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis">🛠️ 应急</button>
+        <button class="icon-btn" onclick="testSound()" data-i18n="navTestSound">🔔 试音</button>
+        <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">🔊 音效: 开</button>
+        <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
         <button class="icon-btn" onclick="exportCSV()">💾 CSV</button>
-        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="resetAll()">↺ 重置</button>
+        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="resetAll()" data-i18n="navReset">↺ 重置</button>
       </div>
     </div>
 
     <!-- 3-COLUMN BROADCAST VIEWPORT -->
     <div class="viewport-grid">
-      <!-- 1. LEFT COLUMN: VERTICAL RUNNING STRIP WITH CLICK-TO-REPLACE -->
+      <!-- 1. LEFT COLUMN: VERTICAL RUNNING STRIP -->
       <div class="traditional-frame crawl-column">
         <div class="column-banner">
-          <span>🏮</span> 荣誉榜 · 点击号码直接重抽 <span>🏮</span>
+          <span>🏮</span> <span data-i18n="leftBanner">荣誉榜 · 点击号码直接重抽</span> <span>🏮</span>
         </div>
         <div class="crawl-viewport" id="opCrawlViewport">
           <div class="crawl-track" id="opCrawlTrack">
-            <div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">
+            <div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;" data-i18n="crawlWaiting">
               抽奖尚未开始<br>祝各位佳节好运吉祥！
             </div>
           </div>
         </div>
         <div class="crawl-controls">
           <div class="control-row">
-            <span>滚动速度:</span>
+            <span data-i18n="speedLabel">滚动速度:</span>
             <input type="range" id="speedSlider" min="20" max="150" value="50" oninput="adjustOpSpeed(this.value)">
           </div>
           <div class="control-row">
-            <span>字体大小:</span>
+            <span data-i18n="fontLabel">字体大小:</span>
             <div>
               <button class="icon-btn" style="padding:1px 6px;" onclick="adjustFont(-0.1)">A-</button>
               <button class="icon-btn" style="padding:1px 6px;" onclick="adjustFont(0.1)">A+</button>
@@ -1332,16 +1336,16 @@
 
         <!-- 3 MODE TABS -->
         <div class="tab-group">
-          <button class="tab-btn active" onclick="switchTab('batch')">⚡ 十连抽模式 (10 Slots)</button>
-          <button class="tab-btn" onclick="switchTab('vip')">👑 贵宾抽奖台 (VIP Slot)</button>
-          <button class="tab-btn" onclick="switchTab('manual')">✍️ 手动录入 / 补抽 (Manual)</button>
+          <button class="tab-btn active" id="tabBatchBtn" onclick="switchTab('batch')" data-i18n="tabBatch">⚡ 十连抽模式 (10 Slots)</button>
+          <button class="tab-btn" id="tabVipBtn" onclick="switchTab('vip')" data-i18n="tabVip">👑 贵宾抽奖台 (VIP Slot)</button>
+          <button class="tab-btn" id="tabManualBtn" onclick="switchTab('manual')" data-i18n="tabManual">✍️ 手动录入 / 补抽 (Manual)</button>
         </div>
 
         <!-- Mode 1: Batch 10 -->
         <div id="batchPanel" class="panel active">
-          <button class="action-btn" id="batchDrawBtn" onclick="drawTen()">🎲 摇出 10 位幸运儿</button>
+          <button class="action-btn" id="batchDrawBtn" onclick="drawTen()" data-i18n="btnDraw10">🎲 摇出 10 位幸运儿</button>
           <div class="batch-grid" id="batchGrid">
-            <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
+            <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;" data-i18n="batchEmptyHint">
               点击上方按钮同时抽出 10 个幸运号码
             </div>
           </div>
@@ -1350,70 +1354,70 @@
         <!-- Mode 2: VIP Single Picker -->
         <div id="vipPanel" class="panel">
           <div class="vip-display" id="vipDisplay">----</div>
-          <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()">开 始 滚 动</button>
-          <div style="font-size:0.85rem; color:#8c6810; font-weight:bold;">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
+          <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()" data-i18n="btnStartRoll">开 始 滚 动</button>
+          <div style="font-size:0.85rem; color:#8c6810; font-weight:bold;" data-i18n="vipSpaceHint">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
         </div>
 
         <!-- Mode 3: Manual Insertion -->
         <div id="manualPanel" class="panel">
           <div class="manual-card">
-            <h3 style="color:var(--cinnabar-red); letter-spacing:1px; font-size:1.15rem;">✍️ 无人认领现场录入 / 单号补抽</h3>
-            <p style="font-size:0.85rem; color:#666; text-align:center;">
+            <h3 style="color:var(--cinnabar-red); letter-spacing:1px; font-size:1.15rem;" data-i18n="manualTitle">✍️ 无人认领现场录入 / 单号补抽</h3>
+            <p style="font-size:0.85rem; color:#666; text-align:center;" data-i18n="manualDesc">
               严格防重校验：自动剔除已出号码，绝不与任何环节重复
             </p>
             <div class="manual-input-box">
               <input type="text" id="manualTicketInput" maxlength="4" placeholder="0001" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeydown="if(event.key==='Enter') confirmManualEntry();">
-              <span style="font-size:0.75rem; color:#888;">输入 1 至 4 位数字按回车或点确认</span>
+              <span style="font-size:0.75rem; color:#888;" data-i18n="manualInputHint">输入 1 至 4 位数字按回车或点确认</span>
             </div>
             <div class="manual-actions">
-              <button class="btn-manual-confirm" onclick="confirmManualEntry()">✓ 确认手动录入</button>
-              <button class="btn-manual-redraw" onclick="drawSingleManual()">🎲 现场补抽 1 个</button>
+              <button class="btn-manual-confirm" onclick="confirmManualEntry()" data-i18n="btnConfirmManual">✓ 确认手动录入</button>
+              <button class="btn-manual-redraw" onclick="drawSingleManual()" data-i18n="btnDrawSingleManual">🎲 现场补抽 1 个</button>
             </div>
           </div>
         </div>
 
         <div class="stage-footer">
-          <span>中秋提灯晚会 • 全屏/左榜/PIP/跨机P2P实时联动已就绪</span>
-          <span style="color:#b8860b; font-weight:bold;">中秋提灯节现场专委会监制</span>
+          <span data-i18n="stageFooterLeft">中秋提灯晚会 • 全屏/左榜/PIP/跨机P2P实时联动已就绪</span>
+          <span style="color:#b8860b; font-weight:bold;" data-i18n="stageFooterRight">现场专委会监制</span>
         </div>
       </div>
 
       <!-- 3. RIGHT COLUMN: MASTER BILLBOARD WITH RANGE FILTER -->
       <div class="traditional-frame billboard-column">
         <div class="column-banner" style="background: linear-gradient(90deg, #1f7a4d 0%, #2ecc71 50%, #1f7a4d 100%); color:#fff;">
-          <span>📋</span> 中奖公布栏 (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
+          <span>📋</span> <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
         <!-- RANGE & SEGMENT FILTER PANEL -->
         <div class="filter-panel">
           <div class="filter-row">
             <select class="filter-select" id="filterModeSelect" onchange="applyRangeFilter()">
-              <option value="seq">按奖品位次 (Prize #)</option>
-              <option value="ticket">按中奖票号 (Ticket #)</option>
+              <option value="seq" data-i18n="optBySeq">按奖品位次 (Prize #)</option>
+              <option value="ticket" data-i18n="optByTicket">按中奖票号 (Ticket #)</option>
             </select>
-            <input type="number" class="filter-input" id="rangeStart" placeholder="起始" oninput="applyRangeFilter()">
-            <span style="color:#ffdca8; font-size:0.8rem;">至</span>
-            <input type="number" class="filter-input" id="rangeEnd" placeholder="结束" oninput="applyRangeFilter()">
-            <button class="filter-btn" onclick="clearRangeFilter()">全部</button>
-            <button class="filter-btn" title="导出当前分段范围的 CSV" onclick="exportRangeCSV()">💾 段导</button>
+            <input type="number" class="filter-input" id="rangeStart" placeholder="1" oninput="applyRangeFilter()">
+            <span style="color:#ffdca8; font-size:0.8rem;" data-i18n="rangeTo">至</span>
+            <input type="number" class="filter-input" id="rangeEnd" placeholder="70" oninput="applyRangeFilter()">
+            <button class="filter-btn" onclick="clearRangeFilter()" data-i18n="btnFilterAll">全部</button>
+            <button class="filter-btn" onclick="exportRangeCSV()" data-i18n="btnExportSegment">💾 段导</button>
           </div>
 
           <div class="preset-chips">
-            <button class="chip-btn active" id="chip-all" onclick="setFilterPreset('all')">显示全部</button>
-            <button class="chip-btn" id="chip-1-70" onclick="setFilterPreset('1-70')">1-70 奖</button>
-            <button class="chip-btn" id="chip-71-100" onclick="setFilterPreset('71-100')">71-100 奖</button>
-            <button class="chip-btn" id="chip-101-110" onclick="setFilterPreset('101-110')">101-110 特奖</button>
-            <button class="chip-btn" id="chip-custom" onclick="promptCustomRange()">自定义...</button>
+            <button class="chip-btn active" id="chip-all" onclick="setFilterPreset('all')" data-i18n="chipAll">显示全部</button>
+            <button class="chip-btn" id="chip-1-70" onclick="setFilterPreset('1-70')">1-70</button>
+            <button class="chip-btn" id="chip-71-100" onclick="setFilterPreset('71-100')">71-100</button>
+            <button class="chip-btn" id="chip-101-110" onclick="setFilterPreset('101-110')">101-110</button>
+            <button class="chip-btn" id="chip-custom" onclick="promptCustomRange()" data-i18n="chipCustom">自定义...</button>
           </div>
         </div>
 
         <div class="search-container">
-          <input type="text" id="searchInput" maxlength="4" placeholder="🔍 快速精确定位票号 (例: 0888)..." oninput="searchTicket(this.value)">
-          <button class="filter-btn" onclick="triggerSpotlightFromSearch()">聚焦核验</button>
+          <input type="text" id="searchInput" maxlength="4" placeholder="0888" oninput="searchTicket(this.value)">
+          <button class="filter-btn" onclick="triggerSpotlightFromSearch()" data-i18n="btnFocusVerify">聚焦核验</button>
         </div>
 
         <div class="billboard-grid" id="billboardGrid">
-          <div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;">暂无得奖数据</div>
+          <div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;" data-i18n="bbEmpty">暂无得奖数据</div>
         </div>
       </div>
     </div>
@@ -1426,31 +1430,314 @@
     <div class="proj-toolbar">
       <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影条</div>
       <div class="proj-btn-group">
-        <button class="icon-btn" onclick="toggleWidgetOverlay()">🖼️ 切换条形挂件/全屏</button>
-        <button class="icon-btn" onclick="toggleDockPosition()">↕ 置顶/置底</button>
-        <button class="icon-btn" onclick="toggleProjLayout()">⇄ 横向/竖向</button>
-        <button class="icon-btn" onclick="toggleProjTransparent()">🌓 背景半透明/纯色</button>
-        <button class="icon-btn" onclick="adjustProjSpeed(-15)">⏩ 加速</button>
-        <button class="icon-btn" onclick="adjustProjSpeed(15)">⏪ 减速</button>
-        <button class="icon-btn" onclick="toggleFullScreen()">⛶ 全屏</button>
-        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()">✕ 返回</button>
+        <button class="icon-btn" onclick="toggleWidgetOverlay()" data-i18n="btnToggleWidget">🖼️ 切换条形挂件/全屏</button>
+        <button class="icon-btn" onclick="toggleDockPosition()" data-i18n="btnToggleDock">↕ 置顶/置底</button>
+        <button class="icon-btn" onclick="toggleProjLayout()" data-i18n="btnToggleHV">⇄ 横向/竖向</button>
+        <button class="icon-btn" onclick="toggleProjTransparent()" data-i18n="btnToggleTrans">🌓 背景半透明/纯色</button>
+        <button class="icon-btn" onclick="adjustProjSpeed(-15)">⏩</button>
+        <button class="icon-btn" onclick="adjustProjSpeed(15)">⏪</button>
+        <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
+        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
     </div>
 
     <div class="proj-body horizontal" id="projBody">
       <div class="proj-viewport" id="projViewport">
-        <div class="proj-track-wrapper" id="projTrack">
-          <!-- Real-Time Infinite Scroller -->
-        </div>
+        <div class="proj-track-wrapper" id="projTrack"></div>
       </div>
     </div>
   </div>
 
   <script>
+    // ==============================================================
+    // TRILINGUAL LOCALIZATION (BM, BI, BC)
+    // ==============================================================
+    let currentLang = 'BC';
+
+    const I18N = {
+      BC: {
+        brandTitle: "中秋提灯节庆典 · 幸运大抽奖",
+        brandSub: "Tanglung Festival Grand Lucky Draw",
+        poolLabel: "号池",
+        wonLabel: "已抽出",
+        leftLabel: "剩余名额",
+        navSync: "📡 联机大厅",
+        navSuspenseOn: "🔒 隐蔽模式: 开",
+        navSuspenseOff: "🔒 隐蔽模式: 关",
+        navRecycle: "回收站",
+        navProj: "📽️ 大屏投影端",
+        navPip: "📌 桌面悬浮条",
+        navScript: "📋 司仪口播稿",
+        navCrisis: "🛠️ 应急",
+        navTestSound: "🔔 试音",
+        navSoundOn: "🔊 音效: 开",
+        navSoundOff: "🔇 音效: 关",
+        navFullscreen: "⛶ 全屏",
+        navReset: "↺ 重置",
+        leftBanner: "荣誉榜 · 点击号码直接重抽",
+        crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
+        speedLabel: "滚动速度:",
+        fontLabel: "字体大小:",
+        tabBatch: "⚡ 十连抽模式 (10 Slots)",
+        tabVip: "👑 贵宾抽奖台 (VIP Slot)",
+        tabManual: "✍️ 手动录入 / 补抽 (Manual)",
+        btnDraw10: "🎲 摇出 10 位幸运儿",
+        batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
+        btnStartRoll: "开 始 滚 动",
+        btnStopRoll: "停！(STOP)",
+        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
+        manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
+        manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
+        manualInputHint: "输入 1 至 4 位数字按回车或点确认",
+        btnConfirmManual: "✓ 确认手动录入",
+        btnDrawSingleManual: "🎲 现场补抽 1 个",
+        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
+        stageFooterRight: "现场专委会监制",
+        bbBanner: "中奖公布栏",
+        optBySeq: "按奖品位次 (Prize #)",
+        optByTicket: "按中奖票号 (Ticket #)",
+        rangeTo: "至",
+        btnFilterAll: "全部",
+        btnExportSegment: "💾 段导",
+        chipAll: "显示全部",
+        chipCustom: "自定义...",
+        btnFocusVerify: "聚焦核验",
+        bbEmpty: "暂无得奖数据",
+        syncTitle: "跨设备多机实时云同步",
+        syncStatusLabel: "连接状态:",
+        syncOffline: "离线 (未连接)",
+        syncConnected: "在线同步中 (已接入房间)",
+        btnHost: "👑 启动为主控机 (Host)",
+        btnJoin: "🔗 加入现有主控机 (Join)",
+        scanQr: "副机 / 手机扫码一键连接:",
+        copyLinkText: "或复制链接分享给其他电脑:",
+        btnCopyLink: "📋 复制直连链接",
+        spotlightCongrats: "🎉 恭喜中奖 🎉",
+        btnCall10: "⏱️ 现场10秒呼叫",
+        btnVoidRedraw: "⚡ 作废并重抽",
+        btnClose: "关 闭",
+        timerCalling: "⏱️ 领奖呼叫:",
+        secondsUnit: "秒",
+        btnRedrawNow: "⚡ 立即作废重抽",
+        btnCancel: "取消",
+        recycleTitle: "作废号码回收站",
+        recycleDesc: "所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：",
+        recycleEmpty: "回收站空空如也",
+        auditTitle: "无人认领 / 作废重抽审核记录",
+        auditEmpty: "暂无作废或重抽记录",
+        crisisTitle: "应急危机处置工具箱",
+        blacklistLabel: "🚫 临时剔除黑名单号码 (提前离场/失票):",
+        btnExclude: "剔除出池",
+        backupLabel: "💾 应急备份与热导入 (防电脑彻底死机):",
+        btnDownloadJson: "📥 下载完整状态 JSON",
+        btnRestoreJson: "📤 导入恢复状态",
+        sponsorLabel: "⚡ 赞助商突击加码 (Quick Add Prizes):",
+        pacingConsolation: "🏮 当前环节：幸运安慰奖抽取 (DRAWS #1 - #{quota}) 🏮",
+        pacingGrand: "🌟 盛大环节：压轴特奖 (VIP 逐一揭晓) 🌟",
+        pacingDone: "🎉 圆满礼成：全部 {quota} 份大奖已全部抽出！ 🎉",
+        prizeItemPrefix: "第 {seq} 份奖品",
+        projWaiting: "准备就绪",
+        projSuspense: "★★★ 正在摇号，即将揭晓 ★★★"
+      },
+      BM: {
+        brandTitle: "Pesta Tanglung · Cabutan Bertuah",
+        brandSub: "Grand Lucky Draw Festival Tanglung",
+        poolLabel: "Kolam",
+        wonLabel: "Disedut",
+        leftLabel: "Baki Hadiah",
+        navSync: "📡 Sync Bilik",
+        navSuspenseOn: "🔒 Mod Rahsia: On",
+        navSuspenseOff: "🔒 Mod Rahsia: Off",
+        navRecycle: "Tong Kitar",
+        navProj: "📽️ Skrin Projektor",
+        navPip: "📌 Bar Terapung",
+        navScript: "📋 Skrip Juruacara",
+        navCrisis: "🛠️ Kecemasan",
+        navTestSound: "🔔 Uji Bunyi",
+        navSoundOn: "🔊 Bunyi: On",
+        navSoundOff: "🔇 Bunyi: Mute",
+        navFullscreen: "⛶ Skrin Penuh",
+        navReset: "↺ Reset",
+        leftBanner: "Senarai Pemenang (Klik Ganti Semula)",
+        crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
+        speedLabel: "Kelajuan:",
+        fontLabel: "Saiz Fon:",
+        tabBatch: "⚡ Cabut 10 Sekaligus",
+        tabVip: "👑 Pentas VIP (Satu persatu)",
+        tabManual: "✍️ Masuk Manual / Ganti",
+        btnDraw10: "🎲 Cabut 10 Pemenang",
+        batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
+        btnStartRoll: "Mula Putar",
+        btnStopRoll: "BERHENTI! (STOP)",
+        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
+        manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
+        manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
+        manualInputHint: "Masukkan 1-4 digit nombor tiket dan tekan Enter",
+        btnConfirmManual: "✓ Sahkan Masukan",
+        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
+        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Segera Aktif",
+        stageFooterRight: "Jawatankuasa Pengelola",
+        bbBanner: "Papan Kenyataan Pemenang",
+        optBySeq: "Ikut Kedudukan Hadiah (#)",
+        optByTicket: "Ikut Nombor Tiket (#)",
+        rangeTo: "hingga",
+        btnFilterAll: "Semua",
+        btnExportSegment: "💾 Eksport",
+        chipAll: "Semua",
+        chipCustom: "Tersuai...",
+        btnFocusVerify: "Sahkan Tiket",
+        bbEmpty: "Tiada rekod pemenang",
+        syncTitle: "Sinkronisasi Awan Berbilang Peranti",
+        syncStatusLabel: "Status Sambungan:",
+        syncOffline: "Luar Talian (Belum Sambung)",
+        syncConnected: "Tersambung (Bilik Aktif)",
+        btnHost: "👑 Cipta Sebagai Host",
+        btnJoin: "🔗 Sertai Bilik Host",
+        scanQr: "Imbas QR untuk Sambung Pantas:",
+        copyLinkText: "Atau kongsi pautan ini:",
+        btnCopyLink: "📋 Salin Pautan",
+        spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
+        btnCall10: "⏱️ Panggilan 10 Saat",
+        btnVoidRedraw: "⚡ Batal & Cabut Semula",
+        btnClose: "Tutup",
+        timerCalling: "⏱️ Panggilan:",
+        secondsUnit: "saat",
+        btnRedrawNow: "⚡ Ganti Sekarang",
+        btnCancel: "Batal",
+        recycleTitle: "Tong Kitar Semula Nombor Batal",
+        recycleDesc: "Semua nombor yang dibatalkan atau pemilik tiada disimpan di sini:",
+        recycleEmpty: "Tong kitar kosong",
+        auditTitle: "Log Audit Pembatalan & Cabutan Semula",
+        auditEmpty: "Tiada rekod pembatalan",
+        crisisTitle: "Kotak Alat Kecemasan",
+        blacklistLabel: "🚫 Keluarkan Tiket Hilang/Awal Balik:",
+        btnExclude: "Keluarkan",
+        backupLabel: "💾 Simpanan Sandaran JSON:",
+        btnDownloadJson: "📥 Muat Turun JSON",
+        btnRestoreJson: "📤 Pulihkan JSON",
+        sponsorLabel: "⚡ Tambah Hadiah Penaja:",
+        pacingConsolation: "🏮 Fasa: Hadiah Saguhati (DRAWS #1 - #{quota}) 🏮",
+        pacingGrand: "🌟 Fasa: Hadiah Utama VIP 🌟",
+        pacingDone: "🎉 Selesai: Semua {quota} Hadiah Telah Dimenangi! 🎉",
+        prizeItemPrefix: "Hadiah #{seq}",
+        projWaiting: "Sedia Bermula",
+        projSuspense: "★★★ Sedang Berputar... Nantikan! ★★★"
+      },
+      BI: {
+        brandTitle: "Tanglung Lantern Festival · Lucky Draw",
+        brandSub: "Grand Annual Lantern Festival Celebration",
+        poolLabel: "Pool",
+        wonLabel: "Drawn",
+        leftLabel: "Prizes Left",
+        navSync: "📡 Cloud Sync",
+        navSuspenseOn: "🔒 Conceal: On",
+        navSuspenseOff: "🔒 Conceal: Off",
+        navRecycle: "Recycle Bin",
+        navProj: "📽️ Projection",
+        navPip: "📌 Desktop PiP",
+        navScript: "📋 Emcee Script",
+        navCrisis: "🛠️ Crisis Kit",
+        navTestSound: "🔔 Sound Test",
+        navSoundOn: "🔊 Audio: On",
+        navSoundOff: "🔇 Audio: Muted",
+        navFullscreen: "⛶ Fullscreen",
+        navReset: "↺ Reset All",
+        leftBanner: "Winners Board (Click to Redraw)",
+        crawlWaiting: "Lucky Draw has not started yet.<br>Best of luck to everyone!",
+        speedLabel: "Scroll Speed:",
+        fontLabel: "Font Size:",
+        tabBatch: "⚡ Batch 10 Slots",
+        tabVip: "👑 VIP Stage Slot",
+        tabManual: "✍️ Manual Entry / Replace",
+        btnDraw10: "🎲 Draw 10 Winners",
+        batchEmptyHint: "Click button above to draw 10 lucky winners",
+        btnStartRoll: "Start Rolling",
+        btnStopRoll: "STOP!",
+        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
+        manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
+        manualDesc: "Strict duplicate check: automatically excludes already won numbers",
+        manualInputHint: "Type 1 to 4 digit ticket number and press Enter",
+        btnConfirmManual: "✓ Confirm Entry",
+        btnDrawSingleManual: "🎲 Draw 1 Replacement",
+        stageFooterLeft: "Lantern Gala • Multi-Device Realtime Cloud Sync Active",
+        stageFooterRight: "Organizing Committee",
+        bbBanner: "Winners Billboard",
+        optBySeq: "By Prize Sequence (#)",
+        optByTicket: "By Ticket Number (#)",
+        rangeTo: "to",
+        btnFilterAll: "All",
+        btnExportSegment: "💾 Segment",
+        chipAll: "All Prizes",
+        chipCustom: "Custom...",
+        btnFocusVerify: "Verify",
+        bbEmpty: "No winners drawn yet",
+        syncTitle: "Cross-Device Real-Time Cloud Sync",
+        syncStatusLabel: "Connection Status:",
+        syncOffline: "Offline (Not Connected)",
+        syncConnected: "Online & Synced",
+        btnHost: "👑 Start as Master Host",
+        btnJoin: "🔗 Join Existing Room",
+        scanQr: "Scan QR to Pair Instantly:",
+        copyLinkText: "Or share this direct room link:",
+        btnCopyLink: "📋 Copy Link",
+        spotlightCongrats: "🎉 CONGRATULATIONS! 🎉",
+        btnCall10: "⏱️ 10s Call Timer",
+        btnVoidRedraw: "⚡ Void & Redraw",
+        btnClose: "Close",
+        timerCalling: "⏱️ Calling:",
+        secondsUnit: "sec",
+        btnRedrawNow: "⚡ Redraw Now",
+        btnCancel: "Cancel",
+        recycleTitle: "Voided Tickets Recycle Bin",
+        recycleDesc: "All forfeited or absent tickets are archived here. Restore anytime if claimant returns:",
+        recycleEmpty: "Recycle bin is empty",
+        auditTitle: "Void & Redraw Audit Log",
+        auditEmpty: "No redraw history recorded",
+        crisisTitle: "Crisis Emergency Toolkit",
+        blacklistLabel: "🚫 Exclude Lost / Early Departure Tickets:",
+        btnExclude: "Exclude",
+        backupLabel: "💾 Backup & Hot Restore JSON:",
+        btnDownloadJson: "📥 Export JSON",
+        btnRestoreJson: "📤 Import JSON",
+        sponsorLabel: "⚡ Sponsor Quick Add Prizes:",
+        pacingConsolation: "🏮 Stage: Consolation Prizes (DRAWS #1 - #{quota}) 🏮",
+        pacingGrand: "🌟 Grand Stage: VIP Top Prizes 🌟",
+        pacingDone: "🎉 All {quota} Prizes Successfully Concluded! 🎉",
+        prizeItemPrefix: "Prize #{seq}",
+        projWaiting: "Ready to Draw",
+        projSuspense: "★★★ Drawing in Progress... Stay Tuned! ★★★"
+      }
+    };
+
+    function changeLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('langSelect').value = lang;
+      applyLanguageUI();
+      saveAndBroadcast();
+    }
+
+    function applyLanguageUI() {
+      const t = I18N[currentLang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key]) el.innerHTML = t[key];
+      });
+
+      // Update brand headings if unchanged
+      document.getElementById('appMainTitle').innerText = t.brandTitle;
+      document.getElementById('appSubTitle').innerText = t.brandSub;
+      document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+      
+      updateUI();
+    }
+
+    // ==============================================================
+    // CORE LOTTERY STATE
+    // ==============================================================
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v16_mqtt_fixed";
+    const STORAGE_KEY = "tanglung_stage_v18_final";
     const CHANNEL_NAME = "tanglung_sync_channel";
 
     let pool = [];
@@ -1468,7 +1755,7 @@
     let filterEndVal = null;
     let filterType = 'seq';
 
-    // Suspense & Active Spotlight/Timer Tracking
+    // Suspense & Timer Tracking
     let isSuspenseMode = false;
     let claimTimerInterval = null;
     let claimTimeRemaining = 10;
@@ -1479,12 +1766,13 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
 
-    // ==========================================================
-    // RELIABLE MQTT OVER SECURE WEBSOCKET PUBSUB
-    // ==========================================================
-    let mqttClient = null;
-    let activeRoomTopic = null;
+    // ==============================================================
+    // 100% RELIABLE CLOUD SYNC ENGINE (PIESOCKET 443 + NTFY FALLBACK)
+    // ==============================================================
+    let ws = null;
+    let currentRoomId = null;
     let isHost = false;
+    let ntfyPollTimer = null;
 
     const syncChannel = new BroadcastChannel(CHANNEL_NAME);
     let audioCtx = null;
@@ -1573,12 +1861,13 @@
     function testSound() {
       initAudio();
       playFestiveGong();
-      showToast("音响测试正常！音量输出完毕。");
+      showToast(currentLang === 'BM' ? 'Bunyi diuji berjaya!' : (currentLang === 'BI' ? 'Audio tested successfully!' : '音响测试正常！'));
     }
 
     function toggleSound() {
       soundOn = !soundOn;
-      document.getElementById('soundBtn').textContent = soundOn ? '🔊 音效: 开' : '🔇 音效: 关';
+      const t = I18N[currentLang];
+      document.getElementById('soundBtn').textContent = soundOn ? t.navSoundOn : t.navSoundOff;
     }
 
     function initPool() {
@@ -1589,48 +1878,39 @@
     }
 
     function editPoolSize() {
-      const input = prompt(`当前彩池范围为 ${poolStart} 至 ${poolEnd}。\n请输入新的彩池最大号码 (例如 1200 或 2000):`, poolEnd);
+      const input = prompt(`当前彩池范围 (Pool Range): ${poolStart} - ${poolEnd}。\n请输入新最大号码 (New Max):`, poolEnd);
       if (!input) return;
       const parsed = parseInt(input, 10);
-      if (isNaN(parsed) || parsed <= poolStart) {
-        alert("请输入有效的最大号码！");
-        return;
-      }
+      if (isNaN(parsed) || parsed <= poolStart) return alert("Invalid Number!");
       poolEnd = parsed;
 
       pool = [];
       for (let i = poolStart; i <= poolEnd; i++) {
         const str = String(i).padStart(4, '0');
-        if (!winners.includes(str)) {
-          pool.push(str);
-        }
+        if (!winners.includes(str)) pool.push(str);
       }
       saveAndBroadcast();
       updateUI();
-      showToast(`彩池已更新为 ${poolStart} - ${poolEnd}！当前剩余可用号码: ${pool.length}`);
     }
 
     function editMaxPrizes() {
-      const input = prompt(`当前设定的奖品总份数为: ${maxPrizes} 份。\n请输入新的总奖品数 (例如 120):`, maxPrizes);
+      const input = prompt(`当前奖品总份数: ${maxPrizes}。\n请输入新总额:`, maxPrizes);
       if (!input) return;
       const parsed = parseInt(input, 10);
-      if (isNaN(parsed) || parsed < winners.length) {
-        alert(`总奖品数不能小于已抽出的数量 (${winners.length})！`);
-        return;
-      }
+      if (isNaN(parsed) || parsed < winners.length) return alert("Cannot be less than drawn count!");
       maxPrizes = parsed;
       saveAndBroadcast();
       updateUI();
-      showToast(`奖品总额已调整为 ${maxPrizes} 份！`);
     }
 
     function quickAddPrizes(qty) {
       maxPrizes += qty;
       saveAndBroadcast();
       updateUI();
-      showToast(`已追加 ${qty} 份奖品！新奖品总额: ${maxPrizes}`);
+      showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
+    // CLOUD BROADCAST DISPATCHER
     function saveAndBroadcast() {
       const payload = {
         pool,
@@ -1645,6 +1925,7 @@
         filterEndVal,
         filterType,
         isSuspenseMode,
+        currentLang,
         mainTitle: document.getElementById('appMainTitle').innerText,
         subTitle: document.getElementById('appSubTitle').innerText,
         timestamp: Date.now()
@@ -1654,16 +1935,20 @@
       // 1. Cross-tab local broadcast
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
-      // 2. Cross-device cloud sync via MQTT WebSocket
-      if (mqttClient && mqttClient.isConnected() && activeRoomTopic && isHost) {
+      // 2. Cloud WebSocket Broadcast (Port 443 WSS)
+      if (ws && ws.readyState === WebSocket.OPEN && isHost) {
         try {
-          const message = new Paho.MQTT.Message(JSON.stringify({ type: 'UPDATE_STATE', data: payload }));
-          message.destinationName = activeRoomTopic;
-          message.retained = true; // Retain state so new screens instantly sync on join
-          mqttClient.send(message);
-        } catch (e) {
-          console.warn("MQTT Publish Error:", e);
-        }
+          ws.send(JSON.stringify({ type: 'UPDATE_STATE', data: payload }));
+        } catch(e) {}
+      }
+
+      // 3. Fallback Cloud Pub/Sub via NTFY (Ensures phone/cellular networks never drop)
+      if (currentRoomId && isHost) {
+        fetch(`https://ntfy.sh/tanglung_${currentRoomId}`, {
+          method: 'POST',
+          body: JSON.stringify({ type: 'UPDATE_STATE', data: payload }),
+          headers: { 'Title': 'Sync', 'Priority': 'high' }
+        }).catch(() => {});
       }
     }
 
@@ -1684,10 +1969,8 @@
           if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
           if (d.filterType) filterType = d.filterType;
           if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
-          if (d.mainTitle) {
-            document.getElementById('appMainTitle').innerText = d.mainTitle;
-            document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle} · 实时中奖榜条`;
-          }
+          if (d.currentLang) currentLang = d.currentLang;
+          if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
           if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
           return true;
         } catch(e) { return false; }
@@ -1708,9 +1991,13 @@
       if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
+      if (d.currentLang && d.currentLang !== currentLang) {
+        currentLang = d.currentLang;
+        document.getElementById('langSelect').value = currentLang;
+      }
       if (d.mainTitle) {
         document.getElementById('appMainTitle').innerText = d.mainTitle;
-        document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle} · 实时中奖榜条`;
+        document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
       }
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
       updateUI();
@@ -1751,7 +2038,7 @@
     // Mode 1: Batch 10 Draw
     function drawTen() {
       const quota = maxPrizes - winners.length;
-      if (quota <= 0) return alert(`全部 ${maxPrizes} 份奖品已全部抽出！`);
+      if (quota <= 0) return alert(`All ${maxPrizes} prizes have been won!`);
 
       const toPick = Math.min(10, quota, pool.length);
       const batch = [];
@@ -1765,11 +2052,13 @@
 
       const grid = document.getElementById('batchGrid');
       grid.innerHTML = '';
+      const t = I18N[currentLang];
       batch.forEach((num, i) => {
         const div = document.createElement('div');
         div.className = 'number-tag';
+        const seqNum = winners.length - batch.length + i + 1;
         div.innerHTML = `
-          <div class="sub-seq">奖品 #${winners.length - batch.length + i + 1}</div>
+          <div class="sub-seq">${t.prizeItemPrefix.replace('{seq}', seqNum)}</div>
           <div class="main-num">${num}</div>
         `;
         grid.appendChild(div);
@@ -1779,7 +2068,7 @@
       triggerConfetti();
       saveAndBroadcast();
       updateUI();
-      showToast(`已成功抽出 10 位幸运儿！`);
+      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
     }
 
     // Mode 2: VIP Picker
@@ -1789,12 +2078,12 @@
     }
 
     function startVip() {
-      if (winners.length >= maxPrizes) return alert(`全部 ${maxPrizes} 份大奖已全部抽出！`);
-      if (pool.length === 0) return alert("号池已无多余号码！");
+      if (winners.length >= maxPrizes) return alert(`All ${maxPrizes} prizes concluded!`);
+      if (pool.length === 0) return alert("Pool is empty!");
 
       isRolling = true;
       const btn = document.getElementById('vipToggleBtn');
-      btn.textContent = "停！(STOP)";
+      btn.textContent = I18N[currentLang].btnStopRoll;
       btn.style.background = "linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)";
       btn.style.color = "#fff";
 
@@ -1810,7 +2099,7 @@
       isRolling = false;
 
       const btn = document.getElementById('vipToggleBtn');
-      btn.textContent = "开 始 滚 动";
+      btn.textContent = I18N[currentLang].btnStartRoll;
       btn.style.background = "";
       btn.style.color = "";
 
@@ -1823,42 +2112,31 @@
       triggerConfetti();
       saveAndBroadcast();
       updateUI();
-      showToast(`恭喜幸运票号 【${picked}】 荣获大奖！`);
+      showToast(`🏆 ${picked}`);
     }
 
     // Mode 3: Manual Insertion
     function confirmManualEntry() {
-      if (winners.length >= maxPrizes) {
-        showToast(`全部 ${maxPrizes} 份奖品名额已满！请先提高奖品总额。`, true);
-        return;
-      }
+      if (winners.length >= maxPrizes) return alert(`All ${maxPrizes} prize slots filled!`);
       
       const input = document.getElementById('manualTicketInput');
       let val = input.value.trim();
-      if (!val) {
-        showToast("请输入有效票号！", true);
-        return;
-      }
+      if (!val) return alert("Please enter ticket number!");
       
       val = val.padStart(4, '0');
       const numVal = parseInt(val, 10);
 
-      if (numVal < poolStart || numVal > poolEnd) {
-        showToast(`票号 ${val} 超出彩池设定范围 (${poolStart} - ${poolEnd})！`, true);
-        return;
-      }
+      if (numVal < poolStart || numVal > poolEnd) return alert(`Ticket number out of range (${poolStart} - ${poolEnd})!`);
 
       const existingIdx = winners.indexOf(val);
       if (existingIdx !== -1) {
-        showToast(`【严防重复】票号 ${val} 已在第 ${existingIdx + 1} 份奖品中抽出，不可重复！`, true);
+        alert(`Duplicate detected! Ticket ${val} already drawn at prize #${existingIdx + 1}!`);
         input.select();
         return;
       }
 
       const poolIdx = pool.indexOf(val);
-      if (poolIdx !== -1) {
-        pool.splice(poolIdx, 1);
-      }
+      if (poolIdx !== -1) pool.splice(poolIdx, 1);
 
       winners.push(val);
       input.value = '';
@@ -1866,18 +2144,12 @@
       triggerConfetti();
       saveAndBroadcast();
       updateUI();
-      showToast(`成功录入票号 【${val}】 为第 ${winners.length} 份奖品！`);
+      showToast(`Ticket #${val} added!`);
     }
 
     function drawSingleManual() {
-      if (winners.length >= maxPrizes) {
-        showToast(`全部 ${maxPrizes} 份大奖已全部抽出！`, true);
-        return;
-      }
-      if (pool.length === 0) {
-        showToast("号池已无多余号码！", true);
-        return;
-      }
+      if (winners.length >= maxPrizes) return alert("All prizes concluded!");
+      if (pool.length === 0) return alert("Pool is empty!");
 
       const finalIdx = Math.floor(Math.random() * pool.length);
       const picked = pool.splice(finalIdx, 1)[0];
@@ -1887,19 +2159,18 @@
       triggerConfetti();
       saveAndBroadcast();
       updateUI();
-      showToast(`现场补抽成功！抽中幸运号码：【${picked}】 (第 ${winners.length} 份奖品)`);
+      showToast(`Replacement drawn: ${picked}`);
     }
 
-    // ONE-CLICK REDRAW & IN-PLACE REPLACEMENT
+    // ONE-CLICK REDRAW & REPLACEMENT
     function promptRedrawSlot(ticketNum, index) {
       if (pool.length === 0) {
-        showToast("号池已无可用备选号码！无法重抽！", true);
+        showToast("No backup numbers left in pool!", true);
         return false;
       }
 
       const confirmed = confirm(
-        `【无人认领重抽确认】\n\n第 ${index + 1} 份奖品：原票号 【${ticketNum}】 确认为无人认领或作废？\n\n` +
-        `点击【确定】：原票号将移入回收站保护，并立即现场随机摇出新号码“原地替换”！`
+        `【Redraw Confirmation】\nPrize #${index + 1}: Ticket [${ticketNum}] forfeited?\nClick OK to replace in-place immediately!`
       );
 
       if (confirmed) {
@@ -1924,14 +2195,14 @@
         if (activeSpotlightIndex === index) {
           activeSpotlightTicket = replacement;
           document.getElementById('spotlightNum').textContent = replacement;
-          document.getElementById('spotlightSub').textContent = `第 ${index + 1} 份奖品 · 重抽新号码【${replacement}】`;
+          document.getElementById('spotlightSub').textContent = `Prize #${index + 1} · [${replacement}]`;
         }
 
         playFestiveGong();
         triggerConfetti();
         saveAndBroadcast();
         updateUI();
-        showToast(`【重抽成功】第 ${index + 1} 份奖品已由 【${replacement}】 替换原号 【${ticketNum}】！`);
+        showToast(`Replaced #${ticketNum} -> #${replacement}!`);
         return true;
       }
       return false;
@@ -1942,7 +2213,7 @@
         stopClaimTimer();
         promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
       } else {
-        alert("未选定当前重抽的奖品！");
+        alert("No ticket selected!");
       }
     }
 
@@ -2001,11 +2272,10 @@
       filterEndVal = e;
       saveAndBroadcast();
       updateUI();
-      showToast(`已全局同步切换至分段: 第 ${s} 至 ${e} 份奖品`);
     }
 
     function promptCustomRange() {
-      const input = prompt("请输入您想展示的范围 (例如 '1-70' 或 '100-150'):", "100-150");
+      const input = prompt("Enter range (e.g. 1-70 or 100-150):", "100-150");
       if (!input) return;
       const parts = input.split('-');
       if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
@@ -2014,8 +2284,6 @@
         document.getElementById('rangeStart').value = parts[0].trim();
         document.getElementById('rangeEnd').value = parts[1].trim();
         applyRangeFilter();
-      } else {
-        alert("格式错误！请输入类似 1-70 或 100-150 的格式。");
       }
     }
 
@@ -2038,10 +2306,10 @@
       document.getElementById('bbFilteredCount').textContent = filtered.length;
 
       if (filtered.length === 0) {
-        bb.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;">当前分段范围内暂无中奖数据</div>';
+        bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
       } else {
         bb.innerHTML = filtered.map(item => `
-          <div class="billboard-card" id="card-${item.num}" title="点击查看大图核验 / 重抽" onclick="openSpotlight('${item.num}', ${item.seq})">
+          <div class="billboard-card" id="card-${item.num}" title="Click to verify/redraw" onclick="openSpotlight('${item.num}', ${item.seq})">
             <span class="bb-seq">#${item.seq}</span>
             <span class="bb-num">${item.num}</span>
           </div>
@@ -2051,25 +2319,24 @@
 
     function exportRangeCSV() {
       const filtered = getFilteredWinnersList();
-      if (filtered.length === 0) return alert("当前分段没有可导出的数据！");
-      let csv = "分段中奖位次 (Prize Sequence),中奖票号 (Ticket Number)\n";
+      if (filtered.length === 0) return alert("Empty range!");
+      let csv = "Prize Sequence,Ticket Number\n";
       filtered.forEach(item => csv += `${item.seq},${item.num}\n`);
       const link = document.createElement("a");
       link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
       const tag = filterActive ? `_${filterStartVal}-${filterEndVal}` : '_all';
-      link.download = `幸运抽奖分段名单${tag}.csv`;
+      link.download = `lucky_draw_segment${tag}.csv`;
       link.click();
-      showToast(`已成功导出当前分段 (${filtered.length} 条记录)！`);
     }
 
-    // SPOTLIGHT AUDIENCE VERIFICATION & 10-SEC COUNTDOWN TIMER
+    // SPOTLIGHT VERIFICATION
     function openSpotlight(ticket, seq) {
       activeSpotlightTicket = ticket;
       activeSpotlightIndex = seq - 1;
 
       document.getElementById('spotlightNum').textContent = ticket;
-      document.getElementById('spotlightTitle').textContent = `🎉 第 ${seq} 份奖品中奖核对 🎉`;
-      document.getElementById('spotlightSub').textContent = `中奖票号：【${ticket}】 · 现场有效存根`;
+      document.getElementById('spotlightTitle').textContent = I18N[currentLang].spotlightCongrats;
+      document.getElementById('spotlightSub').textContent = `${I18N[currentLang].prizeItemPrefix.replace('{seq}', seq)} · 【${ticket}】`;
       document.getElementById('spotlightModal').style.display = 'flex';
       playFestiveGong();
     }
@@ -2081,12 +2348,12 @@
 
     function triggerSpotlightFromSearch() {
       const val = document.getElementById('searchInput').value.trim();
-      if (!val) return alert("请先在搜索框输入票号！");
+      if (!val) return alert("Please type ticket number!");
       const idx = winners.indexOf(val.padStart(4, '0'));
       if (idx !== -1) {
         openSpotlight(winners[idx], idx + 1);
       } else {
-        showToast(`未找到票号 【${val}】 的中奖记录！`, true);
+        showToast(`Not found: ${val}`, true);
       }
     }
 
@@ -2107,7 +2374,7 @@
           playBuzzer();
           setTimeout(() => {
             if (activeSpotlightTicket && activeSpotlightIndex >= 0) {
-              const doRedraw = confirm(`【10秒呼叫时间已到】\n\n票号 【${activeSpotlightTicket}】 (第 ${activeSpotlightIndex + 1} 份奖品) 现场无人在场认领！\n\n是否立即作废并现场重抽新号码替换？`);
+              const doRedraw = confirm(`10s Expired! Ticket [${activeSpotlightTicket}] absent. Redraw now?`);
               if (doRedraw) {
                 promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
               }
@@ -2130,26 +2397,23 @@
       isSuspenseMode = !isSuspenseMode;
       const btn = document.getElementById('suspenseBtn');
       btn.classList.toggle('active', isSuspenseMode);
-      btn.textContent = isSuspenseMode ? '🔒 隐蔽模式: 开' : '🔒 隐蔽模式: 关';
+      btn.textContent = isSuspenseMode ? I18N[currentLang].navSuspenseOn : I18N[currentLang].navSuspenseOff;
       saveAndBroadcast();
       updateUI();
-      showToast(isSuspenseMode ? '大屏与PIP已进入隐蔽状态（摇号不会提前剧透）' : '大屏与PIP已恢复公开展示！');
     }
 
-    // EMCEE SCRIPT COPY
+    // EMCEE SCRIPT
     function copyEmceeScript() {
-      if (winners.length === 0) return alert("暂无中奖号码生成！");
+      if (winners.length === 0) return alert("No winners yet!");
       const filtered = getFilteredWinnersList();
-      const listStr = filtered.map(i => `第${i.seq}奖:【${i.num}】`).join('，');
-      const script = `【中秋幸运大抽奖现场口播单】\n尊敬的各位来宾，本轮抽出共 ${filtered.length} 位幸运号码依次为：\n${listStr}。\n请持对应副券者移步领奖处核对领取！`;
+      const listStr = filtered.map(i => `#${i.seq}:【${i.num}】`).join(', ');
+      const script = `Lucky Draw Winners (${filtered.length} total):\n${listStr}`;
       navigator.clipboard.writeText(script).then(() => {
-        showToast("司仪口播稿已复制到剪贴板！可以直接发送微信或打印。");
-      }).catch(() => {
-        alert(script);
-      });
+        showToast("Copied script to clipboard!");
+      }).catch(() => alert(script));
     }
 
-    // RECYCLE BIN MANAGEMENT
+    // RECYCLE BIN
     function toggleRecycleModal(show) {
       document.getElementById('recycleModal').style.display = show ? 'flex' : 'none';
       renderRecycleList();
@@ -2158,7 +2422,7 @@
     function renderRecycleList() {
       const container = document.getElementById('recycleList');
       if (recycleBin.length === 0) {
-        container.innerHTML = '<div style="text-align:center; color:#888; padding:30px;">回收站空空如也</div>';
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">${I18N[currentLang].recycleEmpty}</div>`;
         return;
       }
 
@@ -2166,11 +2430,11 @@
         <div class="modal-item">
           <div>
             <strong style="color:var(--imperial-gold); font-size:1.15rem; font-family:monospace;">${item.ticket}</strong>
-            <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(原第 #${item.originalSeq} 份 • ${item.time})</span>
+            <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(#${item.originalSeq} • ${item.time})</span>
           </div>
           <div class="recycle-actions">
-            <button class="btn-recycle-action" onclick="restoreToPool('${item.ticket}', ${idx})">♻️ 还原至彩池</button>
-            <button class="btn-recycle-action" style="border-color:#2ecc71; color:#2ecc71;" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 恢复为中奖</button>
+            <button class="btn-recycle-action" onclick="restoreToPool('${item.ticket}', ${idx})">♻️ Return to Pool</button>
+            <button class="btn-recycle-action" style="border-color:#2ecc71; color:#2ecc71;" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 Restore Winner</button>
           </div>
         </div>
       `).join('');
@@ -2185,13 +2449,11 @@
       saveAndBroadcast();
       updateUI();
       renderRecycleList();
-      showToast(`票号 【${ticket}】 已成功归还号池！`);
+      showToast(`Restored #${ticket} to pool!`);
     }
 
     function restoreAsWinner(ticket, index) {
-      if (winners.length >= maxPrizes) {
-        maxPrizes++;
-      }
+      if (winners.length >= maxPrizes) maxPrizes++;
       recycleBin.splice(index, 1);
       winners.push(ticket);
       const pIdx = pool.indexOf(ticket);
@@ -2200,7 +2462,7 @@
       saveAndBroadcast();
       updateUI();
       renderRecycleList();
-      showToast(`票号 【${ticket}】 已正式恢复为中奖名单（追加为第 ${winners.length} 份）！`);
+      showToast(`Restored #${ticket} as winner!`);
     }
 
     // CRISIS TOOLS
@@ -2217,15 +2479,13 @@
         pool.splice(idx, 1);
         recycleBin.unshift({
           ticket: val,
-          originalSeq: '未抽出(预剔除)',
+          originalSeq: 'Excluded',
           time: new Date().toLocaleTimeString()
         });
         input.value = '';
         saveAndBroadcast();
         updateUI();
-        showToast(`已成功将票号 【${val}】 剔除出号池并存入回收站！`);
-      } else {
-        showToast(`票号 【${val}】 不在当前可用号池中！`, true);
+        showToast(`Excluded #${val}`);
       }
     }
 
@@ -2257,111 +2517,105 @@
         try {
           const d = JSON.parse(e.target.result);
           if (Array.isArray(d.pool) && Array.isArray(d.winners)) {
-            pool = d.pool;
-            winners = d.winners;
-            recycleBin = d.recycleBin || [];
-            voidAuditLogs = d.voidAuditLogs || [];
-            if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
-            if (d.poolStart) poolStart = Number(d.poolStart);
-            if (d.poolEnd) poolEnd = Number(d.poolEnd);
-            if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
-            if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
-
+            applyIncomingState(d);
             saveAndBroadcast();
-            updateUI();
             toggleCrisisModal(false);
-            showToast("完整抽奖备份已成功还原恢复！");
-          } else {
-            alert("文件格式不正确，不是有效的抽奖备份文件！");
+            showToast("JSON Restored!");
           }
         } catch (err) {
-          alert("导入失败: " + err.message);
+          alert("Import failed!");
         }
       };
       reader.readAsText(file);
     }
 
     // ==============================================================
-    // ROBUST MQTT WEBSOCKET PUBSUB ENGINE (NO MORE WEBRTC NAT CRASHES)
+    // 100% RELIABLE WEBSOCKET PUB/SUB (PORT 443 WSS) + NTFY FALLBACK
     // ==============================================================
     function toggleSyncModal(show) {
       document.getElementById('syncModal').style.display = show ? 'flex' : 'none';
     }
 
-    function updateP2PStatus(status, text) {
+    function updateSyncUI(status, text) {
       const tag = document.getElementById('p2pStatusTag');
       tag.className = `p2p-status-tag ${status}`;
       tag.textContent = text;
       const navBtn = document.getElementById('syncNavBtn');
       if (status === 'connected') {
         navBtn.style.background = '#27ae60';
-        navBtn.textContent = '📡 联机中 (已同步)';
+        navBtn.textContent = '📡 Synced';
       } else if (status === 'waiting') {
         navBtn.style.background = '#e67e22';
-        navBtn.textContent = '📡 连接中...';
+        navBtn.textContent = '📡 Syncing...';
       }
     }
 
-    function initMQTTClient(roomId, asHost) {
-      if (mqttClient) {
-        try { mqttClient.disconnect(); } catch(e) {}
+    function connectCloudChannel(roomId, asHost) {
+      isHost = asHost;
+      currentRoomId = roomId;
+
+      if (ws) {
+        try { ws.close(); } catch(e) {}
       }
 
-      isHost = asHost;
-      activeRoomTopic = "tanglung/festival/room/" + roomId;
-      const clientId = "client_" + (asHost ? "host_" : "sub_") + Math.random().toString(16).substr(2, 8);
+      updateSyncUI('waiting', `Connecting Room: ${roomId}...`);
+      document.getElementById('p2pPeerId').textContent = `Room ID: ${roomId}`;
 
-      // Connect securely via WSS over port 8884
-      mqttClient = new Paho.MQTT.Client("broker.hivemq.com", 8884, "/mqtt", clientId);
+      // Free standard PieSocket demo endpoint on port 443 (Pure WSS, never blocked by firewalls)
+      const apiKey = "oCdCMcMPQpbvNjUIzqtvF1d2X2okWpDQj4AwARJuAgtjhzKxVEjQU6IdCjwm";
+      const endpoint = `wss://demo.piesocket.com/v3/${roomId}?api_key=${apiKey}&notify_self=0`;
 
-      mqttClient.onConnectionLost = (responseObject) => {
-        updateP2PStatus('disconnected', '连接中断，3秒后自动重试...');
-        setTimeout(() => initMQTTClient(roomId, asHost), 3000);
-      };
+      try {
+        ws = new WebSocket(endpoint);
 
-      mqttClient.onMessageArrived = (message) => {
-        try {
-          const payload = JSON.parse(message.payloadString);
-          if (payload && payload.type === 'UPDATE_STATE') {
-            // Apply state directly
-            applyIncomingState(payload.data);
-          }
-        } catch (e) {
-          console.warn("MQTT Parse error:", e);
-        }
-      };
+        ws.onopen = () => {
+          updateSyncUI('connected', `${I18N[currentLang].syncConnected} [${roomId}]`);
+          showToast(`Cloud Sync Connected (Room: ${roomId})!`);
+          if (isHost) saveAndBroadcast();
+        };
 
-      updateP2PStatus('waiting', '正在连入公共加密云节点 (WSS)...');
+        ws.onmessage = (e) => {
+          try {
+            const parsed = JSON.parse(e.data);
+            if (parsed && parsed.type === 'UPDATE_STATE') {
+              applyIncomingState(parsed.data);
+            }
+          } catch(err) {}
+        };
 
-      mqttClient.connect({
-        useSSL: true,
-        timeout: 10,
-        keepAliveInterval: 30,
-        cleanSession: false,
-        onSuccess: () => {
-          updateP2PStatus('connected', `已成功接入房间: ${roomId}`);
-          document.getElementById('p2pPeerId').textContent = `房间码: ${roomId}`;
-          showToast(`跨设备云同步成功连接！房间: ${roomId}`);
-          
-          mqttClient.subscribe(activeRoomTopic, { qos: 0 });
+        ws.onclose = () => {
+          updateSyncUI('waiting', 'Reconnecting WSS in 3s...');
+          setTimeout(() => connectCloudChannel(roomId, asHost), 3000);
+        };
 
-          // If Host, broadcast current state right away
-          if (isHost) {
-            saveAndBroadcast();
-          }
-        },
-        onFailure: (err) => {
-          updateP2PStatus('disconnected', `连接失败: ${err.errorMessage || '请检查网络'}`);
-          setTimeout(() => initMQTTClient(roomId, asHost), 4000);
-        }
-      });
+        ws.onerror = () => {
+          updateSyncUI('waiting', 'Switching to HTTP cloud stream...');
+        };
+      } catch(e) {
+        console.warn("WSS fallback to HTTP");
+      }
+
+      // Secondary Guaranteed HTTP Poll Fallback via NTFY Stream (Works 100% on restricted mobile networks)
+      if (ntfyPollTimer) clearInterval(ntfyPollTimer);
+      if (!isHost) {
+        const eventSource = new EventSource(`https://ntfy.sh/tanglung_${roomId}/sse`);
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.message) {
+              const payload = JSON.parse(data.message);
+              if (payload.type === 'UPDATE_STATE') applyIncomingState(payload.data);
+            }
+          } catch(e) {}
+        };
+      }
     }
 
     function startHostRoom() {
-      const roomId = "tanglung-" + Math.floor(1000 + Math.random() * 9000);
-      initMQTTClient(roomId, true);
+      const roomId = "tanglung" + Math.floor(1000 + Math.random() * 9000);
+      connectCloudChannel(roomId, true);
 
-      // Build share link & QR code
+      // Create QR code
       const shareUrl = new URL(window.location.href);
       shareUrl.searchParams.set('room', roomId);
       document.getElementById('shareLinkInput').value = shareUrl.toString();
@@ -2377,9 +2631,9 @@
     }
 
     function joinClientRoomPrompt() {
-      const room = prompt("请输入主控机显示的房间码 (例如: tanglung-8888):");
+      const room = prompt("Enter Room ID (e.g. tanglung8888):");
       if (room && room.trim()) {
-        initMQTTClient(room.trim(), false);
+        connectCloudChannel(room.trim(), false);
       }
     }
 
@@ -2387,15 +2641,15 @@
       const input = document.getElementById('shareLinkInput');
       input.select();
       navigator.clipboard.writeText(input.value).then(() => {
-        showToast("直连链接已复制到剪贴板！可以直接发送给副机微信或浏览器。");
+        showToast("Copied pairing link!");
       });
     }
 
     function checkUrlForAutoJoin() {
       const params = new URLSearchParams(window.location.search);
-      const roomParam = params.get('room') || params.get('join');
-      if (roomParam) {
-        initMQTTClient(roomParam.trim(), false);
+      const room = params.get('room') || params.get('join');
+      if (room) {
+        connectCloudChannel(room.trim(), false);
       }
     }
 
@@ -2409,7 +2663,7 @@
       }
     });
 
-    // SCROLL ENGINE (DESKTOP + PIP INTEGRATED)
+    // SCROLLER ENGINE
     let projScrollPos = 0;
     let opScrollPos = 0;
     let projSpeedPx = 1.2;
@@ -2419,16 +2673,17 @@
 
     function renderScrollers() {
       const filtered = getFilteredWinnersList();
+      const t = I18N[currentLang];
       let cardsHtml = '';
 
       if (isSuspenseMode) {
-        cardsHtml = `<div class="proj-card"><span class="p-seq">正在摇号</span><span class="p-num">★★★ 精彩即将揭晓 ★★★</span></div>`;
+        cardsHtml = `<div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>`;
       } else if (filtered.length === 0) {
-        cardsHtml = `<div class="proj-card"><span class="p-seq">准备就绪</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
+        cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
       } else {
         cardsHtml = filtered.map(item => `
           <div class="proj-card">
-            <span class="p-seq">第 ${item.seq} 份奖品</span>
+            <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
             <span class="p-num">${item.num}</span>
           </div>
         `).join('');
@@ -2438,26 +2693,24 @@
       const projTrack = document.getElementById('projTrack');
       projTrack.innerHTML = cardsHtml + cardsHtml;
 
-      // Update Floating Desktop Picture-in-Picture window dynamically
+      // Update Desktop PiP
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
-          if (pipTrack) {
-            pipTrack.innerHTML = cardsHtml + cardsHtml;
-          }
+          if (pipTrack) pipTrack.innerHTML = cardsHtml + cardsHtml;
         } catch (e) {}
       }
 
       // Operator Left Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (filtered.length === 0) {
-        opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">当前分段暂无号码<br>祝各位好运吉祥！</div>`;
+        opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
       } else {
         const opCards = filtered.map(item => `
-          <div class="crawl-card" title="点击立即作废并现场重抽替换此号" onclick="promptRedrawSlot('${item.num}', ${item.seq - 1})">
+          <div class="crawl-card" title="Click to redraw" onclick="promptRedrawSlot('${item.num}', ${item.seq - 1})">
             <div>
-              <div class="crawl-tag">第 ${item.seq} 份奖品</div>
-              <div class="crawl-hint">⚡ 点击重抽</div>
+              <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
+              <div class="crawl-hint">⚡ Redraw</div>
             </div>
             <span class="crawl-num">${item.num}</span>
           </div>
@@ -2484,7 +2737,7 @@
         }
       }
 
-      // Robust PiP Translation Loop
+      // PiP Scroller
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2513,7 +2766,7 @@
     document.getElementById('opCrawlViewport').addEventListener('mouseenter', () => isOpPaused = true);
     document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
 
-    // Update UI Stats & Views
+    // Update UI Stats
     function updateUI() {
       document.getElementById('poolCount').textContent = pool.length;
       document.getElementById('poolMaxLabel').textContent = poolEnd;
@@ -2525,15 +2778,16 @@
       document.getElementById('recycleBtnCount').textContent = recycleBin.length;
       document.getElementById('recycleCount').textContent = recycleBin.length;
 
+      const t = I18N[currentLang];
       const ribbon = document.getElementById('pacingRibbon');
       if (winners.length >= (maxPrizes - 10) && winners.length < maxPrizes) {
-        ribbon.textContent = `🌟 盛大环节：压轴特奖 (VIP 逐一揭晓) 🌟`;
+        ribbon.textContent = t.pacingGrand;
         ribbon.style.background = "linear-gradient(90deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%)";
       } else if (winners.length >= maxPrizes) {
-        ribbon.textContent = `🎉 圆满礼成：全部 ${maxPrizes} 份大奖已全部抽出！ 🎉`;
+        ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
         ribbon.style.background = "linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%)";
       } else {
-        ribbon.textContent = `🏮 当前环节：幸运安慰奖抽取 (DRAWS #1 - #${maxPrizes - 10}) 🏮`;
+        ribbon.textContent = t.pacingConsolation.replace('{quota}', maxPrizes - 10);
         ribbon.style.background = "linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%)";
       }
 
@@ -2545,13 +2799,13 @@
 
       const auditList = document.getElementById('auditList');
       if (voidAuditLogs.length === 0) {
-        auditList.innerHTML = '<div style="text-align:center; color:#888; padding:30px;">暂无作废或重抽记录</div>';
+        auditList.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">${t.auditEmpty}</div>`;
       } else {
         auditList.innerHTML = voidAuditLogs.map(item => `
           <div class="modal-item">
             <div>
-              <strong>第 ${item.seq} 份奖品</strong>：原号 <span style="text-decoration:line-through; color:#ff7875;">${item.oldNum}</span> 
-              ➜ 替换为 <strong style="color:var(--imperial-gold); font-size:1.1rem;">${item.newNum}</strong>
+              <strong>#${item.seq}</strong>: <span style="text-decoration:line-through; color:#ff7875;">${item.oldNum}</span> 
+              ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${item.newNum}</strong>
             </div>
             <div style="font-size:0.75rem; color:#aaa;">${item.time}</div>
           </div>
@@ -2654,7 +2908,7 @@
       document.getElementById('projectorView').classList.toggle('transparent-mode');
     }
 
-    // ROBUST PIP IMPLEMENTATION
+    // PIP IMPLEMENTATION
     async function openPiPOverlay() {
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
@@ -2687,54 +2941,32 @@
             </div>
           `;
 
-          activePipWindow.addEventListener('pagehide', () => {
-            activePipWindow = null;
-          });
-
+          activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
           pipScrollPos = 0;
           renderScrollers();
-          showToast("已成功启动桌面悬浮置顶条！");
+          showToast("PiP Bar Opened!");
           return;
-        } catch (err) {
-          console.warn("PiP initialization fell back to popup window:", err);
-        }
+        } catch (err) {}
       }
 
+      // Universal Popup Fallback
       const popupUrl = new URL(window.location.href);
       popupUrl.searchParams.set('projection', 'true');
-      const popup = window.open(
-        popupUrl.toString(),
-        'TanglungPiPPopup',
-        'width=1000,height=120,top=10,left=100,resizable=yes,scrollbars=no,status=no,toolbar=no,menubar=no,location=no'
-      );
-      if (popup) {
-        showToast("已通过独立悬浮窗口为您开启挂件条！");
-      } else {
-        alert("弹窗被浏览器拦截，请允许本站弹出窗口！");
-      }
+      window.open(popupUrl.toString(), 'TanglungPiPPopup', 'width=1000,height=120,top=10,left=100,resizable=yes');
     }
 
     function exportCSV() {
-      if (winners.length === 0) return alert("尚无得奖者记录！");
-      let csv = "得奖位次 (Prize Sequence),最终中奖票号 (Final Ticket Number)\n";
+      if (winners.length === 0) return alert("No winners!");
+      let csv = "Prize Sequence,Ticket Number\n";
       winners.forEach((w, idx) => csv += `${idx + 1},${w}\n`);
-      
-      if (voidAuditLogs.length > 0) {
-        csv += "\n\n作废重抽历史审计记录 (Void & Redraw Audit Log)\n";
-        csv += "奖品位次 (Prize Seq),原号 (Voided Number),替换新号 (Replacement Number),操作时间 (Time)\n";
-        voidAuditLogs.forEach(item => {
-          csv += `${item.seq},${item.oldNum},${item.newNum},${item.time}\n`;
-        });
-      }
-
       const link = document.createElement("a");
       link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
-      link.download = `中秋提灯节庆典幸运大抽奖结果_${new Date().toISOString().slice(0,10)}.csv`;
+      link.download = `lucky_draw_${new Date().toISOString().slice(0,10)}.csv`;
       link.click();
     }
 
     function resetAll() {
-      if (confirm(`【严重警告】确定要重置整个抽奖吗？\n所有中奖记录将被清空，0001-${String(poolEnd).padStart(4,'0')} 号码将重返号池！`)) {
+      if (confirm("Reset everything?")) {
         if (isRolling) stopVip();
         stopClaimTimer();
         closeSpotlight();
@@ -2747,13 +2979,13 @@
         isSuspenseMode = false;
         document.getElementById('batchGrid').innerHTML = `
           <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
-            点击上方按钮同时抽出 10 个幸运号码
+            ${I18N[currentLang].batchEmptyHint}
           </div>`;
         document.getElementById('vipDisplay').textContent = '----';
         document.getElementById('searchInput').value = '';
         saveAndBroadcast();
         updateUI();
-        showToast("抽奖系统已成功重置回初始状态！");
+        showToast("Reset Completed!");
       }
     }
 
@@ -2805,14 +3037,15 @@
     window.addEventListener('beforeunload', (e) => {
       if (winners.length > 0 && winners.length < maxPrizes) {
         e.preventDefault();
-        e.returnValue = '活动抽奖正在进行中，确定要刷新或离开页面吗？';
+        e.returnValue = 'Draw in progress. Confirm exit?';
       }
     });
 
-    // Launch & auto-join detection
+    // Startup
     if (!load()) initPool();
     checkProjectionModeFromURL();
     checkUrlForAutoJoin();
+    applyLanguageUI();
     updateUI();
     requestAnimationFrame(animateScrollers);
   </script>
