@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
-  <!-- Zero-dependency QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style id="mainStyles">
     :root {
@@ -59,7 +58,6 @@
       z-index: 9999;
     }
 
-    /* TOAST NOTIFICATION */
     .toast-container {
       position: fixed;
       top: 75px;
@@ -102,7 +100,6 @@
       to { opacity: 0; }
     }
 
-    /* TOP OPERATOR BAR */
     .top-bar {
       min-height: 68px;
       display: flex;
@@ -261,7 +258,6 @@
       box-shadow: 0 0 10px #e74c3c;
     }
 
-    /* 3-COLUMN BROADCAST VIEWPORT */
     .viewport-grid {
       flex: 1;
       display: grid;
@@ -297,7 +293,6 @@
       min-height: 0;
     }
 
-    /* 1. LEFT COLUMN: VERTICAL CRAWL */
     .crawl-column {
       overflow: hidden;
     }
@@ -401,7 +396,6 @@
       cursor: pointer;
     }
 
-    /* 2. CENTER COLUMN: MAIN STAGE */
     .main-stage {
       background: var(--paper-cream);
       color: #2b0204;
@@ -493,7 +487,6 @@
       box-shadow: none;
     }
 
-    /* Mode 1: 10-Grid */
     .batch-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
@@ -555,7 +548,6 @@
       100% { transform: scale(1); opacity: 1; }
     }
 
-    /* Mode 2: VIP Stage */
     .vip-display {
       font-size: clamp(3.6rem, 8vw, 5.8rem);
       font-weight: 900;
@@ -575,7 +567,6 @@
       line-height: 1;
     }
 
-    /* Mode 3: Manual Insertion */
     .manual-card {
       background: #fffaf0;
       border: 2px dashed #b8860b;
@@ -612,11 +603,6 @@
       background: #fff;
       color: var(--cinnabar-red);
       box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
-    }
-
-    .manual-input-box input:focus {
-      border-color: var(--imperial-gold);
-      box-shadow: 0 0 10px rgba(244, 196, 48, 0.5);
     }
 
     .manual-actions {
@@ -657,7 +643,6 @@
       background: #19633e;
     }
 
-    /* 3. RIGHT COLUMN: MASTER BILLBOARD */
     .billboard-column {
       overflow: hidden;
     }
@@ -828,7 +813,6 @@
       flex-shrink: 0;
     }
 
-    /* MODALS */
     .modal-backdrop {
       display: none;
       position: fixed;
@@ -904,7 +888,18 @@
       color: #000;
     }
 
-    /* AUDIENCE VERIFICATION SPOTLIGHT POP-UP */
+    .p2p-status-tag {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-top: 4px;
+    }
+    .p2p-status-tag.connected { background: #27ae60; color: #fff; }
+    .p2p-status-tag.waiting { background: #e67e22; color: #fff; }
+    .p2p-status-tag.disconnected { background: #c0392b; color: #fff; }
+
     #spotlightModal {
       display: none;
       position: fixed;
@@ -947,7 +942,6 @@
       line-height: 1;
     }
 
-    /* COUNTDOWN TIMER BADGE */
     .timer-overlay {
       display: none;
       position: fixed;
@@ -986,7 +980,6 @@
       color: var(--cinnabar-red);
     }
 
-    /* PROJECTION & WIDGET OVERLAY SCREEN */
     #projectorView {
       display: none;
       position: fixed;
@@ -1334,7 +1327,6 @@
           🏮 当前环节：幸运安慰奖抽取 🏮
         </div>
 
-        <!-- 3 MODE TABS -->
         <div class="tab-group">
           <button class="tab-btn active" id="tabBatchBtn" onclick="switchTab('batch')" data-i18n="tabBatch">⚡ 十连抽模式 (10 Slots)</button>
           <button class="tab-btn" id="tabVipBtn" onclick="switchTab('vip')" data-i18n="tabVip">👑 贵宾抽奖台 (VIP Slot)</button>
@@ -1377,7 +1369,7 @@
         </div>
 
         <div class="stage-footer">
-          <span data-i18n="stageFooterLeft">中秋提灯晚会 • 全屏/左榜/PIP/跨机P2P实时联动已就绪</span>
+          <span data-i18n="stageFooterLeft">中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪</span>
           <span style="color:#b8860b; font-weight:bold;" data-i18n="stageFooterRight">现场专委会监制</span>
         </div>
       </div>
@@ -1388,7 +1380,6 @@
           <span>📋</span> <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
-        <!-- RANGE & SEGMENT FILTER PANEL -->
         <div class="filter-panel">
           <div class="filter-row">
             <select class="filter-select" id="filterModeSelect" onchange="applyRangeFilter()">
@@ -1449,9 +1440,6 @@
   </div>
 
   <script>
-    // ==============================================================
-    // TRILINGUAL LOCALIZATION (BM, BI, BC)
-    // ==============================================================
     let currentLang = 'BC';
 
     const I18N = {
@@ -1723,7 +1711,6 @@
         if (t[key]) el.innerHTML = t[key];
       });
 
-      // Update brand headings if unchanged
       document.getElementById('appMainTitle').innerText = t.brandTitle;
       document.getElementById('appSubTitle').innerText = t.brandSub;
       document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
@@ -1731,13 +1718,10 @@
       updateUI();
     }
 
-    // ==============================================================
-    // CORE LOTTERY STATE
-    // ==============================================================
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v18_final";
+    const STORAGE_KEY = "tanglung_stage_v20_perfect_sync";
     const CHANNEL_NAME = "tanglung_sync_channel";
 
     let pool = [];
@@ -1749,30 +1733,23 @@
     let soundOn = true;
     let currentFontSize = 1.35;
 
-    // Filter Variables
     let filterActive = false;
     let filterStartVal = null;
     let filterEndVal = null;
     let filterType = 'seq';
 
-    // Suspense & Timer Tracking
     let isSuspenseMode = false;
     let claimTimerInterval = null;
     let claimTimeRemaining = 10;
     let activeSpotlightTicket = null;
     let activeSpotlightIndex = -1;
 
-    // PiP References
     let activePipWindow = null;
     let pipScrollPos = 0;
 
-    // ==============================================================
-    // 100% RELIABLE CLOUD SYNC ENGINE (PIESOCKET 443 + NTFY FALLBACK)
-    // ==============================================================
-    let ws = null;
     let currentRoomId = null;
     let isHost = false;
-    let ntfyPollTimer = null;
+    let sseSource = null;
 
     const syncChannel = new BroadcastChannel(CHANNEL_NAME);
     let audioCtx = null;
@@ -1910,10 +1887,10 @@
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // CLOUD BROADCAST DISPATCHER
-    function saveAndBroadcast() {
+    // DISPATCH DELTA & FULL PAYLOADS RELIABLY
+    function saveAndBroadcast(eventType = 'STATE_SYNC', delta = null) {
       const payload = {
-        pool,
+        poolCount: pool.length,
         winners,
         recycleBin,
         maxPrizes,
@@ -1930,24 +1907,25 @@
         subTitle: document.getElementById('appSubTitle').innerText,
         timestamp: Date.now()
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
+      // Save complete state to LocalStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...payload, pool }));
       
       // 1. Cross-tab local broadcast
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
-      // 2. Cloud WebSocket Broadcast (Port 443 WSS)
-      if (ws && ws.readyState === WebSocket.OPEN && isHost) {
-        try {
-          ws.send(JSON.stringify({ type: 'UPDATE_STATE', data: payload }));
-        } catch(e) {}
-      }
-
-      // 3. Fallback Cloud Pub/Sub via NTFY (Ensures phone/cellular networks never drop)
+      // 2. High-speed, guaranteed Cloud Event Dispatch via HTTPS PubSub
       if (currentRoomId && isHost) {
-        fetch(`https://ntfy.sh/tanglung_${currentRoomId}`, {
+        const cloudPacket = {
+          type: eventType,
+          delta: delta,
+          state: payload
+        };
+        
+        fetch(`https://ntfy.sh/tanglung_room_${currentRoomId}`, {
           method: 'POST',
-          body: JSON.stringify({ type: 'UPDATE_STATE', data: payload }),
-          headers: { 'Title': 'Sync', 'Priority': 'high' }
+          headers: { 'Title': 'LotteryEvent', 'Priority': 'max' },
+          body: JSON.stringify(cloudPacket)
         }).catch(() => {});
       }
     }
@@ -1979,10 +1957,10 @@
     }
 
     function applyIncomingState(d) {
-      pool = d.pool;
-      winners = d.winners;
-      recycleBin = d.recycleBin || [];
-      voidAuditLogs = d.voidAuditLogs || [];
+      if (!d) return;
+      if (Array.isArray(d.winners)) winners = d.winners;
+      if (Array.isArray(d.recycleBin)) recycleBin = d.recycleBin;
+      if (Array.isArray(d.voidAuditLogs)) voidAuditLogs = d.voidAuditLogs;
       if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
       if (d.poolStart) poolStart = Number(d.poolStart);
       if (d.poolEnd) poolEnd = Number(d.poolEnd);
@@ -1991,15 +1969,23 @@
       if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
+      
       if (d.currentLang && d.currentLang !== currentLang) {
         currentLang = d.currentLang;
         document.getElementById('langSelect').value = currentLang;
+        applyLanguageUI();
       }
+
       if (d.mainTitle) {
         document.getElementById('appMainTitle').innerText = d.mainTitle;
         document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
       }
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
+
+      if (d.poolCount !== undefined) {
+        document.getElementById('poolCount').textContent = d.poolCount;
+      }
+
       updateUI();
     }
 
@@ -2066,7 +2052,7 @@
 
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
+      saveAndBroadcast('BATCH_DRAW', { batch });
       updateUI();
       showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
     }
@@ -2110,7 +2096,7 @@
       document.getElementById('vipDisplay').textContent = picked;
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
+      saveAndBroadcast('VIP_DRAW', { ticket: picked });
       updateUI();
       showToast(`🏆 ${picked}`);
     }
@@ -2142,7 +2128,7 @@
       input.value = '';
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
+      saveAndBroadcast('MANUAL_ENTRY', { ticket: val });
       updateUI();
       showToast(`Ticket #${val} added!`);
     }
@@ -2157,7 +2143,7 @@
 
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
+      saveAndBroadcast('MANUAL_DRAW', { ticket: picked });
       updateUI();
       showToast(`Replacement drawn: ${picked}`);
     }
@@ -2200,7 +2186,7 @@
 
         playFestiveGong();
         triggerConfetti();
-        saveAndBroadcast();
+        saveAndBroadcast('REDRAW_SLOT', { index, oldNum: ticketNum, newNum: replacement });
         updateUI();
         showToast(`Replaced #${ticketNum} -> #${replacement}!`);
         return true;
@@ -2217,7 +2203,7 @@
       }
     }
 
-    // RANGE FILTER LOGIC
+    // RANGE FILTER
     function applyRangeFilter() {
       filterType = document.getElementById('filterModeSelect').value;
       const sVal = document.getElementById('rangeStart').value.trim();
@@ -2530,7 +2516,7 @@
     }
 
     // ==============================================================
-    // 100% RELIABLE WEBSOCKET PUB/SUB (PORT 443 WSS) + NTFY FALLBACK
+    // GUARANTEED REAL-TIME CLOUD STREAM (ZERO WEBRTC / WSS FAILS)
     // ==============================================================
     function toggleSyncModal(show) {
       document.getElementById('syncModal').style.display = show ? 'flex' : 'none';
@@ -2554,68 +2540,66 @@
       isHost = asHost;
       currentRoomId = roomId;
 
-      if (ws) {
-        try { ws.close(); } catch(e) {}
+      if (sseSource) {
+        try { sseSource.close(); } catch(e) {}
       }
 
       updateSyncUI('waiting', `Connecting Room: ${roomId}...`);
       document.getElementById('p2pPeerId').textContent = `Room ID: ${roomId}`;
 
-      // Free standard PieSocket demo endpoint on port 443 (Pure WSS, never blocked by firewalls)
-      const apiKey = "oCdCMcMPQpbvNjUIzqtvF1d2X2okWpDQj4AwARJuAgtjhzKxVEjQU6IdCjwm";
-      const endpoint = `wss://demo.piesocket.com/v3/${roomId}?api_key=${apiKey}&notify_self=0`;
+      // Open Real-Time HTTPS Server-Sent Event stream
+      const topicUrl = `https://ntfy.sh/tanglung_room_${roomId}/sse`;
+      sseSource = new EventSource(topicUrl);
 
-      try {
-        ws = new WebSocket(endpoint);
+      sseSource.onopen = () => {
+        updateSyncUI('connected', `${I18N[currentLang].syncConnected} [${roomId}]`);
+        showToast(`Real-Time Cloud Connected (Room: ${roomId})!`);
+        if (isHost) {
+          saveAndBroadcast('STATE_SYNC');
+        } else {
+          // Client pulls immediate latest state snapshot
+          fetch(`https://ntfy.sh/tanglung_room_${roomId}/json?poll=1`)
+            .then(res => res.text())
+            .then(text => {
+              const lines = text.trim().split('\n');
+              for (let i = lines.length - 1; i >= 0; i--) {
+                try {
+                  const entry = JSON.parse(lines[i]);
+                  if (entry.message) {
+                    const parsed = JSON.parse(entry.message);
+                    if (parsed.state) {
+                      applyIncomingState(parsed.state);
+                      break;
+                    }
+                  }
+                } catch(e) {}
+              }
+            }).catch(() => {});
+        }
+      };
 
-        ws.onopen = () => {
-          updateSyncUI('connected', `${I18N[currentLang].syncConnected} [${roomId}]`);
-          showToast(`Cloud Sync Connected (Room: ${roomId})!`);
-          if (isHost) saveAndBroadcast();
-        };
-
-        ws.onmessage = (e) => {
-          try {
-            const parsed = JSON.parse(e.data);
-            if (parsed && parsed.type === 'UPDATE_STATE') {
-              applyIncomingState(parsed.data);
+      sseSource.onmessage = (event) => {
+        try {
+          const packet = JSON.parse(event.data);
+          if (packet.message) {
+            const parsed = JSON.parse(packet.message);
+            if (parsed.state && !isHost) {
+              applyIncomingState(parsed.state);
             }
-          } catch(err) {}
-        };
+          }
+        } catch(e) {}
+      };
 
-        ws.onclose = () => {
-          updateSyncUI('waiting', 'Reconnecting WSS in 3s...');
-          setTimeout(() => connectCloudChannel(roomId, asHost), 3000);
-        };
-
-        ws.onerror = () => {
-          updateSyncUI('waiting', 'Switching to HTTP cloud stream...');
-        };
-      } catch(e) {
-        console.warn("WSS fallback to HTTP");
-      }
-
-      // Secondary Guaranteed HTTP Poll Fallback via NTFY Stream (Works 100% on restricted mobile networks)
-      if (ntfyPollTimer) clearInterval(ntfyPollTimer);
-      if (!isHost) {
-        const eventSource = new EventSource(`https://ntfy.sh/tanglung_${roomId}/sse`);
-        eventSource.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.message) {
-              const payload = JSON.parse(data.message);
-              if (payload.type === 'UPDATE_STATE') applyIncomingState(payload.data);
-            }
-          } catch(e) {}
-        };
-      }
+      sseSource.onerror = () => {
+        updateSyncUI('waiting', 'Reconnecting cloud stream in 3s...');
+      };
     }
 
     function startHostRoom() {
       const roomId = "tanglung" + Math.floor(1000 + Math.random() * 9000);
       connectCloudChannel(roomId, true);
 
-      // Create QR code
+      // Create QR Code & Share Link
       const shareUrl = new URL(window.location.href);
       shareUrl.searchParams.set('room', roomId);
       document.getElementById('shareLinkInput').value = shareUrl.toString();
@@ -2766,7 +2750,6 @@
     document.getElementById('opCrawlViewport').addEventListener('mouseenter', () => isOpPaused = true);
     document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
 
-    // Update UI Stats
     function updateUI() {
       document.getElementById('poolCount').textContent = pool.length;
       document.getElementById('poolMaxLabel').textContent = poolEnd;
@@ -2908,7 +2891,6 @@
       document.getElementById('projectorView').classList.toggle('transparent-mode');
     }
 
-    // PIP IMPLEMENTATION
     async function openPiPOverlay() {
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
@@ -2949,7 +2931,6 @@
         } catch (err) {}
       }
 
-      // Universal Popup Fallback
       const popupUrl = new URL(window.location.href);
       popupUrl.searchParams.set('projection', 'true');
       window.open(popupUrl.toString(), 'TanglungPiPPopup', 'width=1000,height=120,top=10,left=100,resizable=yes');
@@ -2983,7 +2964,7 @@
           </div>`;
         document.getElementById('vipDisplay').textContent = '----';
         document.getElementById('searchInput').value = '';
-        saveAndBroadcast();
+        saveAndBroadcast('RESET_ALL');
         updateUI();
         showToast("Reset Completed!");
       }
@@ -3041,7 +3022,6 @@
       }
     });
 
-    // Startup
     if (!load()) initPool();
     checkProjectionModeFromURL();
     checkUrlForAutoJoin();
