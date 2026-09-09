@@ -223,29 +223,17 @@
       border-color: #74b9ff;
       box-shadow: 0 0 10px rgba(9, 132, 227, 0.5);
     }
-    .btn-sync:hover {
-      background: #74b9ff;
-      color: #000;
-    }
 
     .btn-projector {
       background: linear-gradient(135deg, #f4c430 0%, #b8860b 100%);
       color: #2b0204;
       box-shadow: 0 0 10px rgba(244, 196, 48, 0.5);
     }
-    .btn-projector:hover {
-      background: #fff;
-      color: #981216;
-    }
 
     .btn-recycle {
       background: rgba(46, 204, 113, 0.18);
       border-color: #2ecc71;
       color: #a8f0c3;
-    }
-    .btn-recycle:hover {
-      background: #2ecc71;
-      color: #10301a;
     }
 
     .btn-suspense {
@@ -256,7 +244,6 @@
     .btn-suspense.active {
       background: #e74c3c;
       color: #fff;
-      box-shadow: 0 0 10px #e74c3c;
     }
 
     .viewport-grid {
@@ -1146,21 +1133,21 @@
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
-          <div id="p2pStatusTag" class="p2p-status-tag connected">已连接 Firebase 云数据库</div>
+          <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
-          <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;" data-i18n="scanQr">副机 / 手机扫码一键连接:</div>
+          <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;" data-i18n="scanQr">副机 / 显示端扫码一键加入:</div>
           <div id="qrcode" style="background:#fff; padding:8px; border-radius:6px;"></div>
-          <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制链接分享给其他电脑:</div>
+          <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制显示端链接分享给副机:</div>
           <input type="text" id="shareLinkInput" readonly style="width:100%; margin-top:4px; padding:6px; background:#1c0204; border:1px solid var(--imperial-gold); color:#ffdca8; font-size:0.75rem;">
-          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">📋 复制直连链接</button>
+          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">📋 复制显示端链接</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP WITH CLAIM TOGGLE -->
+  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP -->
   <div id="spotlightModal" onclick="closeSpotlight()">
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
@@ -1169,7 +1156,7 @@
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:#2ecc71; color:#fff; border-color:#2ecc71;" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()">⏱️ 现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" onclick="triggerDirectRedrawFromSpotlight()">⚡ 作废重抽</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()">⚡ 作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
@@ -1268,10 +1255,10 @@
       </div>
 
       <div class="top-stats">
-        <div class="stat-badge" title="点击修改彩池总数" onclick="editPoolSize()" style="cursor:pointer;">
+        <div class="stat-badge" title="点击修改彩池总数" onclick="editPoolSize()" style="cursor:pointer;" id="poolBadgeEl">
           <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">1500</strong> / <span id="poolMaxLabel" style="text-decoration:underline;">1500</span> ✏️
         </div>
-        <div class="stat-badge" title="点击修改奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;">
+        <div class="stat-badge" title="点击修改奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;" id="prizeBadgeEl">
           <span data-i18n="wonLabel">已抽出</span>: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" style="text-decoration:underline;">110</span> ✏️
         </div>
         <div class="stat-badge">
@@ -1293,12 +1280,12 @@
         <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">📽️ 大屏投影端</button>
         <button class="icon-btn" onclick="openPiPOverlay()" data-i18n="navPip">📌 桌面悬浮条</button>
         <button class="icon-btn" onclick="copyEmceeScript()" data-i18n="navScript">📋 司仪口播稿</button>
-        <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis">🛠️ 应急</button>
+        <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis" id="crisisBtn">🛠️ 应急</button>
         <button class="icon-btn" onclick="testSound()" data-i18n="navTestSound">🔔 试音</button>
         <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">🔊 音效: 开</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
         <button class="icon-btn" onclick="exportCSV()">💾 CSV</button>
-        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="resetAll()" data-i18n="navReset">↺ 重置</button>
+        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
       </div>
     </div>
 
@@ -1306,7 +1293,7 @@
     <div class="viewport-grid">
       <!-- 1. LEFT COLUMN: VERTICAL RUNNING STRIP -->
       <div class="traditional-frame crawl-column">
-        <div class="column-banner">
+        <div class="column-banner" id="leftBannerText">
           <span>🏮</span> <span data-i18n="leftBanner">荣誉榜 · 点击号码直接重抽</span> <span>🏮</span>
         </div>
         <div class="crawl-viewport" id="opCrawlViewport">
@@ -1337,7 +1324,7 @@
           🏮 当前环节：幸运安慰奖抽取 🏮
         </div>
 
-        <div class="tab-group">
+        <div class="tab-group" id="tabGroupEl">
           <button class="tab-btn active" id="tabBatchBtn" onclick="switchTab('batch')" data-i18n="tabBatch">⚡ 十连抽模式 (10 Slots)</button>
           <button class="tab-btn" id="tabVipBtn" onclick="switchTab('vip')" data-i18n="tabVip">👑 贵宾抽奖台 (VIP Slot)</button>
           <button class="tab-btn" id="tabManualBtn" onclick="switchTab('manual')" data-i18n="tabManual">✍️ 手动录入 / 补抽 (Manual)</button>
@@ -1456,6 +1443,7 @@
   <script>
     const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
     let currentLang = 'BC';
+    let isViewerMode = false;
 
     const I18N = {
       BC: {
@@ -1464,7 +1452,7 @@
         poolLabel: "号池",
         wonLabel: "已抽出",
         leftLabel: "剩余名额",
-        navSync: "📡 云同步 (已连接)",
+        navSync: "📡 联机大厅",
         navSuspenseOn: "🔒 隐蔽模式: 开",
         navSuspenseOff: "🔒 隐蔽模式: 关",
         navRecycle: "回收站",
@@ -1477,7 +1465,7 @@
         navSoundOff: "🔇 音效: 关",
         navFullscreen: "⛶ 全屏",
         navReset: "↺ 重置",
-        leftBanner: "荣誉榜 · 点击号码直接重抽",
+        leftBanner: "荣誉榜 · 查看中奖名单",
         crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
         speedLabel: "滚动速度:",
         fontLabel: "字体大小:",
@@ -1488,13 +1476,13 @@
         batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
         btnStartRoll: "开 始 滚 动",
         btnStopRoll: "停！(STOP)",
-        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
+        vipSpaceHint: "💡 舞台提示：主控端控制摇号中",
         manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
         manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
         manualInputHint: "输入 1 至 4 位数字按回车或点确认",
         btnConfirmManual: "✓ 确认手动录入",
         btnDrawSingleManual: "🎲 现场补抽 1 个",
-        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
+        stageFooterLeft: "中秋提灯晚会 • 观众/显示端实时同步已激活",
         stageFooterRight: "现场专委会监制",
         bbBanner: "中奖公布栏",
         optBySeq: "按奖品位次 (Prize #)",
@@ -1506,18 +1494,18 @@
         chipCustom: "自定义...",
         btnFocusVerify: "聚焦核验",
         bbEmpty: "暂无得奖数据",
-        syncTitle: "Firebase 实时云同步",
+        syncTitle: "跨设备实时云同步",
         syncStatusLabel: "连接状态:",
         syncOffline: "离线",
-        syncConnected: "已连接 Google RTDB 专线",
+        syncConnected: "已连接 Firebase 云数据库",
         btnHost: "👑 主控端模式",
         btnJoin: "🔗 显示端模式",
         scanQr: "手机 / 平板扫码一键加入:",
-        copyLinkText: "或复制链接分享给其他电脑:",
-        btnCopyLink: "📋 复制直连链接",
+        copyLinkText: "或复制显示端链接分享给副机:",
+        btnCopyLink: "📋 复制显示端链接",
         spotlightCongrats: "🎉 恭喜中奖 🎉",
         btnCall10: "⏱️ 现场10秒呼叫",
-        btnVoidRedraw: "⚡ 作废并重抽",
+        btnVoidRedraw: "⚡ 作废重抽",
         btnClose: "关 闭",
         timerCalling: "⏱️ 领奖呼叫:",
         secondsUnit: "秒",
@@ -1561,7 +1549,7 @@
         navSoundOff: "🔇 Bunyi: Mute",
         navFullscreen: "⛶ Skrin Penuh",
         navReset: "↺ Reset",
-        leftBanner: "Senarai Pemenang (Klik Ganti Semula)",
+        leftBanner: "Senarai Pemenang",
         crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
         speedLabel: "Kelajuan:",
         fontLabel: "Saiz Fon:",
@@ -1569,16 +1557,16 @@
         tabVip: "👑 Pentas VIP (Satu persatu)",
         tabManual: "✍️ Masuk Manual / Ganti",
         btnDraw10: "🎲 Cabut 10 Pemenang",
-        batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
+        batchEmptyHint: "Menunggu cabutan...",
         btnStartRoll: "Mula Putar",
         btnStopRoll: "BERHENTI! (STOP)",
-        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
+        vipSpaceHint: "💡 Mod Paparan: Dikawal oleh Host",
         manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
         manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
-        manualInputHint: "Masukkan 1-4 digit nombor tiket dan tekan Enter",
-        btnConfirmManual: "✓ Sahkan Masukan",
-        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
-        stageFooterLeft: "Malam Festival Tanglung • Google Firebase Sinkronisasi Aktif",
+        manualInputHint: "Masukkan 1-4 digit nombor tiket",
+        btnConfirmManual: "✓ Sahkan",
+        btnDrawSingleManual: "🎲 Cabut Ganti",
+        stageFooterLeft: "Malam Festival Tanglung • Mod Paparan Aktif",
         stageFooterRight: "Jawatankuasa Pengelola",
         bbBanner: "Papan Kenyataan Pemenang",
         optBySeq: "Ikut Kedudukan Hadiah (#)",
@@ -1645,7 +1633,7 @@
         navSoundOff: "🔇 Audio: Muted",
         navFullscreen: "⛶ Fullscreen",
         navReset: "↺ Reset All",
-        leftBanner: "Winners Board (Click to Redraw)",
+        leftBanner: "Winners Board",
         crawlWaiting: "Lucky Draw has not started yet.<br>Best of luck to everyone!",
         speedLabel: "Scroll Speed:",
         fontLabel: "Font Size:",
@@ -1653,16 +1641,16 @@
         tabVip: "👑 VIP Stage Slot",
         tabManual: "✍️ Manual Entry / Replace",
         btnDraw10: "🎲 Draw 10 Winners",
-        batchEmptyHint: "Click button above to draw 10 lucky winners",
+        batchEmptyHint: "Waiting for draws...",
         btnStartRoll: "Start Rolling",
         btnStopRoll: "STOP!",
-        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
+        vipSpaceHint: "💡 Viewer Mode: Controlled by Master Host",
         manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
         manualDesc: "Strict duplicate check: automatically excludes already won numbers",
-        manualInputHint: "Type 1 to 4 digit ticket number and press Enter",
+        manualInputHint: "Type 1 to 4 digit ticket number",
         btnConfirmManual: "✓ Confirm Entry",
         btnDrawSingleManual: "🎲 Draw 1 Replacement",
-        stageFooterLeft: "Lantern Gala • Google Firebase Realtime Cloud Sync Active",
+        stageFooterLeft: "Lantern Gala • Viewer Display Mode Active",
         stageFooterRight: "Organizing Committee",
         bbBanner: "Winners Billboard",
         optBySeq: "By Prize Sequence (#)",
@@ -1716,7 +1704,7 @@
       currentLang = lang;
       document.getElementById('langSelect').value = lang;
       applyLanguageUI();
-      saveAndBroadcast();
+      if (!isViewerMode) saveAndBroadcast();
     }
 
     function applyLanguageUI() {
@@ -1736,8 +1724,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v22_fixed_bugs";
-    const CHANNEL_NAME = "tanglung_sync_channel";
+    const STORAGE_KEY = "tanglung_stage_v23_fixed_pool";
 
     let pool = [];
     let winners = [];
@@ -1766,7 +1753,7 @@
     let firebaseDb = null;
     let syncRef = null;
 
-    const syncChannel = new BroadcastChannel(CHANNEL_NAME);
+    const syncChannel = new BroadcastChannel('tanglung_sync_v23');
     let audioCtx = null;
 
     function showToast(msg, isError = false) {
@@ -1853,7 +1840,7 @@
     function testSound() {
       initAudio();
       playFestiveGong();
-      showToast(currentLang === 'BM' ? 'Bunyi diuji berjaya!' : (currentLang === 'BI' ? 'Audio tested successfully!' : '音响测试正常！'));
+      showToast("音响测试正常！");
     }
 
     function toggleSound() {
@@ -1870,22 +1857,24 @@
     }
 
     function editPoolSize() {
+      if (isViewerMode) return alert("Viewer Mode: Only Host can edit pool!");
       const input = prompt(`当前彩池范围 (Pool Range): ${poolStart} - ${poolEnd}。\n请输入新最大号码 (New Max):`, poolEnd);
       if (!input) return;
       const parsed = parseInt(input, 10);
       if (isNaN(parsed) || parsed <= poolStart) return alert("Invalid Number!");
       poolEnd = parsed;
 
-      pool = [];
-      for (let i = poolStart; i <= poolEnd; i++) {
-        const str = String(i).padStart(4, '0');
-        if (!winners.includes(str)) pool.push(str);
-      }
+      initPool();
+      winners.forEach(w => {
+        const idx = pool.indexOf(w);
+        if (idx !== -1) pool.splice(idx, 1);
+      });
       saveAndBroadcast();
       updateUI();
     }
 
     function editMaxPrizes() {
+      if (isViewerMode) return alert("Viewer Mode: Only Host can edit prizes!");
       const input = prompt(`当前奖品总份数: ${maxPrizes}。\n请输入新总额:`, maxPrizes);
       if (!input) return;
       const parsed = parseInt(input, 10);
@@ -1896,14 +1885,17 @@
     }
 
     function quickAddPrizes(qty) {
+      if (isViewerMode) return;
       maxPrizes += qty;
       saveAndBroadcast();
       updateUI();
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // FIREBASE CLOUD SYNC
+    // FIREBASE STATE SYNCHRONIZATION
     function saveAndBroadcast() {
+      if (isViewerMode) return;
+
       const payload = {
         pool,
         winners,
@@ -1988,7 +1980,9 @@
     });
 
     ['appMainTitle', 'appSubTitle'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => saveAndBroadcast());
+      document.getElementById(id).addEventListener('input', () => {
+        if (!isViewerMode) saveAndBroadcast();
+      });
     });
 
     function setupFirebaseConnection() {
@@ -1997,21 +1991,33 @@
           firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
         }
         const db = firebase.database();
-        syncRef = db.ref("draw_state");
+        syncRef = db.ref("draw_state_v23");
+
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('viewer') === 'true') {
+          isViewerMode = true;
+          enableViewerModeUI();
+        }
 
         syncRef.on("value", (snapshot) => {
           const val = snapshot.val();
           if (val) {
             applyStateData(val);
+          } else if (isViewerMode) {
+            initPool();
+            updateUI();
+          } else {
+            saveAndBroadcast();
           }
         });
 
-        const shareUrl = new URL(window.location.href);
-        document.getElementById('shareLinkInput').value = shareUrl.toString();
+        const viewerUrl = new URL(window.location.href);
+        viewerUrl.searchParams.set('viewer', 'true');
+        document.getElementById('shareLinkInput').value = viewerUrl.toString();
         const qrContainer = document.getElementById('qrcode');
         qrContainer.innerHTML = '';
         new QRCode(qrContainer, {
-          text: shareUrl.toString(),
+          text: viewerUrl.toString(),
           width: 140,
           height: 140
         });
@@ -2020,7 +2026,25 @@
       }
     }
 
+    function enableViewerModeUI() {
+      document.getElementById('p2pStatusTag').textContent = "显示端模式 (Viewer Mode - Read Only)";
+      document.getElementById('appMainTitle').removeAttribute('contenteditable');
+      document.getElementById('appSubTitle').removeAttribute('contenteditable');
+      document.getElementById('tabGroupEl').style.display = 'none';
+      document.getElementById('batchPanel').style.display = 'none';
+      document.getElementById('vipPanel').style.display = 'none';
+      document.getElementById('manualPanel').style.display = 'none';
+      document.getElementById('crisisBtn').style.display = 'none';
+      document.getElementById('resetBtn').style.display = 'none';
+      document.getElementById('poolBadgeEl').style.cursor = 'default';
+      document.getElementById('poolBadgeEl').removeAttribute('onclick');
+      document.getElementById('prizeBadgeEl').style.cursor = 'default';
+      document.getElementById('prizeBadgeEl').removeAttribute('onclick');
+      showToast("已自动进入【观众/显示端】同步模式，所有抽奖操作由主控端控制。");
+    }
+
     function switchTab(tab) {
+      if (isViewerMode) return;
       if (isRolling) stopVip();
       const btns = document.querySelectorAll('.tab-btn');
       btns[0].classList.toggle('active', tab === 'batch');
@@ -2038,6 +2062,7 @@
 
     // Mode 1: Batch 10 Draw
     function drawTen() {
+      if (isViewerMode) return;
       const quota = maxPrizes - winners.length;
       if (quota <= 0) return alert(`All ${maxPrizes} prizes have been won!`);
 
@@ -2069,16 +2094,18 @@
       triggerConfetti();
       saveAndBroadcast();
       updateUI();
-      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
+      showToast(`已成功抽出 10 位幸运儿！`);
     }
 
     // Mode 2: VIP Picker
     function toggleVip() {
+      if (isViewerMode) return;
       if (isRolling) stopVip();
       else startVip();
     }
 
     function startVip() {
+      if (isViewerMode) return;
       if (winners.length >= maxPrizes) return alert(`All ${maxPrizes} prizes concluded!`);
       if (pool.length === 0) return alert("Pool is empty!");
 
@@ -2096,6 +2123,7 @@
     }
 
     function stopVip() {
+      if (isViewerMode) return;
       clearInterval(rollTimer);
       isRolling = false;
 
@@ -2118,6 +2146,7 @@
 
     // Mode 3: Manual Insertion
     function confirmManualEntry() {
+      if (isViewerMode) return;
       if (winners.length >= maxPrizes) return alert(`All ${maxPrizes} prize slots filled!`);
       
       const input = document.getElementById('manualTicketInput');
@@ -2149,6 +2178,7 @@
     }
 
     function drawSingleManual() {
+      if (isViewerMode) return;
       if (winners.length >= maxPrizes) return alert("All prizes concluded!");
       if (pool.length === 0) return alert("Pool is empty!");
 
@@ -2165,6 +2195,11 @@
 
     // ONE-CLICK REDRAW & REPLACEMENT
     function promptRedrawSlot(ticketNum, index) {
+      if (isViewerMode) {
+        openSpotlight(ticketNum, index + 1);
+        return;
+      }
+
       if (pool.length === 0) {
         showToast("No backup numbers left in pool!", true);
         return false;
@@ -2213,6 +2248,7 @@
     }
 
     function triggerDirectRedrawFromSpotlight() {
+      if (isViewerMode) return;
       if (activeSpotlightIndex >= 0 && activeSpotlightTicket) {
         stopClaimTimer();
         promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
@@ -2223,6 +2259,7 @@
 
     // TOGGLE CLAIMED PRIZE STATUS
     function toggleClaimCurrentSpotlight() {
+      if (isViewerMode) return;
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
         if (idx !== -1) {
@@ -2255,7 +2292,7 @@
       }
 
       document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      saveAndBroadcast();
+      if (!isViewerMode) saveAndBroadcast();
       updateUI();
     }
 
@@ -2267,7 +2304,7 @@
       filterEndVal = null;
       document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('chip-all').classList.add('active');
-      saveAndBroadcast();
+      if (!isViewerMode) saveAndBroadcast();
       updateUI();
     }
 
@@ -2291,7 +2328,7 @@
       filterActive = true;
       filterStartVal = s;
       filterEndVal = e;
-      saveAndBroadcast();
+      if (!isViewerMode) saveAndBroadcast();
       updateUI();
     }
 
@@ -2366,6 +2403,12 @@
       document.getElementById('spotlightSub').textContent = `${I18N[currentLang].prizeItemPrefix.replace('{seq}', seq)} · 【${ticket}】`;
       
       const claimBtn = document.getElementById('spotlightClaimBtn');
+      const redrawBtn = document.getElementById('spotlightRedrawBtn');
+      if (isViewerMode) {
+        claimBtn.style.display = 'none';
+        redrawBtn.style.display = 'none';
+      }
+
       if (claimedWinners.includes(ticket)) {
         claimBtn.textContent = "✓ 已领奖 (Claimed)";
         claimBtn.style.background = "#27ae60";
@@ -2410,7 +2453,7 @@
           stopClaimTimer();
           playBuzzer();
           setTimeout(() => {
-            if (activeSpotlightTicket && activeSpotlightIndex >= 0) {
+            if (!isViewerMode && activeSpotlightTicket && activeSpotlightIndex >= 0) {
               const doRedraw = confirm(`10s Expired! Ticket [${activeSpotlightTicket}] absent. Redraw now?`);
               if (doRedraw) {
                 promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
@@ -2431,6 +2474,7 @@
 
     // SUSPENSE MODE
     function toggleSuspenseMode() {
+      if (isViewerMode) return;
       isSuspenseMode = !isSuspenseMode;
       const btn = document.getElementById('suspenseBtn');
       btn.classList.toggle('active', isSuspenseMode);
@@ -2470,14 +2514,17 @@
             <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(#${item.originalSeq} • ${item.time})</span>
           </div>
           <div class="recycle-actions">
-            <button class="btn-recycle-action" onclick="restoreToPool('${item.ticket}', ${idx})">♻️ Return to Pool</button>
-            <button class="btn-recycle-action" style="border-color:#2ecc71; color:#2ecc71;" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 Restore Winner</button>
+            ${!isViewerMode ? `
+              <button class="btn-recycle-action" onclick="restoreToPool('${item.ticket}', ${idx})">♻️ Return to Pool</button>
+              <button class="btn-recycle-action" style="border-color:#2ecc71; color:#2ecc71;" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 Restore Winner</button>
+            ` : ''}
           </div>
         </div>
       `).join('');
     }
 
     function restoreToPool(ticket, index) {
+      if (isViewerMode) return;
       recycleBin.splice(index, 1);
       if (!pool.includes(ticket) && !winners.includes(ticket)) {
         pool.push(ticket);
@@ -2490,6 +2537,7 @@
     }
 
     function restoreAsWinner(ticket, index) {
+      if (isViewerMode) return;
       if (winners.length >= maxPrizes) maxPrizes++;
       recycleBin.splice(index, 1);
       winners.push(ticket);
@@ -2508,6 +2556,7 @@
     }
 
     function excludeBlacklistTicket() {
+      if (isViewerMode) return;
       const input = document.getElementById('blacklistInput');
       let val = input.value.trim().padStart(4, '0');
       if (!val) return;
@@ -2548,6 +2597,7 @@
     }
 
     function uploadBackupJSON(event) {
+      if (isViewerMode) return;
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -2567,7 +2617,7 @@
       reader.readAsText(file);
     }
 
-    // SCROLLER ENGINE (EXCLUDES CLAIMED WINNERS FROM LEFT SCROLLER)
+    // SCROLLER ENGINE
     let projScrollPos = 0;
     let opScrollPos = 0;
     let projSpeedPx = 1.2;
