@@ -1409,7 +1409,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v38_live";
+    const STORAGE_KEY = "tanglung_stage_v39_realtime";
 
     let winners = [];
     let claimedWinners = [];
@@ -1440,7 +1440,7 @@
 
     let syncRef = null;
     let isPushingFirebase = false;
-    const syncChannel = new BroadcastChannel('tanglung_sync_v38');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v39');
     let audioCtx = null;
 
     const I18N = {
@@ -1866,7 +1866,10 @@
         applyLanguageUI();
       }
 
-      if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
+      if (d.mainTitle) {
+        document.getElementById('appMainTitle').innerText = d.mainTitle;
+        document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
+      }
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
 
       updateUI();
@@ -2009,7 +2012,7 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`已成功抽出 10 位幸运儿！`);
+      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
     }
 
     // MODE 2: VIP ROLLER
@@ -2409,7 +2412,7 @@
     function renderRecycleList() {
       const container = document.getElementById('recycleList');
       if (recycleBin.length === 0) {
-        container.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">${I18N[currentLang].recycleEmpty}</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:30px;" data-i18n="recycleEmpty">回收站空空如也</div>`;
         return;
       }
 
@@ -2499,7 +2502,7 @@
       reader.readAsText(file);
     }
 
-    // RENDER STATIC PROJECTION GRID & LIVE BILLBOARDS
+    // STATIC GRID PROJECTION & LIVE BILLBOARDS RENDERER
     function renderScrollers() {
       const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
       const t = I18N[currentLang];
@@ -2529,7 +2532,9 @@
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack) {
             let cardsHtml = '';
-            if (filtered.length === 0) {
+            if (isSuspenseMode) {
+              cardsHtml = `<div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>`;
+            } else if (filtered.length === 0) {
               cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
             } else {
               cardsHtml = filtered.map(item => `
@@ -2776,6 +2781,14 @@
           </div>`;
         document.getElementById('vipDisplay').textContent = '----';
         document.getElementById('searchInput').value = '';
+        document.getElementById('rangeStart').value = '';
+        document.getElementById('rangeEnd').value = '';
+        document.getElementById('filterModeSelect').value = 'seq';
+        filterType = 'seq';
+        filterStartVal = null;
+        filterEndVal = null;
+        document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('chip-all').classList.add('active');
         updateUI();
         saveAndBroadcast();
         showToast("Reset Completed!");
