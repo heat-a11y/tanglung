@@ -1486,6 +1486,14 @@
 
     const syncChannel = new BroadcastChannel(CHANNEL_NAME);
     let audioCtx = null;
+    let lastAppliedTimestamp = 0;
+    let isApplyingState = false;
+    let renderScrollersPending = false;
+    let activeConfettiId = null;
+    let cachedProjWidth = 0;
+    let cachedProjHeight = 0;
+    let cachedOpHeight = 0;
+    let cachedPipWidth = 0;
 
     function showToast(msg, isError = false) {
       const container = document.getElementById('toastContainer');
@@ -1507,8 +1515,12 @@
       }
     }
 
+    let lastTickTime = 0;
     function playTick() {
       if (!soundOn) return;
+      const now = Date.now();
+      if (now - lastTickTime < 90) return;
+      lastTickTime = now;
       initAudio();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -1596,10 +1608,11 @@
       }
       poolEnd = parsed;
 
+      const wonSet = new Set(winners);
       pool = [];
       for (let i = poolStart; i <= poolEnd; i++) {
         const str = String(i).padStart(4, '0');
-        if (!winners.includes(str)) {
+        if (!wonSet.has(str)) {
           pool.push(str);
         }
       }
@@ -1647,6 +1660,7 @@
         subTitle: document.getElementById('appSubTitle').innerText,
         timestamp: Date.now()
       };
+      lastAppliedTimestamp = payload.timestamp;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       
       // 1. Broadcast locally (cross tabs)
@@ -1691,10 +1705,14 @@
     }
 
     function applyIncomingState(d) {
-      pool = d.pool;
-      winners = d.winners;
-      recycleBin = d.recycleBin || [];
-      voidAuditLogs = d.voidAuditLogs || [];
+      if (!d || isApplyingState) return;
+      if (d.timestamp && d.timestamp <= lastAppliedTimestamp) return;
+      isApplyingState = true;
+      if (d.timestamp) lastAppliedTimestamp = d.timestamp;
+      pool = (Array.isArray(d.pool) ? d.pool : []).slice();
+      winners = (Array.isArray(d.winners) ? d.winners : []).slice();
+      recycleBin = (Array.isArray(d.recycleBin) ? d.recycleBin : []).slice();
+      voidAuditLogs = (Array.isArray(d.voidAuditLogs) ? d.voidAuditLogs : []).slice();
       if (d.maxPrizes) maxPrizes = d.maxPrizes;
       if (d.poolStart) poolStart = d.poolStart;
       if (d.poolEnd) poolEnd = d.poolEnd;
@@ -1708,7 +1726,11 @@
         document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle} · 实时中奖榜条`;
       }
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
-      updateUI();
+      try {
+        updateUI();
+      } finally {
+        isApplyingState = false;
+      }
     }
 
     syncChannel.onmessage = (event) => {
@@ -2433,6 +2455,14 @@
       // Projection Display Track
       const projTrack = document.getElementById('projTrack');
       projTrack.innerHTML = cardsHtml + cardsHtml;
+      const pBody = document.getElementById('projBody');
+      if (pBody.classList.contains('horizontal')) {
+        cachedProjWidth = projTrack.scrollWidth / 2;
+        cachedProjHeight = 0;
+      } else {
+        cachedProjHeight = projTrack.scrollHeight / 2;
+        cachedProjWidth = 0;
+      }
 
       // Update Floating Desktop Picture-in-Picture window dynamically
       if (activePipWindow && !activePipWindow.closed) {
@@ -2440,6 +2470,7 @@
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack) {
             pipTrack.innerHTML = cardsHtml + cardsHtml;
+            cachedPipWidth = pipTrack.scrollWidth / 2;
           }
         } catch (e) {}
       }
@@ -2448,6 +2479,7 @@
       const opTrack = document.getElementById('opCrawlTrack');
       if (filtered.length === 0) {
         opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">当前分段暂无号码<br>祝各位好运吉祥！</div>`;
+        cachedOpHeight = 0;
       } else {
         const opCards = filtered.map(item => `
           <div class="crawl-card" title="点击立即作废并现场重抽替换此号" onclick="promptRedrawSlot('${item.num}', ${item.seq - 1})">
@@ -2459,7 +2491,17 @@
           </div>
         `).join('');
         opTrack.innerHTML = opCards + opCards;
+        cachedOpHeight = opTrack.scrollHeight / 2;
       }
+    }
+
+    function scheduleRenderScrollers() {
+      if (renderScrollersPending) return;
+      renderScrollersPending = true;
+      requestAnimationFrame(() => {
+        renderScrollersPending = false;
+        renderScrollers();
+      });
     }
 
     function animateScrollers() {
@@ -2470,11 +2512,13 @@
       if (!isProjPaused && projTrack.children.length > 0) {
         projScrollPos += projSpeedPx;
         if (isHorizontal) {
-          const halfWidth = projTrack.scrollWidth / 2;
+          if (cachedProjWidth <= 0) cachedProjWidth = projTrack.scrollWidth / 2;
+          const halfWidth = cachedProjWidth;
           if (projScrollPos >= halfWidth) projScrollPos = 0;
           projTrack.style.transform = `translateX(-${projScrollPos}px)`;
         } else {
-          const halfHeight = projTrack.scrollHeight / 2;
+          if (cachedProjHeight <= 0) cachedProjHeight = projTrack.scrollHeight / 2;
+          const halfHeight = cachedProjHeight;
           if (projScrollPos >= halfHeight) projScrollPos = 0;
           projTrack.style.transform = `translate(-50%, -${projScrollPos}px)`;
         }
@@ -2486,7 +2530,8 @@
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack && pipTrack.children.length > 0) {
             pipScrollPos += projSpeedPx;
-            const halfPip = pipTrack.scrollWidth / 2;
+            if (cachedPipWidth <= 0) cachedPipWidth = pipTrack.scrollWidth / 2;
+            const halfPip = cachedPipWidth;
             if (pipScrollPos >= halfPip) pipScrollPos = 0;
             pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
           }
@@ -2496,7 +2541,8 @@
       const opTrack = document.getElementById('opCrawlTrack');
       if (!isOpPaused && opTrack && winners.length > 0) {
         opScrollPos += opSpeedPx;
-        const halfOp = opTrack.scrollHeight / 2;
+        if (cachedOpHeight <= 0) cachedOpHeight = opTrack.scrollHeight / 2;
+        const halfOp = cachedOpHeight;
         if (opScrollPos >= halfOp) opScrollPos = 0;
         opTrack.style.transform = `translateY(-${opScrollPos}px)`;
       }
@@ -2554,7 +2600,7 @@
         `).join('');
       }
 
-      renderScrollers();
+      scheduleRenderScrollers();
     }
 
     function searchTicket(val) {
@@ -2756,6 +2802,10 @@
     }
 
     function triggerConfetti() {
+      if (activeConfettiId !== null) {
+        cancelAnimationFrame(activeConfettiId);
+        activeConfettiId = null;
+      }
       const canvas = document.getElementById('confettiCanvas');
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
@@ -2794,10 +2844,14 @@
           ctx.stroke();
         });
         frames++;
-        if (frames < 80) requestAnimationFrame(render);
-        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (frames < 80) {
+          activeConfettiId = requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          activeConfettiId = null;
+        }
       }
-      render();
+      activeConfettiId = requestAnimationFrame(render);
     }
 
     window.addEventListener('beforeunload', (e) => {

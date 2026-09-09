@@ -1475,8 +1475,16 @@
 
     let syncRef = null;
     let isPushingFirebase = false;
+    let isApplyingState = false;
+    let lastAppliedTimestamp = 0;
+    let hasInitialized = false;
     const syncChannel = new BroadcastChannel('tanglung_sync_v32');
     let audioCtx = null;
+    let renderScrollersPending = false;
+    let activeConfettiId = null;
+    let cachedProjWidths = [];
+    let cachedOpHeight = 0;
+    let cachedPipWidth = 0;
 
     function showToast(msg, isError = false) {
       const container = document.getElementById('toastContainer');
@@ -1498,8 +1506,12 @@
       }
     }
 
+    let lastTickTime = 0;
     function playTick() {
       if (!soundOn) return;
+      const now = Date.now();
+      if (now - lastTickTime < 90) return;
+      lastTickTime = now;
       initAudio();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
@@ -1645,6 +1657,7 @@
 
     function saveAndBroadcast() {
       const payload = getPayload();
+      lastAppliedTimestamp = payload.timestamp;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
@@ -1673,7 +1686,12 @@
     }
 
     function applyStateData(d) {
-      if (!d) return;
+      if (!d || isApplyingState) return;
+      if (d.timestamp && d.timestamp <= lastAppliedTimestamp) return;
+      isApplyingState = true;
+
+      if (d.timestamp) lastAppliedTimestamp = d.timestamp;
+
       winners = sanitizeList(d.winners);
       claimedWinners = sanitizeList(d.claimedWinners);
       recycleBin = sanitizeList(d.recycleBin);
@@ -1697,8 +1715,12 @@
       if (d.mainTitle) document.getElementById('appMainTitle').innerText = d.mainTitle;
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
 
-      rebuildPool();
-      updateUI();
+      try {
+        rebuildPool();
+        updateUI();
+      } finally {
+        isApplyingState = false;
+      }
     }
 
     syncChannel.onmessage = (event) => {
@@ -1740,10 +1762,15 @@
           const val = snapshot.val();
           if (val) {
             applyStateData(val);
-          } else if (!isViewerMode) {
+          } else if (!isViewerMode && !hasInitialized) {
+            hasInitialized = true;
             rebuildPool();
             updateUI();
             saveAndBroadcast();
+          } else if (!hasInitialized) {
+            hasInitialized = true;
+            rebuildPool();
+            updateUI();
           }
         });
 
@@ -2356,12 +2383,14 @@
               <div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>
             </div>`;
           projRowPositions = [0];
+          cachedProjWidths = [0];
         } else if (filtered.length === 0) {
           projBody.innerHTML = `
             <div class="proj-multi-row" style="justify-content:center;">
               <div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>
             </div>`;
           projRowPositions = [0];
+          cachedProjWidths = [0];
         } else {
           const winHeight = window.innerHeight;
           let rowCount = 2;
@@ -2399,6 +2428,7 @@
           if (projRowPositions.length !== rowCount) {
             projRowPositions = Array.from({ length: rowCount }, () => 0);
           }
+          cachedProjWidths = Array.from({ length: rowCount }, () => 0);
         }
       }
 
@@ -2419,6 +2449,7 @@
               `).join('');
             }
             pipTrack.innerHTML = cardsHtml + cardsHtml + cardsHtml;
+            cachedPipWidth = pipTrack.scrollWidth / 3;
           }
         } catch (e) {}
       }
@@ -2428,6 +2459,7 @@
       if (opTrack) {
         if (filtered.length === 0) {
           opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
+          cachedOpHeight = 0;
         } else {
           const opCards = filtered.map(item => `
             <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
@@ -2439,8 +2471,18 @@
             </div>
           `).join('');
           opTrack.innerHTML = opCards + opCards;
+          cachedOpHeight = opTrack.scrollHeight / 2;
         }
       }
+    }
+
+    function scheduleRenderScrollers() {
+      if (renderScrollersPending) return;
+      renderScrollersPending = true;
+      requestAnimationFrame(() => {
+        renderScrollersPending = false;
+        renderScrollers();
+      });
     }
 
     function animateScrollers() {
@@ -2450,7 +2492,10 @@
           if (track && track.children.length > 0) {
             const speed = projSpeedPx * (1 + (rIdx * 0.08));
             projRowPositions[rIdx] += speed;
-            const singleSetWidth = track.scrollWidth / 3;
+            if (cachedProjWidths[rIdx] <= 0) {
+              cachedProjWidths[rIdx] = track.scrollWidth / 3;
+            }
+            const singleSetWidth = cachedProjWidths[rIdx];
             if (projRowPositions[rIdx] >= singleSetWidth) {
               projRowPositions[rIdx] = 0;
             }
@@ -2464,7 +2509,10 @@
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack && pipTrack.children.length > 0) {
             pipScrollPos += projSpeedPx;
-            const singleSetWidth = pipTrack.scrollWidth / 3;
+            if (cachedPipWidth <= 0) {
+              cachedPipWidth = pipTrack.scrollWidth / 3;
+            }
+            const singleSetWidth = cachedPipWidth;
             if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
             pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
           }
@@ -2474,7 +2522,10 @@
       const opTrack = document.getElementById('opCrawlTrack');
       if (!isOpPaused && opTrack && winners.length > 0) {
         opScrollPos += opSpeedPx;
-        const halfOp = opTrack.scrollHeight / 2;
+        if (cachedOpHeight <= 0) {
+          cachedOpHeight = opTrack.scrollHeight / 2;
+        }
+        const halfOp = cachedOpHeight;
         if (opScrollPos >= halfOp) opScrollPos = 0;
         opTrack.style.transform = `translateY(-${opScrollPos}px)`;
       }
@@ -2534,7 +2585,7 @@
         `).join('');
       }
 
-      renderScrollers();
+      scheduleRenderScrollers();
     }
 
     function searchTicket(val) {
@@ -2683,6 +2734,10 @@
     }
 
     function triggerConfetti() {
+      if (activeConfettiId !== null) {
+        cancelAnimationFrame(activeConfettiId);
+        activeConfettiId = null;
+      }
       const canvas = document.getElementById('confettiCanvas');
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
@@ -2721,10 +2776,14 @@
           ctx.stroke();
         });
         frames++;
-        if (frames < 80) requestAnimationFrame(render);
-        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (frames < 80) {
+          activeConfettiId = requestAnimationFrame(render);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          activeConfettiId = null;
+        }
       }
-      render();
+      activeConfettiId = requestAnimationFrame(render);
     }
 
     window.addEventListener('beforeunload', (e) => {
@@ -2745,7 +2804,10 @@
     });
 
     window.addEventListener('resize', () => {
-      renderScrollers();
+      cachedProjWidths = [];
+      cachedOpHeight = 0;
+      cachedPipWidth = 0;
+      scheduleRenderScrollers();
     });
 
     function toggleSyncModal(show) {
