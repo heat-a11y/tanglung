@@ -684,7 +684,7 @@
       white-space: nowrap;
     }
     .filter-btn:hover {
-      background: var(--imperial-gold);
+      background: rgba(244, 196, 48, 0.25);
       color: #000;
     }
 
@@ -968,7 +968,7 @@
     .btn-timer-redraw:hover {
       transform: scale(1.04);
       background: #fff;
-      color: var(--cinnabar-red);
+      color: #981216;
     }
 
     #projectorView {
@@ -1019,58 +1019,49 @@
     .proj-body {
       flex: 1;
       position: relative;
-      overflow: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       background: #190103;
       box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-      padding: 10px 0;
-      justify-content: space-around;
+      padding: 20px;
     }
 
-    .proj-multi-row {
-      width: 100%;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      flex: 1;
-      margin: 4px 0;
-    }
-
-    .proj-track-row {
-      display: flex;
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      left: 0;
-      white-space: nowrap;
-      will-change: transform;
-    }
-
-    .proj-card {
-      background: linear-gradient(135deg, rgba(152, 18, 22, 0.92) 0%, rgba(35, 2, 4, 0.95) 100%);
-      border: 2px solid var(--imperial-gold);
-      border-radius: 12px;
-      padding: 8px 18px;
-      display: inline-flex;
-      align-items: center;
+    .proj-static-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 12px;
-      margin: 0 10px;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .proj-grid-card {
+      background: linear-gradient(135deg, rgba(152, 18, 22, 0.9) 0%, rgba(35, 2, 4, 0.95) 100%);
+      border: 2px solid var(--imperial-gold);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
-
-    .proj-card .p-seq {
+    .proj-grid-card .pg-seq {
+      font-size: 0.8rem;
       color: #ffdca8;
-      font-size: 1.05rem;
-      font-weight: bold;
+      margin-bottom: 2px;
     }
-    .proj-card .p-num {
-      color: var(--imperial-gold);
-      font-size: 1.9rem;
+    .proj-grid-card .pg-num {
+      font-size: 2rem;
       font-weight: 900;
+      color: var(--imperial-gold);
       font-family: monospace;
       letter-spacing: 2px;
+    }
+    .proj-grid-card.claimed {
+      background: rgba(46, 204, 113, 0.25) !important;
+      border-color: #2ecc71 !important;
+    }
+    .proj-grid-card.claimed .pg-num {
+      color: #2ecc71 !important;
     }
 
     .pip-single-row-body {
@@ -1393,21 +1384,21 @@
   </div>
 
   <!-- ============================================================== -->
-  <!-- 2. FULL WINDOW MULTI-ROW PROJECTION OVERLAY (Station 2)         -->
+  <!-- 2. FULL WINDOW STATIC GRID PROJECTION OVERLAY (Station 2)        -->
   <!-- ============================================================== -->
   <div id="projectorView">
     <div class="proj-toolbar">
       <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影</div>
       <div class="proj-btn-group">
         <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">🌓 背景: 全彩纯黑</button>
-        <button class="icon-btn" onclick="adjustProjSpeed(-15)">⏩</button>
-        <button class="icon-btn" onclick="adjustProjSpeed(15)">⏪</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
         <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
     </div>
 
-    <div class="proj-body" id="projBody"></div>
+    <div class="proj-body" id="projBody">
+      <div class="proj-static-grid" id="projStaticGrid"></div>
+    </div>
   </div>
 
   <script>
@@ -1418,7 +1409,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v34_stable";
+    const STORAGE_KEY = "tanglung_stage_v38_live";
 
     let winners = [];
     let claimedWinners = [];
@@ -1443,16 +1434,13 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
 
-    let projRowPositions = [];
     let opScrollPos = 0;
-    let projSpeedPx = 1.3;
     let opSpeedPx = 0.8;
-    let isProjPaused = false;
     let isOpPaused = false;
 
     let syncRef = null;
     let isPushingFirebase = false;
-    const syncChannel = new BroadcastChannel('tanglung_sync_v34');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v38');
     let audioCtx = null;
 
     const I18N = {
@@ -1627,7 +1615,7 @@
         pacingDone: "🎉 Tahniah: Kesemua {quota} Hadiah Telah Selesai Dicabut! 🎉",
         prizeItemPrefix: "Hadiah #{seq}",
         projWaiting: "Sedia Bermula",
-        projSuspense: "★★★ Sedang Berputar... Nantikan! ★★★",
+        projSuspense: "★★★ Nantikan Keputusan! ★★★",
         btnToggleBgSolid: "🌓 Latar: Warna Penuh",
         btnToggleBgTrans: "🌓 Latar: Saluran Telus",
         btnProjFs: "⛶ Skrin Penuh",
@@ -1762,7 +1750,6 @@
       return Object.values(raw).filter(Boolean);
     }
 
-    // DETERMINISTIC POOL GENERATOR (NEVER FAILS OR BLOCKS CLICKS)
     function getAvailablePool() {
       const wonSet = new Set(sanitizeList(winners));
       const recycledSet = new Set(sanitizeList(recycleBin).map(r => r.ticket));
@@ -1966,12 +1953,9 @@
       document.getElementById('poolBadgeEl').removeAttribute('onclick');
       document.getElementById('prizeBadgeEl').style.cursor = 'default';
       document.getElementById('prizeBadgeEl').removeAttribute('onclick');
-
-      showToast("已自动进入【观众/显示端】同步模式，可核销领奖。");
     }
 
     function switchTab(tab) {
-      if (isViewerMode) return;
       if (isRolling) stopVip();
       const btns = document.querySelectorAll('.tab-btn');
       btns[0].classList.toggle('active', tab === 'batch');
@@ -1987,7 +1971,7 @@
       }
     }
 
-    // MODE 1: BATCH 10 DRAW (GUARANTEED NON-FREEZING)
+    // MODE 1: BATCH 10 DRAW (INSTANT SYNCHRONOUS UPDATE)
     function drawTen() {
       if (isViewerMode) return;
       const candidates = getAvailablePool();
@@ -2127,7 +2111,6 @@
       showToast(`Replacement drawn: ${picked}`);
     }
 
-    // ONE-CLICK REDRAW
     function promptRedrawSlot(ticketNum, index) {
       if (isViewerMode) {
         openSpotlight(ticketNum, index + 1);
@@ -2516,65 +2499,31 @@
       reader.readAsText(file);
     }
 
-    // MULTI-ROW PROJECTION & SINGLE ROW PIP ENGINE
+    // RENDER STATIC PROJECTION GRID & LIVE BILLBOARDS
     function renderScrollers() {
       const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
       const t = I18N[currentLang];
 
-      const projBody = document.getElementById('projBody');
-      if (projBody) {
+      // 1. Static Grid Projection Screen
+      const projGrid = document.getElementById('projStaticGrid');
+      if (projGrid) {
         if (isSuspenseMode) {
-          projBody.innerHTML = `
-            <div class="proj-multi-row" style="justify-content:center;">
-              <div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>
-            </div>`;
-          projRowPositions = [0];
+          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2.5rem; color:var(--imperial-gold); padding:50px;">${t.projSuspense}</div>`;
         } else if (filtered.length === 0) {
-          projBody.innerHTML = `
-            <div class="proj-multi-row" style="justify-content:center;">
-              <div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>
-            </div>`;
-          projRowPositions = [0];
+          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:#ffdca8; padding:50px;">${t.projWaiting}</div>`;
         } else {
-          const winHeight = window.innerHeight;
-          let rowCount = 2;
-          if (winHeight >= 1000) rowCount = 5;
-          else if (winHeight >= 750) rowCount = 4;
-          else if (winHeight >= 550) rowCount = 3;
-
-          const rowsCards = Array.from({ length: rowCount }, () => []);
-          filtered.forEach((item, idx) => {
-            rowsCards[idx % rowCount].push(item);
-          });
-
-          let html = '';
-          rowsCards.forEach((rowItems, rIdx) => {
-            let rowHtml = '';
-            if (rowItems.length === 0) {
-              rowHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
-            } else {
-              rowHtml = rowItems.map(item => `
-                <div class="proj-card">
-                  <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
-                  <span class="p-num">${item.num}</span>
-                </div>
-              `).join('');
-            }
-            html += `
-              <div class="proj-multi-row">
-                <div class="proj-track-row" id="projTrackRow_${rIdx}">
-                  ${rowHtml + rowHtml + rowHtml}
-                </div>
+          projGrid.innerHTML = filtered.map(item => {
+            const isClaimed = claimedWinners.includes(item.num);
+            return `
+              <div class="proj-grid-card ${isClaimed ? 'claimed' : ''}">
+                <div class="pg-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
+                <div class="pg-num">${item.num}</div>
               </div>`;
-          });
-          projBody.innerHTML = html;
-
-          if (projRowPositions.length !== rowCount) {
-            projRowPositions = Array.from({ length: rowCount }, () => 0);
-          }
+          }).join('');
         }
       }
 
+      // 2. Desktop PiP (Single row ticker)
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2595,6 +2544,7 @@
         } catch (e) {}
       }
 
+      // 3. Operator Left Running Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (opTrack) {
         if (filtered.length === 0) {
@@ -2615,21 +2565,6 @@
     }
 
     function animateScrollers() {
-      if (!isProjPaused && projRowPositions.length > 0) {
-        projRowPositions.forEach((pos, rIdx) => {
-          const track = document.getElementById(`projTrackRow_${rIdx}`);
-          if (track && track.children.length > 0) {
-            const speed = projSpeedPx * (1 + (rIdx * 0.08));
-            projRowPositions[rIdx] += speed;
-            const singleSetWidth = track.scrollWidth / 3;
-            if (projRowPositions[rIdx] >= singleSetWidth) {
-              projRowPositions[rIdx] = 0;
-            }
-            track.style.transform = `translateY(-50%) translateX(-${projRowPositions[rIdx]}px)`;
-          }
-        });
-      }
-
       if (activePipWindow && !activePipWindow.closed) {
         try {
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
@@ -2653,8 +2588,6 @@
       requestAnimationFrame(animateScrollers);
     }
 
-    document.getElementById('projBody').addEventListener('mouseenter', () => isProjPaused = true);
-    document.getElementById('projBody').addEventListener('mouseleave', () => isProjPaused = false);
     document.getElementById('opCrawlViewport').addEventListener('mouseenter', () => isOpPaused = true);
     document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
 
@@ -2728,10 +2661,6 @@
 
     function adjustOpSpeed(val) {
       opSpeedPx = Number(val) / 55;
-    }
-
-    function adjustProjSpeed(delta) {
-      projSpeedPx = Math.max(0.4, Math.min(8.0, projSpeedPx + (delta > 0 ? 0.4 : -0.4)));
     }
 
     function adjustFont(delta) {
@@ -2905,6 +2834,16 @@
       }
     });
 
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select') {
+          e.preventDefault();
+          toggleVip();
+        }
+      }
+    });
+
     window.addEventListener('resize', () => {
       renderScrollers();
     });
@@ -2921,7 +2860,7 @@
       });
     }
 
-    // BOOTSTRAP
+    // BOOTSTRAP LIFECYCLE
     if (!load()) {
       updateUI();
     }
