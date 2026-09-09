@@ -3,9 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
-  <!-- QR Code Generator -->
+  <title>🏮 中秋提灯节庆典 · 幸运大抽奖 🏮</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style id="mainStyles">
     :root {
       --cinnabar-red: #981216;
@@ -329,6 +331,12 @@
       font-size: var(--strip-font);
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.15s, background 0.15s;
+    }
+
+    .crawl-card:hover {
+      transform: scale(1.02);
+      background: rgba(244, 196, 48, 0.25);
+      border-color: var(--imperial-gold);
     }
 
     .crawl-card .crawl-tag {
@@ -1118,8 +1126,7 @@
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
-          <div id="p2pStatusTag" class="p2p-status-tag connected">已连接 Firebase 云数据库</div>
-          <div id="modeIndicatorTag" style="margin-top:6px; font-weight:bold; color:var(--imperial-gold);">当前模式: 主控端 (Host)</div>
+          <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
@@ -1253,7 +1260,6 @@
       </div>
 
       <div class="top-actions">
-        <!-- TRILINGUAL TOGGLE BM / BI / BC -->
         <select class="lang-select" id="langSelect" onchange="changeLanguage(this.value)">
           <option value="BC">华文 (BC)</option>
           <option value="BM">B. Melayu (BM)</option>
@@ -1421,10 +1427,6 @@
       </div>
     </div>
   </div>
-
-  <!-- FIREBASE SDKS -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
     const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
@@ -1710,7 +1712,7 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v24_stable";
+    const STORAGE_KEY = "tanglung_stage_v26_fixed";
 
     let pool = [];
     let winners = [];
@@ -1736,10 +1738,8 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
 
-    let firebaseDb = null;
     let syncRef = null;
-
-    const syncChannel = new BroadcastChannel('tanglung_sync_v24');
+    const syncChannel = new BroadcastChannel('tanglung_sync_v26');
     let audioCtx = null;
 
     function showToast(msg, isError = false) {
@@ -1855,8 +1855,8 @@
         const idx = pool.indexOf(w);
         if (idx !== -1) pool.splice(idx, 1);
       });
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
     }
 
     function editMaxPrizes() {
@@ -1866,31 +1866,35 @@
       const parsed = parseInt(input, 10);
       if (isNaN(parsed) || parsed < winners.length) return alert("Cannot be less than drawn count!");
       maxPrizes = parsed;
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
     }
 
     function quickAddPrizes(qty) {
       if (isViewerMode) return;
       maxPrizes += qty;
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // ROBUST FIREBASE SYNCHRONIZATION
-    function saveAndBroadcast() {
-      if (isViewerMode) return;
+    // ROBUST DATA CLEANER TO PREVENT FIREBASE CRASHES
+    function sanitizeList(raw) {
+      if (!raw) return [];
+      if (Array.isArray(raw)) return raw.filter(Boolean);
+      return Object.values(raw).filter(Boolean);
+    }
 
-      const payload = {
-        pool: Array.isArray(pool) ? pool : [],
-        winners: Array.isArray(winners) ? winners : [],
-        claimedWinners: Array.isArray(claimedWinners) ? claimedWinners : [],
-        recycleBin: Array.isArray(recycleBin) ? recycleBin : [],
+    function getPayload() {
+      return {
+        pool: sanitizeList(pool),
+        winners: sanitizeList(winners),
+        claimedWinners: sanitizeList(claimedWinners),
+        recycleBin: sanitizeList(recycleBin),
         maxPrizes: Number(maxPrizes),
         poolStart: Number(poolStart),
         poolEnd: Number(poolEnd),
-        voidAuditLogs: Array.isArray(voidAuditLogs) ? voidAuditLogs : [],
+        voidAuditLogs: sanitizeList(voidAuditLogs),
         filterActive: Boolean(filterActive),
         filterStartVal: filterStartVal !== null ? Number(filterStartVal) : null,
         filterEndVal: filterEndVal !== null ? Number(filterEndVal) : null,
@@ -1901,24 +1905,39 @@
         subTitle: document.getElementById('appSubTitle').innerText,
         timestamp: Date.now()
       };
+    }
 
+    // ATOMIC SAVE AND BROADCAST
+    function saveAndBroadcast() {
+      if (isViewerMode) return;
+      const payload = getPayload();
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
 
       if (syncRef) {
-        syncRef.set(payload).catch((err) => console.warn("Firebase Write Error:", err));
+        syncRef.set(payload).catch((err) => console.warn("Firebase Push Error:", err));
       }
+    }
+
+    function load() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const d = JSON.parse(saved);
+          applyStateData(d);
+          return true;
+        } catch(e) { return false; }
+      }
+      return false;
     }
 
     function applyStateData(d) {
       if (!d) return;
-      
-      // Safely parse arrays from Firebase objects
-      pool = d.pool ? Object.values(d.pool) : [];
-      winners = d.winners ? Object.values(d.winners) : [];
-      claimedWinners = d.claimedWinners ? Object.values(d.claimedWinners) : [];
-      recycleBin = d.recycleBin ? Object.values(d.recycleBin) : [];
-      voidAuditLogs = d.voidAuditLogs ? Object.values(d.voidAuditLogs) : [];
+      pool = sanitizeList(d.pool);
+      winners = sanitizeList(d.winners);
+      claimedWinners = sanitizeList(d.claimedWinners);
+      recycleBin = sanitizeList(d.recycleBin);
+      voidAuditLogs = sanitizeList(d.voidAuditLogs);
 
       if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
       if (d.poolStart) poolStart = Number(d.poolStart);
@@ -1968,7 +1987,7 @@
           firebase.initializeApp({ databaseURL: FIREBASE_DB_URL });
         }
         const db = firebase.database();
-        syncRef = db.ref("draw_state_v24");
+        syncRef = db.ref("draw_state_live");
 
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('viewer') === 'true') {
@@ -1982,6 +2001,7 @@
             applyStateData(val);
           } else if (!isViewerMode) {
             initPool();
+            updateUI();
             saveAndBroadcast();
           }
         });
@@ -2035,7 +2055,7 @@
       }
     }
 
-    // Mode 1: Batch 10 Draw
+    // Mode 1: Batch 10 Draw (OPTIMISTIC IMMEDIATE UPDATE)
     function drawTen() {
       if (isViewerMode) return;
       const quota = maxPrizes - winners.length;
@@ -2067,8 +2087,8 @@
 
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
       showToast(`已成功抽出 10 位幸运儿！`);
     }
 
@@ -2114,8 +2134,8 @@
       document.getElementById('vipDisplay').textContent = picked;
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
       showToast(`🏆 ${picked}`);
     }
 
@@ -2147,8 +2167,8 @@
       input.value = '';
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
       showToast(`Ticket #${val} added!`);
     }
 
@@ -2163,8 +2183,8 @@
 
       playFestiveGong();
       triggerConfetti();
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
       showToast(`Replacement drawn: ${picked}`);
     }
 
@@ -2214,8 +2234,8 @@
 
         playFestiveGong();
         triggerConfetti();
-        saveAndBroadcast();
         updateUI();
+        saveAndBroadcast();
         showToast(`Replaced #${ticketNum} -> #${replacement}!`);
         return true;
       }
@@ -2244,8 +2264,8 @@
           claimedWinners.push(activeSpotlightTicket);
           showToast(`✓ 票号 【${activeSpotlightTicket}】 已成功核销领奖！`);
         }
-        saveAndBroadcast();
         updateUI();
+        saveAndBroadcast();
         closeSpotlight();
       }
     }
@@ -2267,8 +2287,8 @@
       }
 
       document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-      if (!isViewerMode) saveAndBroadcast();
       updateUI();
+      if (!isViewerMode) saveAndBroadcast();
     }
 
     function clearRangeFilter() {
@@ -2279,8 +2299,8 @@
       filterEndVal = null;
       document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('chip-all').classList.add('active');
-      if (!isViewerMode) saveAndBroadcast();
       updateUI();
+      if (!isViewerMode) saveAndBroadcast();
     }
 
     function setFilterPreset(preset) {
@@ -2303,8 +2323,8 @@
       filterActive = true;
       filterStartVal = s;
       filterEndVal = e;
-      if (!isViewerMode) saveAndBroadcast();
       updateUI();
+      if (!isViewerMode) saveAndBroadcast();
     }
 
     function promptCustomRange() {
@@ -2363,6 +2383,7 @@
       });
       const link = document.createElement("a");
       link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
+      const tag = filterActive ? `_${filterStartVal}-${filterEndVal}` : '_all';
       link.download = `lucky_draw_segment${tag}.csv`;
       link.click();
     }
@@ -2446,18 +2467,16 @@
       document.getElementById('timerOverlay').style.display = 'none';
     }
 
-    // SUSPENSE MODE
     function toggleSuspenseMode() {
       if (isViewerMode) return;
       isSuspenseMode = !isSuspenseMode;
       const btn = document.getElementById('suspenseBtn');
       btn.classList.toggle('active', isSuspenseMode);
       btn.textContent = isSuspenseMode ? I18N[currentLang].navSuspenseOn : I18N[currentLang].navSuspenseOff;
-      saveAndBroadcast();
       updateUI();
+      saveAndBroadcast();
     }
 
-    // EMCEE SCRIPT
     function copyEmceeScript() {
       if (winners.length === 0) return alert("No winners yet!");
       const filtered = getFilteredWinnersList();
@@ -2468,7 +2487,6 @@
       }).catch(() => alert(script));
     }
 
-    // RECYCLE BIN
     function toggleRecycleModal(show) {
       document.getElementById('recycleModal').style.display = show ? 'flex' : 'none';
       renderRecycleList();
@@ -2495,6 +2513,87 @@
           </div>
         </div>
       `).join('');
+    }
+
+    function restoreToPool(ticket, index) {
+      if (isViewerMode) return;
+      recycleBin.splice(index, 1);
+      if (!pool.includes(ticket) && !winners.includes(ticket)) {
+        pool.push(ticket);
+        pool.sort((a, b) => Number(a) - Number(b));
+      }
+      updateUI();
+      renderRecycleList();
+      saveAndBroadcast();
+      showToast(`Restored #${ticket} to pool!`);
+    }
+
+    function restoreAsWinner(ticket, index) {
+      if (isViewerMode) return;
+      if (winners.length >= maxPrizes) maxPrizes++;
+      recycleBin.splice(index, 1);
+      winners.push(ticket);
+      const pIdx = pool.indexOf(ticket);
+      if (pIdx !== -1) pool.splice(pIdx, 1);
+
+      updateUI();
+      renderRecycleList();
+      saveAndBroadcast();
+      showToast(`Restored #${ticket} as winner!`);
+    }
+
+    function toggleCrisisModal(show) {
+      document.getElementById('crisisModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function excludeBlacklistTicket() {
+      if (isViewerMode) return;
+      const input = document.getElementById('blacklistInput');
+      let val = input.value.trim().padStart(4, '0');
+      if (!val) return;
+      const idx = pool.indexOf(val);
+      if (idx !== -1) {
+        pool.splice(idx, 1);
+        recycleBin.unshift({
+          ticket: val,
+          originalSeq: 'Excluded',
+          time: new Date().toLocaleTimeString()
+        });
+        input.value = '';
+        updateUI();
+        saveAndBroadcast();
+        showToast(`Excluded #${val}`);
+      }
+    }
+
+    function downloadBackupJSON() {
+      const payload = getPayload();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `lucky_draw_backup_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'_')}.json`;
+      link.click();
+    }
+
+    function uploadBackupJSON(event) {
+      if (isViewerMode) return;
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const d = JSON.parse(e.target.result);
+          if (d && (d.pool || d.winners)) {
+            applyStateData(d);
+            saveAndBroadcast();
+            toggleCrisisModal(false);
+            showToast("JSON Restored!");
+          }
+        } catch (err) {
+          alert("Import failed!");
+        }
+      };
+      reader.readAsText(file);
     }
 
     // SCROLLER ENGINE
@@ -2644,6 +2743,257 @@
       }
 
       renderScrollers();
+    }
+
+    function searchTicket(val) {
+      val = val.trim();
+      document.querySelectorAll('.billboard-card').forEach(c => c.classList.remove('highlight'));
+      if (val.length === 4) {
+        const found = document.getElementById(`card-${val}`);
+        if (found) {
+          found.classList.add('highlight');
+          found.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          playTick();
+        }
+      }
+    }
+
+    function toggleAuditModal(show) {
+      document.getElementById('auditModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function adjustOpSpeed(val) {
+      opSpeedPx = Number(val) / 55;
+    }
+
+    function adjustProjSpeed(delta) {
+      projSpeedPx = Math.max(0.4, Math.min(8.0, projSpeedPx + (delta > 0 ? 0.4 : -0.4)));
+    }
+
+    function adjustFont(delta) {
+      currentFontSize = Math.max(1.0, Math.min(2.2, currentFontSize + delta));
+      document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else if (document.exitFullscreen) document.exitFullscreen();
+    }
+
+    function openProjectionTab() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('projection', 'true');
+      window.open(url.toString(), '_blank');
+    }
+
+    function checkProjectionModeFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('projection') === 'true') {
+        document.getElementById('operatorView').style.display = 'none';
+        const pView = document.getElementById('projectorView');
+        pView.style.display = 'flex';
+        pView.classList.add('widget-overlay-mode', 'dock-top', 'transparent-mode');
+      }
+    }
+
+    function closeProjectionMode() {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('projection');
+      window.location.href = url.toString();
+    }
+
+    function toggleWidgetOverlay() {
+      const pView = document.getElementById('projectorView');
+      pView.classList.toggle('widget-overlay-mode');
+      if (!pView.classList.contains('dock-top') && !pView.classList.contains('dock-bottom')) {
+        pView.classList.add('dock-top');
+      }
+    }
+
+    function toggleDockPosition() {
+      const pView = document.getElementById('projectorView');
+      if (pView.classList.contains('dock-top')) {
+        pView.classList.remove('dock-top');
+        pView.classList.add('dock-bottom');
+      } else {
+        pView.classList.remove('dock-bottom');
+        pView.classList.add('dock-top');
+      }
+    }
+
+    function toggleProjLayout() {
+      const pBody = document.getElementById('projBody');
+      projScrollPos = 0;
+      if (pBody.classList.contains('horizontal')) {
+        pBody.classList.remove('horizontal');
+        pBody.classList.add('vertical');
+      } else {
+        pBody.classList.remove('vertical');
+        pBody.classList.add('horizontal');
+      }
+      renderScrollers();
+    }
+
+    function toggleProjTransparent() {
+      document.getElementById('projectorView').classList.toggle('transparent-mode');
+    }
+
+    async function openPiPOverlay() {
+      if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
+        try {
+          activePipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 1000,
+            height: 90
+          });
+
+          const pipStyle = activePipWindow.document.createElement('style');
+          const mainStyleEl = document.getElementById('mainStyles');
+          pipStyle.textContent = mainStyleEl ? mainStyleEl.textContent : '';
+          activePipWindow.document.head.appendChild(pipStyle);
+
+          const extraReset = activePipWindow.document.createElement('style');
+          extraReset.textContent = `
+            html, body {
+              margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
+              overflow: hidden !important; background: #140103 !important;
+            }
+            .proj-viewport { width: 100% !important; height: 100% !important; display: flex !important; }
+            .proj-track-wrapper { position: absolute !important; display: flex !important; height: 100% !important; align-items: center !important; }
+          `;
+          activePipWindow.document.head.appendChild(extraReset);
+
+          activePipWindow.document.body.innerHTML = `
+            <div class="proj-body horizontal" style="height:100%; width:100%; display:flex; align-items:center; background:#140103;">
+              <div class="proj-viewport">
+                <div class="proj-track-wrapper" id="pipTrack"></div>
+              </div>
+            </div>
+          `;
+
+          activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
+          pipScrollPos = 0;
+          renderScrollers();
+          showToast("PiP Bar Opened!");
+          return;
+        } catch (err) {}
+      }
+
+      const popupUrl = new URL(window.location.href);
+      popupUrl.searchParams.set('projection', 'true');
+      window.open(popupUrl.toString(), 'TanglungPiPPopup', 'width=1000,height=120,top=10,left=100,resizable=yes');
+    }
+
+    function exportCSV() {
+      if (winners.length === 0) return alert("No winners!");
+      let csv = "Prize Sequence,Ticket Number,Claimed Status\n";
+      winners.forEach((w, idx) => {
+        const status = claimedWinners.includes(w) ? "Claimed" : "Pending";
+        csv += `${idx + 1},${w},${status}\n`;
+      });
+      const link = document.createElement("a");
+      link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
+      link.download = `lucky_draw_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+    }
+
+    function resetAll() {
+      if (isViewerMode) return;
+      if (confirm("Reset everything?")) {
+        if (isRolling) stopVip();
+        stopClaimTimer();
+        closeSpotlight();
+        localStorage.removeItem(STORAGE_KEY);
+        initPool();
+        winners = [];
+        claimedWinners = [];
+        recycleBin = [];
+        voidAuditLogs = [];
+        filterActive = false;
+        isSuspenseMode = false;
+        document.getElementById('batchGrid').innerHTML = `
+          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
+            ${I18N[currentLang].batchEmptyHint}
+          </div>`;
+        document.getElementById('vipDisplay').textContent = '----';
+        document.getElementById('searchInput').value = '';
+        updateUI();
+        saveAndBroadcast();
+        showToast("Reset Completed!");
+      }
+    }
+
+    function triggerConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      let particles = [];
+      const colors = ['#f4c430', '#d63031', '#ffffff', '#e67e22', '#fffa65'];
+      for (let i = 0; i < 95; i++) {
+        particles.push({
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+          r: Math.random() * 6 + 3,
+          dx: (Math.random() - 0.5) * 16,
+          dy: (Math.random() - 0.5) * 16 - 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          tilt: Math.random() * 10,
+          tiltAngle: 0,
+          tiltAngleInc: Math.random() * 0.08 + 0.04
+        });
+      }
+
+      let frames = 0;
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.dx;
+          p.y += p.dy;
+          p.dy += 0.28;
+          p.tiltAngle += p.tiltAngleInc;
+          p.tilt = Math.sin(p.tiltAngle) * 10;
+          ctx.beginPath();
+          ctx.lineWidth = p.r;
+          ctx.strokeStyle = p.color;
+          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+          ctx.stroke();
+        });
+        frames++;
+        if (frames < 80) requestAnimationFrame(render);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      render();
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+      if (!isViewerMode && winners.length > 0 && winners.length < maxPrizes) {
+        e.preventDefault();
+        e.returnValue = 'Draw in progress. Confirm exit?';
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select') {
+          e.preventDefault();
+          toggleVip();
+        }
+      }
+    });
+
+    function toggleSyncModal(show) {
+      document.getElementById('syncModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function copyShareLink() {
+      const input = document.getElementById('shareLinkInput');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast("已复制显示端链接！直接发送微信或在其他设备打开。");
+      });
     }
 
     // Startup
