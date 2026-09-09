@@ -367,6 +367,12 @@
       font-family: monospace;
     }
 
+    .crawl-card .crawl-hint {
+      font-size: 0.7rem;
+      color: #ffdca8;
+      opacity: 0.7;
+    }
+
     .crawl-controls {
       background: #100102;
       border-top: 1px solid rgba(244, 196, 48, 0.3);
@@ -775,7 +781,6 @@
       background: rgba(244, 196, 48, 0.2);
     }
 
-    /* CLAIMED PRIZE EMERALD GREEN STYLING */
     .billboard-card.claimed {
       background: rgba(46, 204, 113, 0.25) !important;
       border-color: var(--jade-green) !important;
@@ -1141,8 +1146,7 @@
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
         <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
-          <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 专线</div>
-          <div id="p2pPeerId" style="font-family:monospace; margin-top:6px; color:#ffdca8; word-break:break-all;">数据库: tanglung-firedraw</div>
+          <div id="p2pStatusTag" class="p2p-status-tag connected">已连接 Firebase 云数据库</div>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
@@ -1156,7 +1160,7 @@
     </div>
   </div>
 
-  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP WITH CLAIM VERIFY TOGGLE -->
+  <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP WITH CLAIM TOGGLE -->
   <div id="spotlightModal" onclick="closeSpotlight()">
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
@@ -1164,7 +1168,7 @@
       <div style="font-size:1.15rem; color:#ffdca8;" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:#2ecc71; color:#fff; border-color:#2ecc71;" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()">⏱️ 10秒呼叫</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()">⏱️ 现场10秒呼叫</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" onclick="triggerDirectRedrawFromSpotlight()">⚡ 作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
@@ -1450,6 +1454,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
+    const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
     let currentLang = 'BC';
 
     const I18N = {
@@ -1459,7 +1464,7 @@
         poolLabel: "号池",
         wonLabel: "已抽出",
         leftLabel: "剩余名额",
-        navSync: "📡 云同步 (Firebase RTDB)",
+        navSync: "📡 云同步 (已连接)",
         navSuspenseOn: "🔒 隐蔽模式: 开",
         navSuspenseOff: "🔒 隐蔽模式: 关",
         navRecycle: "回收站",
@@ -1489,7 +1494,7 @@
         manualInputHint: "输入 1 至 4 位数字按回车或点确认",
         btnConfirmManual: "✓ 确认手动录入",
         btnDrawSingleManual: "🎲 现场补抽 1 个",
-        stageFooterLeft: "中秋提灯晚会 • Google Firebase实时云同步已就绪",
+        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
         stageFooterRight: "现场专委会监制",
         bbBanner: "中奖公布栏",
         optBySeq: "按奖品位次 (Prize #)",
@@ -1501,7 +1506,7 @@
         chipCustom: "自定义...",
         btnFocusVerify: "聚焦核验",
         bbEmpty: "暂无得奖数据",
-        syncTitle: "Firebase 实时云同步状态",
+        syncTitle: "Firebase 实时云同步",
         syncStatusLabel: "连接状态:",
         syncOffline: "离线",
         syncConnected: "已连接 Google RTDB 专线",
@@ -1731,12 +1736,12 @@
     let maxPrizes = 110;
     let poolStart = 1;
     let poolEnd = 1500;
-    const STORAGE_KEY = "tanglung_stage_v21_firebase_hardcoded";
+    const STORAGE_KEY = "tanglung_stage_v22_fixed_bugs";
     const CHANNEL_NAME = "tanglung_sync_channel";
 
     let pool = [];
     let winners = [];
-    let claimedWinners = []; // TRACKS CLAIMED STATUS FOR GREEN BADGES
+    let claimedWinners = [];
     let recycleBin = [];
     let voidAuditLogs = [];
     let isRolling = false;
@@ -1757,6 +1762,9 @@
 
     let activePipWindow = null;
     let pipScrollPos = 0;
+
+    let firebaseDb = null;
+    let syncRef = null;
 
     const syncChannel = new BroadcastChannel(CHANNEL_NAME);
     let audioCtx = null;
@@ -1894,7 +1902,7 @@
       showToast(`+${qty} Prizes! Total: ${maxPrizes}`);
     }
 
-    // FIREBASE HARDCODED SYNC
+    // FIREBASE CLOUD SYNC
     function saveAndBroadcast() {
       const payload = {
         pool,
@@ -2176,7 +2184,6 @@
           time: new Date().toLocaleTimeString()
         });
 
-        // Also remove from claimed if it was claimed
         const cIdx = claimedWinners.indexOf(ticketNum);
         if (cIdx !== -1) claimedWinners.splice(cIdx, 1);
 
@@ -2214,7 +2221,7 @@
       }
     }
 
-    // TOGGLE CLAIMED PRIZE VERIFY STATUS (Changes card to emerald green)
+    // TOGGLE CLAIMED PRIZE STATUS
     function toggleClaimCurrentSpotlight() {
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
@@ -2560,7 +2567,7 @@
       reader.readAsText(file);
     }
 
-    // SCROLLER ENGINE
+    // SCROLLER ENGINE (EXCLUDES CLAIMED WINNERS FROM LEFT SCROLLER)
     let projScrollPos = 0;
     let opScrollPos = 0;
     let projSpeedPx = 1.2;
@@ -2569,7 +2576,7 @@
     let isOpPaused = false;
 
     function renderScrollers() {
-      const filtered = getFilteredWinnersList();
+      const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
       const t = I18N[currentLang];
       let cardsHtml = '';
 
@@ -2658,282 +2665,6 @@
     document.getElementById('projBody').addEventListener('mouseleave', () => isProjPaused = false);
     document.getElementById('opCrawlViewport').addEventListener('mouseenter', () => isOpPaused = true);
     document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
-
-    function updateUI() {
-      document.getElementById('poolCount').textContent = pool.length;
-      document.getElementById('poolMaxLabel').textContent = poolEnd;
-      document.getElementById('wonCount').textContent = winners.length;
-      document.getElementById('maxPrizesLabel').textContent = maxPrizes;
-      document.getElementById('leftCount').textContent = Math.max(0, maxPrizes - winners.length);
-      document.getElementById('bbMaxCount').textContent = maxPrizes;
-
-      document.getElementById('recycleBtnCount').textContent = recycleBin.length;
-      document.getElementById('recycleCount').textContent = recycleBin.length;
-
-      const t = I18N[currentLang];
-      const ribbon = document.getElementById('pacingRibbon');
-      if (winners.length >= (maxPrizes - 10) && winners.length < maxPrizes) {
-        ribbon.textContent = t.pacingGrand;
-        ribbon.style.background = "linear-gradient(90deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%)";
-      } else if (winners.length >= maxPrizes) {
-        ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
-        ribbon.style.background = "linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%)";
-      } else {
-        ribbon.textContent = t.pacingConsolation.replace('{quota}', maxPrizes - 10);
-        ribbon.style.background = "linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%)";
-      }
-
-      const exhausted = winners.length >= maxPrizes || pool.length === 0;
-      document.getElementById('batchDrawBtn').disabled = exhausted;
-      document.getElementById('vipToggleBtn').disabled = exhausted;
-
-      renderFilteredBillboard();
-
-      const auditList = document.getElementById('auditList');
-      if (voidAuditLogs.length === 0) {
-        auditList.innerHTML = `<div style="text-align:center; color:#888; padding:30px;">${t.auditEmpty}</div>`;
-      } else {
-        auditList.innerHTML = voidAuditLogs.map(item => `
-          <div class="modal-item">
-            <div>
-              <strong>#${item.seq}</strong>: <span style="text-decoration:line-through; color:#ff7875;">${item.oldNum}</span> 
-              ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${item.newNum}</strong>
-            </div>
-            <div style="font-size:0.75rem; color:#aaa;">${item.time}</div>
-          </div>
-        `).join('');
-      }
-
-      renderScrollers();
-    }
-
-    function searchTicket(val) {
-      val = val.trim();
-      document.querySelectorAll('.billboard-card').forEach(c => c.classList.remove('highlight'));
-      if (val.length === 4) {
-        const found = document.getElementById(`card-${val}`);
-        if (found) {
-          found.classList.add('highlight');
-          found.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          playTick();
-        }
-      }
-    }
-
-    function toggleAuditModal(show) {
-      document.getElementById('auditModal').style.display = show ? 'flex' : 'none';
-    }
-
-    function adjustOpSpeed(val) {
-      opSpeedPx = Number(val) / 55;
-    }
-
-    function adjustProjSpeed(delta) {
-      projSpeedPx = Math.max(0.4, Math.min(8.0, projSpeedPx + (delta > 0 ? 0.4 : -0.4)));
-    }
-
-    function adjustFont(delta) {
-      currentFontSize = Math.max(1.0, Math.min(2.2, currentFontSize + delta));
-      document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
-    }
-
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
-      else if (document.exitFullscreen) document.exitFullscreen();
-    }
-
-    function openProjectionTab() {
-      const url = new URL(window.location.href);
-      url.searchParams.set('projection', 'true');
-      window.open(url.toString(), '_blank');
-    }
-
-    function checkProjectionModeFromURL() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('projection') === 'true') {
-        document.getElementById('operatorView').style.display = 'none';
-        const pView = document.getElementById('projectorView');
-        pView.style.display = 'flex';
-        pView.classList.add('widget-overlay-mode', 'dock-top', 'transparent-mode');
-      }
-    }
-
-    function closeProjectionMode() {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('projection');
-      window.location.href = url.toString();
-    }
-
-    function toggleWidgetOverlay() {
-      const pView = document.getElementById('projectorView');
-      pView.classList.toggle('widget-overlay-mode');
-      if (!pView.classList.contains('dock-top') && !pView.classList.contains('dock-bottom')) {
-        pView.classList.add('dock-top');
-      }
-    }
-
-    function toggleDockPosition() {
-      const pView = document.getElementById('projectorView');
-      if (pView.classList.contains('dock-top')) {
-        pView.classList.remove('dock-top');
-        pView.classList.add('dock-bottom');
-      } else {
-        pView.classList.remove('dock-bottom');
-        pView.classList.add('dock-top');
-      }
-    }
-
-    function toggleProjLayout() {
-      const pBody = document.getElementById('projBody');
-      projScrollPos = 0;
-      if (pBody.classList.contains('horizontal')) {
-        pBody.classList.remove('horizontal');
-        pBody.classList.add('vertical');
-      } else {
-        pBody.classList.remove('vertical');
-        pBody.classList.add('horizontal');
-      }
-      renderScrollers();
-    }
-
-    function toggleProjTransparent() {
-      document.getElementById('projectorView').classList.toggle('transparent-mode');
-    }
-
-    async function openPiPOverlay() {
-      if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
-        try {
-          activePipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 1000,
-            height: 90
-          });
-
-          const pipStyle = activePipWindow.document.createElement('style');
-          const mainStyleEl = document.getElementById('mainStyles');
-          pipStyle.textContent = mainStyleEl ? mainStyleEl.textContent : '';
-          activePipWindow.document.head.appendChild(pipStyle);
-
-          const extraReset = activePipWindow.document.createElement('style');
-          extraReset.textContent = `
-            html, body {
-              margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
-              overflow: hidden !important; background: #140103 !important;
-            }
-            .proj-viewport { width: 100% !important; height: 100% !important; display: flex !important; }
-            .proj-track-wrapper { position: absolute !important; display: flex !important; height: 100% !important; align-items: center !important; }
-          `;
-          activePipWindow.document.head.appendChild(extraReset);
-
-          activePipWindow.document.body.innerHTML = `
-            <div class="proj-body horizontal" style="height:100%; width:100%; display:flex; align-items:center; background:#140103;">
-              <div class="proj-viewport">
-                <div class="proj-track-wrapper" id="pipTrack"></div>
-              </div>
-            </div>
-          `;
-
-          activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
-          pipScrollPos = 0;
-          renderScrollers();
-          showToast("PiP Bar Opened!");
-          return;
-        } catch (err) {}
-      }
-
-      const popupUrl = new URL(window.location.href);
-      popupUrl.searchParams.set('projection', 'true');
-      window.open(popupUrl.toString(), 'TanglungPiPPopup', 'width=1000,height=120,top=10,left=100,resizable=yes');
-    }
-
-    function exportCSV() {
-      if (winners.length === 0) return alert("No winners!");
-      let csv = "Prize Sequence,Ticket Number,Claimed Status\n";
-      winners.forEach((w, idx) => {
-        const st = claimedWinners.includes(w) ? "Claimed" : "Pending";
-        csv += `${idx + 1},${w},${st}\n`;
-      });
-      const link = document.createElement("a");
-      link.href = encodeURI("data:text/csv;charset=utf-8,\uFEFF" + csv);
-      link.download = `lucky_draw_${new Date().toISOString().slice(0,10)}.csv`;
-      link.click();
-    }
-
-    function resetAll() {
-      if (confirm("Reset everything?")) {
-        if (isRolling) stopVip();
-        stopClaimTimer();
-        closeSpotlight();
-        localStorage.removeItem(STORAGE_KEY);
-        initPool();
-        winners = [];
-        claimedWinners = [];
-        recycleBin = [];
-        voidAuditLogs = [];
-        filterActive = false;
-        isSuspenseMode = false;
-        document.getElementById('batchGrid').innerHTML = `
-          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
-            ${I18N[currentLang].batchEmptyHint}
-          </div>`;
-        document.getElementById('vipDisplay').textContent = '----';
-        document.getElementById('searchInput').value = '';
-        saveAndBroadcast();
-        updateUI();
-        showToast("Reset Completed!");
-      }
-    }
-
-    function triggerConfetti() {
-      const canvas = document.getElementById('confettiCanvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-
-      let particles = [];
-      const colors = ['#f4c430', '#d63031', '#ffffff', '#e67e22', '#fffa65'];
-      for (let i = 0; i < 95; i++) {
-        particles.push({
-          x: canvas.width / 2,
-          y: canvas.height / 2,
-          r: Math.random() * 6 + 3,
-          dx: (Math.random() - 0.5) * 16,
-          dy: (Math.random() - 0.5) * 16 - 3,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          tilt: Math.random() * 10,
-          tiltAngle: 0,
-          tiltAngleInc: Math.random() * 0.08 + 0.04
-        });
-      }
-
-      let frames = 0;
-      function render() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.x += p.dx;
-          p.y += p.dy;
-          p.dy += 0.28;
-          p.tiltAngle += p.tiltAngleInc;
-          p.tilt = Math.sin(p.tiltAngle) * 10;
-          ctx.beginPath();
-          ctx.lineWidth = p.r;
-          ctx.strokeStyle = p.color;
-          ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-          ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-          ctx.stroke();
-        });
-        frames++;
-        if (frames < 80) requestAnimationFrame(render);
-        else ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-      render();
-    }
-
-    window.addEventListener('beforeunload', (e) => {
-      if (winners.length > 0 && winners.length < maxPrizes) {
-        e.preventDefault();
-        e.returnValue = 'Draw in progress. Confirm exit?';
-      }
-    });
 
     // Startup
     if (!load()) initPool();
