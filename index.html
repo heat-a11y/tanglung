@@ -1083,6 +1083,31 @@
       will-change: transform;
     }
 
+    .proj-card {
+      background: linear-gradient(135deg, rgba(152, 18, 22, 0.92) 0%, rgba(35, 2, 4, 0.95) 100%);
+      border: 2px solid var(--imperial-gold);
+      border-radius: 12px;
+      padding: 8px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+    .proj-card .p-seq {
+      color: #ffdca8;
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+    .proj-card .p-num {
+      color: var(--imperial-gold);
+      font-size: 1.9rem;
+      font-weight: 900;
+      font-family: monospace;
+      letter-spacing: 2px;
+    }
+
     .viewer-disabled {
       opacity: 0.55 !important;
       cursor: not-allowed !important;
@@ -1433,6 +1458,7 @@
 
     let activePipWindow = null;
     let pipScrollPos = 0;
+    let projSpeedPx = 1.2;
 
     let opScrollPos = 0;
     let opSpeedPx = 0.8;
@@ -2360,17 +2386,19 @@
 
     function renderFilteredBillboard() {
       const bb = document.getElementById('billboardGrid');
-      const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
+      const filtered = getFilteredWinnersList();
 
       document.getElementById('bbFilteredCount').textContent = filtered.length;
 
       if (filtered.length === 0) {
         bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
       } else {
+        const tag = I18N[currentLang].claimedTag;
         bb.innerHTML = filtered.map(item => {
+          const isClaimed = claimedWinners.includes(item.num);
           return `
-            <div class="billboard-card" id="card-${item.num}" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
-              <span class="bb-seq">#${item.seq}</span>
+            <div class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${item.num}" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
+              <span class="bb-seq">#${item.seq}${isClaimed ? tag : ''}</span>
               <span class="bb-num">${item.num}</span>
             </div>
           `;
@@ -2587,7 +2615,8 @@
 
     // STATIC GRID PROJECTION & LIVE BILLBOARDS RENDERER
     function renderScrollers() {
-      const filtered = getFilteredWinnersList().filter(item => !claimedWinners.includes(item.num));
+      const all = getFilteredWinnersList();
+      const unclaimed = all.filter(item => !claimedWinners.includes(item.num));
       const t = I18N[currentLang];
 
       // 1. Static Grid Projection Screen
@@ -2595,10 +2624,10 @@
       if (projGrid) {
         if (isSuspenseMode) {
           projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2.5rem; color:var(--imperial-gold); padding:50px;">${t.projSuspense}</div>`;
-        } else if (filtered.length === 0) {
+        } else if (all.length === 0) {
           projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:#ffdca8; padding:50px;">${t.projWaiting}</div>`;
         } else {
-          projGrid.innerHTML = filtered.map(item => {
+          projGrid.innerHTML = all.map(item => {
             const isClaimed = claimedWinners.includes(item.num);
             return `
               <div class="proj-grid-card ${isClaimed ? 'claimed' : ''}">
@@ -2617,10 +2646,10 @@
             let cardsHtml = '';
             if (isSuspenseMode) {
               cardsHtml = `<div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>`;
-            } else if (filtered.length === 0) {
+            } else if (unclaimed.length === 0) {
               cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
             } else {
-              cardsHtml = filtered.map(item => `
+              cardsHtml = unclaimed.map(item => `
                 <div class="proj-card">
                   <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
                   <span class="p-num">${item.num}</span>
@@ -2635,10 +2664,10 @@
       // 3. Operator Left Running Strip
       const opTrack = document.getElementById('opCrawlTrack');
       if (opTrack) {
-        if (filtered.length === 0) {
+        if (unclaimed.length === 0) {
           opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
         } else {
-          const opCards = filtered.map(item => `
+          const opCards = unclaimed.map(item => `
             <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
               <div>
                 <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
