@@ -1116,6 +1116,19 @@
       position: relative;
     }
 
+    #pipBarView {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      background: #000;
+    }
+    #pipBarView .pip-single-row-body {
+      border-top: 2px solid var(--imperial-gold);
+      border-bottom: 2px solid var(--imperial-gold);
+      box-sizing: border-box;
+    }
+
     .pip-track {
       position: absolute;
       display: flex;
@@ -1454,6 +1467,12 @@
   <!-- ============================================================== -->
   <!-- 2. FULL WINDOW STATIC GRID PROJECTION OVERLAY (Station 2)        -->
   <!-- ============================================================== -->
+  <div id="pipBarView">
+    <div class="pip-single-row-body">
+      <div class="pip-track" id="pipTrack"></div>
+    </div>
+  </div>
+
   <div id="projectorView">
     <div class="proj-toolbar">
       <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影</div>
@@ -1512,6 +1531,7 @@
     let pipScrollPos = 0;
     let pipSetWidth = 0;
     let projHideClaimed = false;
+    let pipBarMode = false;
     let projSpeedPx = 1.2;
 
     let opScrollPos = 0;
@@ -2726,9 +2746,10 @@
       }
 
       // 2. Desktop PiP (Single row ticker)
-      if (activePipWindow && !activePipWindow.closed) {
+      const pipDoc = activePipWindow && !activePipWindow.closed ? activePipWindow.document : (pipBarMode ? document : null);
+      if (pipDoc) {
         try {
-          const pipTrack = activePipWindow.document.getElementById('pipTrack');
+          const pipTrack = pipDoc.getElementById('pipTrack');
           if (pipTrack) {
             let cardsHtml = '';
             if (isSuspenseMode) {
@@ -2745,9 +2766,11 @@
             }
             pipSetWidth = 0;
             pipTrack.innerHTML = cardsHtml;
-            activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+            pipDoc.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+            const pipWinWidth = pipDoc === document
+              ? document.documentElement.clientWidth
+              : ((activePipWindow && activePipWindow.innerWidth) || pipTrack.scrollWidth || 1);
             const singleSetWidth = pipTrack.scrollWidth || 1;
-            const pipWinWidth = (activePipWindow && activePipWindow.innerWidth) || singleSetWidth;
             const sets = Math.max(3, Math.ceil(pipWinWidth / singleSetWidth) * 2 + 1);
             pipSetWidth = singleSetWidth;
             pipTrack.innerHTML = cardsHtml.repeat(sets);
@@ -2777,15 +2800,15 @@
     }
 
     function animateScrollers() {
-      if (activePipWindow && !activePipWindow.closed) {
+      const pipTrack = activePipWindow && !activePipWindow.closed
+        ? activePipWindow.document.getElementById('pipTrack')
+        : (pipBarMode ? document.getElementById('pipTrack') : null);
+      if (pipTrack && pipTrack.children.length > 0) {
         try {
-          const pipTrack = activePipWindow.document.getElementById('pipTrack');
-          if (pipTrack && pipTrack.children.length > 0) {
-            pipScrollPos += projSpeedPx;
-            const singleSetWidth = pipSetWidth > 0 ? pipSetWidth : pipTrack.scrollWidth / 3;
-            if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
-            pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
-          }
+          pipScrollPos += projSpeedPx;
+          const singleSetWidth = pipSetWidth > 0 ? pipSetWidth : pipTrack.scrollWidth / 3;
+          if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
+          pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
         } catch (e) {}
       }
 
@@ -2906,6 +2929,20 @@
         document.getElementById('operatorView').style.display = 'none';
         const pView = document.getElementById('projectorView');
         pView.style.display = 'flex';
+      }
+    }
+
+    function checkPipBarModeFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('pipbar') === 'true') {
+        pipBarMode = true;
+        document.getElementById('operatorView').style.display = 'none';
+        const bv = document.getElementById('pipBarView');
+        bv.style.display = 'block';
+        document.body.style.background = '#000';
+        pipScrollPos = 0;
+        pipSetWidth = 0;
+        renderScrollers();
       }
     }
 
@@ -3066,15 +3103,34 @@
             try { pipSetWidth = 0; renderScrollers(); } catch (e) {}
           };
           snapPipToFullWidth();
-          setTimeout(snapPipToFullWidth, 150);
+          setTimeout(() => {
+            snapPipToFullWidth();
+            const screenW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || pipAvailW, 3840));
+            if (activePipWindow && !activePipWindow.closed && activePipWindow.innerWidth < screenW * 0.5) {
+              const clampedWindow = activePipWindow;
+              activePipWindow = null;
+              try { clampedWindow.close(); } catch (e) {}
+              openPiPBarPopup();
+              return;
+            }
+            pipSetWidth = 0;
+            renderScrollers();
+          }, 200);
           showToast("PiP Bar Opened!");
           return;
         } catch (err) {}
       }
 
-      const popupUrl = new URL(window.location.href);
-      popupUrl.searchParams.set('projection', 'true');
-      window.open(popupUrl.toString(), 'TanglungPiPPopup', 'width=1000,height=120,top=10,left=100,resizable=yes');
+      openPiPBarPopup();
+    }
+
+    function openPiPBarPopup() {
+      const url = new URL(window.location.href);
+      url.searchParams.set('pipbar', 'true');
+      const screenW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 3840));
+      const features = `left=0,top=0,width=${screenW},height=76,toolbar=no,menubar=no,location=no,status=no,scrollbars=no,resizable=yes`;
+      const win = window.open(url.toString(), 'TanglungPiPBar', features);
+      if (!win) alert("Please allow pop-ups to open the full-width bar.");
     }
 
     function exportCSV() {
@@ -3206,6 +3262,7 @@
       updateUI();
     }
     checkProjectionModeFromURL();
+    checkPipBarModeFromURL();
     maybeAutoStartProjTimer();
     setupFirebaseConnection();
     applyLanguageUI();
