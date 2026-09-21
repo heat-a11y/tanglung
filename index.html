@@ -1466,6 +1466,7 @@
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(10)">+10</button>
           <button class="proj-timer-btn-mini" onclick="projTimerReset()">↺</button>
         </span>
+        <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">🚫 隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
         <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
@@ -1509,6 +1510,7 @@
     let activePipWindow = null;
     let pipScrollPos = 0;
     let pipSetWidth = 0;
+    let projHideClaimed = false;
     let projSpeedPx = 1.2;
 
     let opScrollPos = 0;
@@ -1608,6 +1610,8 @@
         btnProjFs: "⛶ 全屏",
         btnProjClose: "✕ 返回",
         projTimerBtn: "⏱️ 领奖倒计时",
+        btnProjHideClaimed: "🚫 隐藏已领奖",
+        btnProjShowClaimed: "👁 显示已领奖",
         btnClaimVerify: "✓ 领奖核销 (Claim)",
         btnClaimVerified: "✓ 已领奖 (Claimed)",
         claimedTag: " ✓已领"
@@ -1699,6 +1703,8 @@
         btnProjFs: "⛶ Skrin Penuh",
         btnProjClose: "✕ Kembali",
         projTimerBtn: "⏱️ Kiraan Masa Menang",
+        btnProjHideClaimed: "🚫 Sembunyi Dituntut",
+        btnProjShowClaimed: "👁 Tunjuk Dituntut",
         btnClaimVerify: "✓ Sahkan Tuntutan",
         btnClaimVerified: "✓ Telah Dituntut",
         claimedTag: " ✓Dituntut"
@@ -1790,6 +1796,8 @@
         btnProjFs: "⛶ Fullscreen",
         btnProjClose: "✕ Return",
         projTimerBtn: "⏱️ Claim Countdown",
+        btnProjHideClaimed: "🚫 Hide Claimed",
+        btnProjShowClaimed: "👁 Show Claimed",
         btnClaimVerify: "✓ Verify Claim",
         btnClaimVerified: "✓ Claimed",
         claimedTag: " ✓Claimed"
@@ -1820,6 +1828,8 @@
       if (bgBtn) {
         bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
       }
+
+      updateProjHideClaimedBtn();
       
       updateUI();
     }
@@ -1981,6 +1991,7 @@
         filterEndVal: filterEndVal !== null ? Number(filterEndVal) : null,
         filterType,
         isSuspenseMode: Boolean(isSuspenseMode),
+        projHideClaimed: Boolean(projHideClaimed),
         currentFontSize: Number(currentFontSize),
         currentLang,
         mainTitle: document.getElementById('appMainTitle').innerText,
@@ -2033,6 +2044,7 @@
       if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
+      if (typeof d.projHideClaimed === 'boolean') projHideClaimed = d.projHideClaimed;
 
       if (d.currentFontSize) {
         currentFontSize = Math.max(1.0, Math.min(2.2, Number(d.currentFontSize)));
@@ -2057,6 +2069,7 @@
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
 
       updateUI();
+      updateProjHideClaimedBtn();
     }
 
     syncChannel.onmessage = (event) => {
@@ -2695,14 +2708,19 @@
         } else if (all.length === 0) {
           projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:#ffdca8; padding:50px;">${t.projWaiting}</div>`;
         } else {
-          projGrid.innerHTML = all.map(item => {
-            const isClaimed = claimedWinners.includes(item.num);
-            return `
-              <div class="proj-grid-card ${isClaimed ? 'claimed' : ''}">
-                <div class="pg-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
-                <div class="pg-num">${item.num}</div>
-              </div>`;
-          }).join('');
+          const shown = projHideClaimed ? all.filter(item => !claimedWinners.includes(item.num)) : all;
+          if (shown.length === 0) {
+            projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:#ffdca8; padding:50px;">${t.projWaiting}</div>`;
+          } else {
+            projGrid.innerHTML = shown.map(item => {
+              const isClaimed = claimedWinners.includes(item.num);
+              return `
+                <div class="proj-grid-card ${isClaimed ? 'claimed' : ''}">
+                  <div class="pg-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
+                  <div class="pg-num">${item.num}</div>
+                </div>`;
+            }).join('');
+          }
         }
       }
 
@@ -2905,6 +2923,19 @@
       bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
     }
 
+    function updateProjHideClaimedBtn() {
+      const btn = document.getElementById('projHideClaimedBtn');
+      if (btn) btn.textContent = projHideClaimed ? I18N[currentLang].btnProjShowClaimed : I18N[currentLang].btnProjHideClaimed;
+    }
+
+    function toggleProjHideClaimed() {
+      if (isViewerMode) return;
+      projHideClaimed = !projHideClaimed;
+      updateProjHideClaimedBtn();
+      renderScrollers();
+      if (!isViewerMode) saveAndBroadcast();
+    }
+
     let projTimerRemaining = 300;
     let projTimerInterval = null;
     let projTimerRunning = false;
@@ -2985,9 +3016,11 @@
     async function openPiPOverlay() {
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
+          const pipAvailW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 2560));
+          const pipAvailH = Math.max(60, Math.round(pipAvailW * 0.035));
           activePipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 780,
-            height: 46
+            width: pipAvailW,
+            height: pipAvailH
           });
 
           const pipStyle = activePipWindow.document.createElement('style');
@@ -3015,6 +3048,7 @@
 
           activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
           activePipWindow.addEventListener('resize', () => { try { renderScrollers(); } catch (e) {} });
+          activePipWindow.addEventListener('focus', () => { try { renderScrollers(); } catch (e) {} });
           pipScrollPos = 0;
           pipSetWidth = 0;
           renderScrollers();
