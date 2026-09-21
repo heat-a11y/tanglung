@@ -1064,48 +1064,26 @@
       color: #2ecc71 !important;
     }
 
-    .proj-timer-overlay {
+    .proj-timer-chip {
       display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 10030;
-      background: rgba(0, 0, 0, 0.78);
-      justify-content: center;
       align-items: center;
-      flex-direction: column;
-    }
-
-    .proj-timer-box {
+      gap: 6px;
       background: #000;
-      border: 4px solid var(--imperial-gold);
-      border-radius: 18px;
-      padding: 26px 40px;
-      text-align: center;
-      box-shadow: 0 0 60px rgba(244, 196, 48, 0.55);
-      min-width: 320px;
+      border: 2px solid var(--imperial-gold);
+      border-radius: 20px;
+      padding: 3px 10px;
+      white-space: nowrap;
     }
-
-    .proj-timer-label {
+    .proj-timer-chip .proj-timer-digits-inline {
       color: var(--imperial-gold);
-      font-size: clamp(1.2rem, 3vw, 1.8rem);
-      font-weight: 900;
-      letter-spacing: 2px;
-      margin-bottom: 6px;
-    }
-
-    .proj-timer-digits {
-      color: #fff;
-      font-size: clamp(4rem, 12vw, 8rem);
       font-weight: 900;
       font-family: monospace;
-      line-height: 1;
-      margin: 4px 0 14px;
-      text-shadow: 0 0 24px rgba(244, 196, 48, 0.7);
-      transition: color 0.15s;
+      font-size: 1.05rem;
+      letter-spacing: 1px;
     }
-    .proj-timer-digits.timeout {
+    .proj-timer-chip .proj-timer-digits-inline.timeout {
       color: #ff4d4f;
-      animation: timerPulse 0.6s ease infinite alternate;
+      animation: timerPulse 0.5s ease infinite alternate;
     }
 
     @keyframes timerPulse {
@@ -1113,18 +1091,18 @@
       to { transform: scale(1.08); }
     }
 
-    .proj-timer-controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .proj-timer-btn {
-      padding: 8px 18px;
-      font-size: 1rem;
+    .proj-timer-btn-mini {
+      padding: 1px 8px;
+      font-size: 0.85rem;
       font-weight: 900;
       background: var(--imperial-gold);
+      color: #000;
+      border: 1px solid #fff;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .proj-timer-btn-mini:hover {
+      background: #fff;
       color: #000;
     }
 
@@ -1482,6 +1460,12 @@
       <div class="proj-btn-group">
         <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">🌓 背景: 全彩纯黑</button>
         <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">⏱️ 领奖倒计时</button>
+        <span class="proj-timer-chip" id="projTimerChip">
+          <span class="proj-timer-digits-inline" id="projTimerDigits">05:00</span>
+          <button class="proj-timer-btn-mini" onclick="projTimerAdd(5)">+5</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerAdd(10)">+10</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerReset()">↺</button>
+        </span>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
         <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
@@ -1489,19 +1473,6 @@
 
     <div class="proj-body" id="projBody">
       <div class="proj-static-grid" id="projStaticGrid"></div>
-    </div>
-
-    <div class="proj-timer-overlay" id="projTimerOverlay">
-      <div class="proj-timer-box">
-        <div class="proj-timer-label" data-i18n="projTimerTitle">⏱️ 领奖倒计时 · 请中奖者上前领奖</div>
-        <div class="proj-timer-digits" id="projTimerDigits">10</div>
-        <div class="proj-timer-controls">
-          <button class="icon-btn proj-timer-btn" onclick="projTimerAdd(5)">+5</button>
-          <button class="icon-btn proj-timer-btn" onclick="projTimerAdd(10)">+10</button>
-          <button class="icon-btn proj-timer-btn" id="projTimerStartBtn" onclick="projTimerToggle()" data-i18n="projTimerStart">▶ 开始</button>
-          <button class="icon-btn proj-timer-btn" style="background:#e74c3c; color:#fff;" onclick="projTimerStop()">✕</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1637,9 +1608,6 @@
         btnProjFs: "⛶ 全屏",
         btnProjClose: "✕ 返回",
         projTimerBtn: "⏱️ 领奖倒计时",
-        projTimerTitle: "⏱️ 领奖倒计时 · 请中奖者上前领奖",
-        projTimerStart: "开始",
-        projTimerStop: "停止",
         btnClaimVerify: "✓ 领奖核销 (Claim)",
         btnClaimVerified: "✓ 已领奖 (Claimed)",
         claimedTag: " ✓已领"
@@ -1731,9 +1699,6 @@
         btnProjFs: "⛶ Skrin Penuh",
         btnProjClose: "✕ Kembali",
         projTimerBtn: "⏱️ Kiraan Masa Menang",
-        projTimerTitle: "⏱️ Kiraan Masa · Pemenang Sila Ke Hadapan",
-        projTimerStart: "Mula",
-        projTimerStop: "Henti",
         btnClaimVerify: "✓ Sahkan Tuntutan",
         btnClaimVerified: "✓ Telah Dituntut",
         claimedTag: " ✓Dituntut"
@@ -1825,9 +1790,6 @@
         btnProjFs: "⛶ Fullscreen",
         btnProjClose: "✕ Return",
         projTimerBtn: "⏱️ Claim Countdown",
-        projTimerTitle: "⏱️ Countdown · Winner, please come forward",
-        projTimerStart: "Start",
-        projTimerStop: "Stop",
         btnClaimVerify: "✓ Verify Claim",
         btnClaimVerified: "✓ Claimed",
         claimedTag: " ✓Claimed"
@@ -2764,6 +2726,7 @@
             }
             pipSetWidth = 0;
             pipTrack.innerHTML = cardsHtml;
+            activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
             const singleSetWidth = pipTrack.scrollWidth || 1;
             const pipWinWidth = (activePipWindow && activePipWindow.innerWidth) || singleSetWidth;
             const sets = Math.max(3, Math.ceil(pipWinWidth / singleSetWidth) * 2 + 1);
@@ -2870,6 +2833,7 @@
       }
 
       renderScrollers();
+      maybeAutoStartProjTimer();
     }
 
     function searchTicket(val) {
@@ -2941,20 +2905,24 @@
       bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
     }
 
-    let projTimerRemaining = 10;
+    let projTimerRemaining = 300;
     let projTimerInterval = null;
     let projTimerRunning = false;
+    let projTimerAutoStarted = false;
+    const projTimerDefault = 300;
 
     function renderProjTimer() {
       const digits = document.getElementById('projTimerDigits');
       if (digits) {
-        digits.textContent = projTimerRemaining;
+        const m = Math.floor(projTimerRemaining / 60);
+        const s = projTimerRemaining % 60;
+        digits.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         digits.classList.toggle('timeout', projTimerRemaining === 0);
       }
     }
 
-    function projTimerAdd(sec) {
-      projTimerRemaining = Math.max(0, projTimerRemaining + sec);
+    function projTimerAdd(minutes) {
+      projTimerRemaining = Math.max(0, projTimerRemaining + Math.round(minutes) * 60);
       renderProjTimer();
       initAudio();
     }
@@ -2965,9 +2933,13 @@
         projTimerInterval = null;
       }
       projTimerRunning = false;
-      const btn = document.getElementById('projTimerStartBtn');
-      if (btn && I18N[currentLang]) btn.innerHTML = `▶ ${I18N[currentLang].projTimerStart}`;
       renderProjTimer();
+    }
+
+    function projTimerReset() {
+      projTimerRemaining = projTimerDefault;
+      projTimerStop();
+      projTimerToggle();
     }
 
     function projTimerToggle() {
@@ -2975,10 +2947,8 @@
         projTimerStop();
         return;
       }
-      if (projTimerRemaining <= 0) projTimerRemaining = 10;
+      if (projTimerRemaining <= 0) projTimerRemaining = projTimerDefault;
       projTimerRunning = true;
-      const btn = document.getElementById('projTimerStartBtn');
-      if (btn && I18N[currentLang]) btn.innerHTML = `■ ${I18N[currentLang].projTimerStop}`;
       renderProjTimer();
       initAudio();
       if (projTimerInterval) clearInterval(projTimerInterval);
@@ -2995,11 +2965,21 @@
     }
 
     function toggleProjTimer() {
-      const ov = document.getElementById('projTimerOverlay');
-      const show = ov.style.display !== 'flex';
-      ov.style.display = show ? 'flex' : 'none';
+      const chip = document.getElementById('projTimerChip');
+      const show = chip.style.display !== 'inline-flex';
+      chip.style.display = show ? 'inline-flex' : 'none';
       renderProjTimer();
       if (!show) projTimerStop();
+    }
+
+    function maybeAutoStartProjTimer() {
+      if (projTimerAutoStarted) return;
+      if (winners.length < 10) return;
+      if (document.getElementById('projectorView').style.display !== 'flex') return;
+      projTimerAutoStarted = true;
+      projTimerReset();
+      const chip = document.getElementById('projTimerChip');
+      if (chip) chip.style.display = 'inline-flex';
     }
 
     async function openPiPOverlay() {
@@ -3177,6 +3157,7 @@
       updateUI();
     }
     checkProjectionModeFromURL();
+    maybeAutoStartProjTimer();
     setupFirebaseConnection();
     applyLanguageUI();
     requestAnimationFrame(animateScrollers);
