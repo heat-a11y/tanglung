@@ -1064,12 +1064,76 @@
       color: #2ecc71 !important;
     }
 
+    .proj-timer-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10030;
+      background: rgba(0, 0, 0, 0.78);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .proj-timer-box {
+      background: #000;
+      border: 4px solid var(--imperial-gold);
+      border-radius: 18px;
+      padding: 26px 40px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(244, 196, 48, 0.55);
+      min-width: 320px;
+    }
+
+    .proj-timer-label {
+      color: var(--imperial-gold);
+      font-size: clamp(1.2rem, 3vw, 1.8rem);
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .proj-timer-digits {
+      color: #fff;
+      font-size: clamp(4rem, 12vw, 8rem);
+      font-weight: 900;
+      font-family: monospace;
+      line-height: 1;
+      margin: 4px 0 14px;
+      text-shadow: 0 0 24px rgba(244, 196, 48, 0.7);
+      transition: color 0.15s;
+    }
+    .proj-timer-digits.timeout {
+      color: #ff4d4f;
+      animation: timerPulse 0.6s ease infinite alternate;
+    }
+
+    @keyframes timerPulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
+
+    .proj-timer-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .proj-timer-btn {
+      padding: 8px 18px;
+      font-size: 1rem;
+      font-weight: 900;
+      background: var(--imperial-gold);
+      color: #000;
+    }
+
     .pip-single-row-body {
       height: 100%;
       width: 100%;
       display: flex;
       align-items: center;
-      background: #140103;
+      background: #000;
       overflow: hidden;
       position: relative;
     }
@@ -1084,19 +1148,18 @@
     }
 
     .proj-card {
-      background: linear-gradient(135deg, rgba(152, 18, 22, 0.55) 0%, rgba(35, 2, 4, 0.9) 100%);
-      border-left: 3px solid var(--imperial-gold);
+      background: #000;
+      border: 2px solid var(--imperial-gold);
       border-radius: 8px;
       padding: 4px 12px;
       display: inline-flex;
       align-items: center;
       gap: 10px;
       margin: 0 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
       white-space: nowrap;
     }
     .proj-card .p-seq {
-      color: #ffdca8;
+      color: var(--imperial-gold);
       font-size: calc(var(--strip-font, 1.35rem) * 0.7);
       font-weight: bold;
       white-space: nowrap;
@@ -1418,6 +1481,7 @@
       <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影</div>
       <div class="proj-btn-group">
         <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">🌓 背景: 全彩纯黑</button>
+        <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">⏱️ 领奖倒计时</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
         <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
@@ -1425,6 +1489,19 @@
 
     <div class="proj-body" id="projBody">
       <div class="proj-static-grid" id="projStaticGrid"></div>
+    </div>
+
+    <div class="proj-timer-overlay" id="projTimerOverlay">
+      <div class="proj-timer-box">
+        <div class="proj-timer-label" data-i18n="projTimerTitle">⏱️ 领奖倒计时 · 请中奖者上前领奖</div>
+        <div class="proj-timer-digits" id="projTimerDigits">10</div>
+        <div class="proj-timer-controls">
+          <button class="icon-btn proj-timer-btn" onclick="projTimerAdd(5)">+5</button>
+          <button class="icon-btn proj-timer-btn" onclick="projTimerAdd(10)">+10</button>
+          <button class="icon-btn proj-timer-btn" id="projTimerStartBtn" onclick="projTimerToggle()" data-i18n="projTimerStart">▶ 开始</button>
+          <button class="icon-btn proj-timer-btn" style="background:#e74c3c; color:#fff;" onclick="projTimerStop()">✕</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1460,6 +1537,7 @@
 
     let activePipWindow = null;
     let pipScrollPos = 0;
+    let pipSetWidth = 0;
     let projSpeedPx = 1.2;
 
     let opScrollPos = 0;
@@ -1558,6 +1636,10 @@
         btnToggleBgTrans: "🌓 背景: 透明通道",
         btnProjFs: "⛶ 全屏",
         btnProjClose: "✕ 返回",
+        projTimerBtn: "⏱️ 领奖倒计时",
+        projTimerTitle: "⏱️ 领奖倒计时 · 请中奖者上前领奖",
+        projTimerStart: "开始",
+        projTimerStop: "停止",
         btnClaimVerify: "✓ 领奖核销 (Claim)",
         btnClaimVerified: "✓ 已领奖 (Claimed)",
         claimedTag: " ✓已领"
@@ -1648,6 +1730,10 @@
         btnToggleBgTrans: "🌓 Latar: Saluran Telus",
         btnProjFs: "⛶ Skrin Penuh",
         btnProjClose: "✕ Kembali",
+        projTimerBtn: "⏱️ Kiraan Masa Menang",
+        projTimerTitle: "⏱️ Kiraan Masa · Pemenang Sila Ke Hadapan",
+        projTimerStart: "Mula",
+        projTimerStop: "Henti",
         btnClaimVerify: "✓ Sahkan Tuntutan",
         btnClaimVerified: "✓ Telah Dituntut",
         claimedTag: " ✓Dituntut"
@@ -1738,6 +1824,10 @@
         btnToggleBgTrans: "🌓 Background: Transparent",
         btnProjFs: "⛶ Fullscreen",
         btnProjClose: "✕ Return",
+        projTimerBtn: "⏱️ Claim Countdown",
+        projTimerTitle: "⏱️ Countdown · Winner, please come forward",
+        projTimerStart: "Start",
+        projTimerStop: "Stop",
         btnClaimVerify: "✓ Verify Claim",
         btnClaimVerified: "✓ Claimed",
         claimedTag: " ✓Claimed"
@@ -2672,7 +2762,14 @@
                 </div>
               `).join('');
             }
-            pipTrack.innerHTML = cardsHtml + cardsHtml + cardsHtml;
+            pipSetWidth = 0;
+            pipTrack.innerHTML = cardsHtml;
+            const singleSetWidth = pipTrack.scrollWidth || 1;
+            const pipWinWidth = (activePipWindow && activePipWindow.innerWidth) || singleSetWidth;
+            const sets = Math.max(3, Math.ceil(pipWinWidth / singleSetWidth) * 2 + 1);
+            pipSetWidth = singleSetWidth;
+            pipTrack.innerHTML = cardsHtml.repeat(sets);
+            if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
           }
         } catch (e) {}
       }
@@ -2703,7 +2800,7 @@
           const pipTrack = activePipWindow.document.getElementById('pipTrack');
           if (pipTrack && pipTrack.children.length > 0) {
             pipScrollPos += projSpeedPx;
-            const singleSetWidth = pipTrack.scrollWidth / 3;
+            const singleSetWidth = pipSetWidth > 0 ? pipSetWidth : pipTrack.scrollWidth / 3;
             if (pipScrollPos >= singleSetWidth) pipScrollPos = 0;
             pipTrack.style.transform = `translateX(-${pipScrollPos}px)`;
           }
@@ -2844,6 +2941,67 @@
       bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
     }
 
+    let projTimerRemaining = 10;
+    let projTimerInterval = null;
+    let projTimerRunning = false;
+
+    function renderProjTimer() {
+      const digits = document.getElementById('projTimerDigits');
+      if (digits) {
+        digits.textContent = projTimerRemaining;
+        digits.classList.toggle('timeout', projTimerRemaining === 0);
+      }
+    }
+
+    function projTimerAdd(sec) {
+      projTimerRemaining = Math.max(0, projTimerRemaining + sec);
+      renderProjTimer();
+      initAudio();
+    }
+
+    function projTimerStop() {
+      if (projTimerInterval) {
+        clearInterval(projTimerInterval);
+        projTimerInterval = null;
+      }
+      projTimerRunning = false;
+      const btn = document.getElementById('projTimerStartBtn');
+      if (btn && I18N[currentLang]) btn.innerHTML = `▶ ${I18N[currentLang].projTimerStart}`;
+      renderProjTimer();
+    }
+
+    function projTimerToggle() {
+      if (projTimerRunning) {
+        projTimerStop();
+        return;
+      }
+      if (projTimerRemaining <= 0) projTimerRemaining = 10;
+      projTimerRunning = true;
+      const btn = document.getElementById('projTimerStartBtn');
+      if (btn && I18N[currentLang]) btn.innerHTML = `■ ${I18N[currentLang].projTimerStop}`;
+      renderProjTimer();
+      initAudio();
+      if (projTimerInterval) clearInterval(projTimerInterval);
+      projTimerInterval = setInterval(() => {
+        projTimerRemaining = Math.max(0, projTimerRemaining - 1);
+        renderProjTimer();
+        if (projTimerRemaining === 0) {
+          projTimerStop();
+          playBuzzer();
+        } else {
+          playBeepCount();
+        }
+      }, 1000);
+    }
+
+    function toggleProjTimer() {
+      const ov = document.getElementById('projTimerOverlay');
+      const show = ov.style.display !== 'flex';
+      ov.style.display = show ? 'flex' : 'none';
+      renderProjTimer();
+      if (!show) projTimerStop();
+    }
+
     async function openPiPOverlay() {
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
@@ -2861,8 +3019,9 @@
           extraReset.textContent = `
             html, body {
               margin: 0 !important; padding: 0 !important; width: 100vw !important; height: 100vh !important;
-              overflow: hidden !important; background: #140103 !important;
+              overflow: hidden !important; background: #000 !important;
             }
+            html, body, * { box-sizing: border-box; }
           `;
           activePipWindow.document.head.appendChild(extraReset);
 
@@ -2875,7 +3034,9 @@
           activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
 
           activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
+          activePipWindow.addEventListener('resize', () => { try { renderScrollers(); } catch (e) {} });
           pipScrollPos = 0;
+          pipSetWidth = 0;
           renderScrollers();
           showToast("PiP Bar Opened!");
           return;
