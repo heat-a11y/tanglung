@@ -1462,6 +1462,7 @@
         <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">⏱️ 领奖倒计时</button>
         <span class="proj-timer-chip" id="projTimerChip">
           <span class="proj-timer-digits-inline" id="projTimerDigits">05:00</span>
+          <button class="proj-timer-btn-mini" onclick="projTimerAdd(1)">+1</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(5)">+5</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(10)">+10</button>
           <button class="proj-timer-btn-mini" onclick="projTimerReset()">↺</button>
@@ -3016,11 +3017,13 @@
     async function openPiPOverlay() {
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
-          const pipAvailW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 2560));
-          const pipAvailH = Math.max(60, Math.round(pipAvailW * 0.035));
+          const pipAvailW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 3840));
+          const pipAvailH = 64;
           activePipWindow = await window.documentPictureInPicture.requestWindow({
             width: pipAvailW,
-            height: pipAvailH
+            height: pipAvailH,
+            disallowReturnToOpener: true,
+            preferInitialWindowPlacement: true
           });
 
           const pipStyle = activePipWindow.document.createElement('style');
@@ -3052,6 +3055,18 @@
           pipScrollPos = 0;
           pipSetWidth = 0;
           renderScrollers();
+          const snapPipToFullWidth = () => {
+            if (!activePipWindow || activePipWindow.closed) return;
+            try {
+              const targetW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || pipAvailW, 3840));
+              if (typeof activePipWindow.resizeTo === 'function' && activePipWindow.innerWidth < targetW - 4) {
+                activePipWindow.resizeTo(targetW, pipAvailH);
+              }
+            } catch (e) {}
+            try { pipSetWidth = 0; renderScrollers(); } catch (e) {}
+          };
+          snapPipToFullWidth();
+          setTimeout(snapPipToFullWidth, 150);
           showToast("PiP Bar Opened!");
           return;
         } catch (err) {}
