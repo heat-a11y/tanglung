@@ -1084,28 +1084,30 @@
     }
 
     .proj-card {
-      background: linear-gradient(135deg, rgba(152, 18, 22, 0.92) 0%, rgba(35, 2, 4, 0.95) 100%);
-      border: 2px solid var(--imperial-gold);
-      border-radius: 12px;
-      padding: 8px 18px;
+      background: linear-gradient(135deg, rgba(152, 18, 22, 0.55) 0%, rgba(35, 2, 4, 0.9) 100%);
+      border-left: 3px solid var(--imperial-gold);
+      border-radius: 8px;
+      padding: 4px 12px;
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin: 0 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
       white-space: nowrap;
     }
     .proj-card .p-seq {
       color: #ffdca8;
-      font-size: 1.05rem;
+      font-size: calc(var(--strip-font, 1.35rem) * 0.7);
       font-weight: bold;
+      white-space: nowrap;
     }
     .proj-card .p-num {
       color: var(--imperial-gold);
-      font-size: 1.9rem;
+      font-size: calc(var(--strip-font, 1.35rem) * 1.45);
       font-weight: 900;
       font-family: monospace;
       letter-spacing: 2px;
+      white-space: nowrap;
     }
 
     .viewer-disabled {
@@ -1153,7 +1155,7 @@
       <div style="font-size:1.15rem; color:#ffdca8;" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:#2ecc71; color:#fff; border-color:#2ecc71;" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
+        <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
@@ -1927,6 +1929,7 @@
         filterEndVal: filterEndVal !== null ? Number(filterEndVal) : null,
         filterType,
         isSuspenseMode: Boolean(isSuspenseMode),
+        currentFontSize: Number(currentFontSize),
         currentLang,
         mainTitle: document.getElementById('appMainTitle').innerText,
         subTitle: document.getElementById('appSubTitle').innerText,
@@ -1978,6 +1981,16 @@
       if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
+
+      if (d.currentFontSize) {
+        currentFontSize = Math.max(1.0, Math.min(2.2, Number(d.currentFontSize)));
+        document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+        if (activePipWindow && !activePipWindow.closed) {
+          try {
+            activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+          } catch (e) {}
+        }
+      }
       
       if (d.currentLang && d.currentLang !== currentLang) {
         currentLang = d.currentLang;
@@ -2067,8 +2080,9 @@
       document.getElementById('manualRedrawBtn').classList.add('viewer-disabled');
       document.getElementById('vipHintText').textContent = I18N[currentLang].vipSpaceHintViewer;
 
-      document.getElementById('spotlightRedrawBtn').style.display = '';
-      document.getElementById('timerRedrawBtn').style.display = '';
+      document.getElementById('spotlightRedrawBtn').style.display = 'none';
+      document.getElementById('spotlightCallBtn').style.display = 'none';
+      document.getElementById('timerRedrawBtn').style.display = 'none';
       document.getElementById('crisisBtn').style.display = 'none';
       document.getElementById('resetBtn').style.display = 'none';
       document.getElementById('poolBadgeEl').style.cursor = 'default';
@@ -2234,6 +2248,7 @@
     }
 
     function promptRedrawSlot(ticketNum, index) {
+      if (isViewerMode) return false;
       const candidates = getAvailablePool();
       if (candidates.length === 0) {
         showToast("No backup tickets left in pool!", true);
@@ -2281,6 +2296,7 @@
     }
 
     function triggerDirectRedrawFromSpotlight() {
+      if (isViewerMode) return;
       if (activeSpotlightIndex >= 0 && activeSpotlightTicket) {
         stopClaimTimer();
         promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
@@ -2430,7 +2446,7 @@
       
       const claimBtn = document.getElementById('spotlightClaimBtn');
       const redrawBtn = document.getElementById('spotlightRedrawBtn');
-      redrawBtn.style.display = '';
+      redrawBtn.style.display = isViewerMode ? 'none' : '';
 
       if (claimedWinners.includes(ticket)) {
         claimBtn.textContent = I18N[currentLang].btnClaimVerified;
@@ -2477,7 +2493,7 @@
           playBuzzer();
           setTimeout(() => {
             if (activeSpotlightTicket && activeSpotlightIndex >= 0) {
-              const doRedraw = confirm(`10s Expired! Ticket [${activeSpotlightTicket}] absent. Redraw now?`);
+              const doRedraw = !isViewerMode && confirm(`10s Expired! Ticket [${activeSpotlightTicket}] absent. Redraw now?`);
               if (doRedraw) {
                 promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
               }
@@ -2783,6 +2799,14 @@
     function adjustFont(delta) {
       currentFontSize = Math.max(1.0, Math.min(2.2, currentFontSize + delta));
       document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+
+      if (activePipWindow && !activePipWindow.closed) {
+        try {
+          activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+        } catch (e) {}
+      }
+
+      if (!isViewerMode) saveAndBroadcast();
     }
 
     function toggleFullScreen() {
@@ -2824,8 +2848,8 @@
       if (window.documentPictureInPicture && typeof window.documentPictureInPicture.requestWindow === 'function') {
         try {
           activePipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 1000,
-            height: 90
+            width: 780,
+            height: 46
           });
 
           const pipStyle = activePipWindow.document.createElement('style');
@@ -2847,6 +2871,8 @@
               <div class="pip-track" id="pipTrack"></div>
             </div>
           `;
+
+          activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
 
           activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
           pipScrollPos = 0;
