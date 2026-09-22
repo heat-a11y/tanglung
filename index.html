@@ -18,6 +18,40 @@
       --paper-cream: #fffaf0;
       --jade-green: #2ecc71;
       --strip-font: 1.35rem;
+
+      --bg-flame: #7b0e12;
+      --bg-flame-mid: #350406;
+      --text-soft: #ffdca8;
+      --text-faint: #fce8cc;
+      --text-muted: #e0d0b0;
+      --text-on-paper: #2b0204;
+      --text-on-gold: #3b0306;
+      --bg-panel: #190204;
+      --bg-toolbar: #140103;
+      --bg-filter-panel: #100102;
+      --bg-input: #250204;
+
+      --danger-red: #e74c3c;
+      --danger-red-deep: #c0392b;
+      --danger-bright: #ff4d4f;
+      --danger-soft: #ff9b90;
+      --red-deep: #7a0e12;
+
+      --success-green-deep: #27ae60;
+      --success-green-dark: #1f7a4d;
+      --success-soft: #a8f0c3;
+      --wait-amber: #e67e22;
+      --neutral-grey: #7f8c8d;
+
+      --blue-sync: #0984e3;
+      --teal-sync: #00cec9;
+
+      --red-rgb: 152, 18, 22;
+      --gold-rgb: 244, 196, 48;
+      --gold-dark-rgb: 184, 134, 11;
+      --lacquer-rgb: 20, 1, 3;
+      --green-rgb: 46, 204, 113;
+      --danger-rgb: 231, 76, 60;
     }
 
     * {
@@ -28,7 +62,7 @@
     }
 
     body {
-      background: radial-gradient(circle at 50% 30%, #7b0e12 0%, #350406 55%, var(--deep-lacquer) 100%);
+      background: radial-gradient(circle at 50% 30%, var(--bg-flame) 0%, var(--bg-flame-mid) 55%, var(--deep-lacquer) 100%);
       color: #fff;
       min-height: 100vh;
       width: 100vw;
@@ -49,7 +83,7 @@
       content: "";
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(rgba(244, 196, 48, 0.05) 2px, transparent 2px);
+      background-image: radial-gradient(rgba(var(--gold-rgb), 0.05) 2px, transparent 2px);
       background-size: 32px 32px;
       pointer-events: none;
       z-index: 1;
@@ -77,7 +111,7 @@
     }
 
     .toast {
-      background: rgba(20, 2, 4, 0.96);
+      background: rgba(var(--lacquer-rgb), 0.96);
       border: 2px solid var(--imperial-gold);
       color: #fff;
       padding: 10px 18px;
@@ -91,8 +125,8 @@
       gap: 10px;
     }
     .toast.error {
-      border-color: #ff4d4f;
-      color: #ffb4b4;
+      border-color: var(--danger-bright);
+      color: var(--danger-bright);
     }
 
     @keyframes toastIn {
@@ -111,7 +145,7 @@
       align-items: center;
       padding: 8px 14px;
       border-bottom: 3px solid var(--imperial-gold);
-      background: linear-gradient(180deg, rgba(30, 2, 4, 0.95) 0%, rgba(20, 1, 2, 0.85) 100%);
+      background: linear-gradient(180deg, rgba(var(--lacquer-rgb), 0.95) 0%, rgba(var(--lacquer-rgb), 0.85) 100%);
       box-shadow: 0 4px 20px rgba(0,0,0,0.7);
       position: relative;
       z-index: 10;
@@ -156,7 +190,7 @@
 
     .brand-subtitle {
       font-size: clamp(0.7rem, 1.1vw, 0.8rem);
-      color: #ffdca8;
+      color: var(--text-soft);
       letter-spacing: 1px;
       outline: none;
     }
@@ -170,11 +204,11 @@
 
     .stat-badge {
       background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(244, 196, 48, 0.6);
+      border: 1px solid rgba(var(--gold-rgb), 0.6);
       padding: 4px 9px;
       border-radius: 20px;
       font-size: clamp(0.72rem, 1.1vw, 0.8rem);
-      color: #fce8cc;
+      color: var(--text-faint);
       user-select: none;
       white-space: nowrap;
     }
@@ -192,7 +226,7 @@
     }
 
     .lang-select {
-      background: #2b0204;
+      background: var(--bg-input);
       border: 1.5px solid var(--imperial-gold);
       color: var(--imperial-gold);
       font-weight: 900;
@@ -204,7 +238,7 @@
     }
 
     .icon-btn {
-      background: rgba(244, 196, 48, 0.15);
+      background: rgba(var(--gold-rgb), 0.15);
       border: 1px solid var(--imperial-gold);
       color: var(--imperial-gold);
       padding: 5px 8px;
@@ -216,33 +250,33 @@
       white-space: nowrap;
     }
     .icon-btn:hover {
-      background: rgba(244, 196, 48, 0.25);
+      background: rgba(var(--gold-rgb), 0.25);
     }
 
     .btn-sync {
-      background: linear-gradient(135deg, #0984e3 0%, #00cec9 100%);
+      background: linear-gradient(135deg, var(--blue-sync) 0%, var(--teal-sync) 100%);
       color: #fff;
-      border-color: #74b9ff;
+      border-color: var(--blue-sync);
     }
 
     .btn-projector {
-      background: linear-gradient(135deg, #f4c430 0%, #b8860b 100%);
-      color: #2b0204;
+      background: linear-gradient(135deg, var(--imperial-gold) 0%, var(--gold-dark) 100%);
+      color: var(--text-on-gold);
     }
 
     .btn-recycle {
-      background: rgba(46, 204, 113, 0.18);
-      border-color: #2ecc71;
-      color: #a8f0c3;
+      background: rgba(var(--green-rgb), 0.18);
+      border-color: var(--jade-green);
+      color: var(--success-soft);
     }
 
     .btn-suspense {
-      background: rgba(231, 76, 60, 0.2);
-      border-color: #e74c3c;
-      color: #ff9b90;
+      background: rgba(var(--danger-rgb), 0.2);
+      border-color: var(--danger-red);
+      color: var(--danger-soft);
     }
     .btn-suspense.active {
-      background: #e74c3c;
+      background: var(--danger-red);
       color: #fff;
     }
 
@@ -271,10 +305,10 @@
     }
 
     .traditional-frame {
-      background: rgba(25, 2, 4, 0.92);
+      background: rgba(var(--lacquer-rgb), 0.92);
       border: 2px solid var(--imperial-gold);
       border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 10px rgba(244, 196, 48, 0.12);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 10px rgba(var(--gold-rgb), 0.12);
       position: relative;
       display: flex;
       flex-direction: column;
@@ -286,8 +320,8 @@
     }
 
     .column-banner {
-      background: linear-gradient(90deg, #b8860b 0%, var(--imperial-gold) 50%, #b8860b 100%);
-      color: #3b0306;
+      background: linear-gradient(90deg, var(--gold-dark) 0%, var(--imperial-gold) 50%, var(--gold-dark) 100%);
+      color: var(--text-on-gold);
       font-weight: 900;
       padding: 7px 6px;
       text-align: center;
@@ -321,8 +355,8 @@
     }
 
     .crawl-card {
-      background: linear-gradient(135deg, rgba(152, 18, 22, 0.45) 0%, rgba(20, 1, 2, 0.75) 100%);
-      border: 1px solid rgba(244, 196, 48, 0.4);
+      background: linear-gradient(135deg, rgba(var(--red-rgb), 0.45) 0%, rgba(var(--lacquer-rgb), 0.75) 100%);
+      border: 1px solid rgba(var(--gold-rgb), 0.4);
       border-left: 5px solid var(--imperial-gold);
       border-radius: 8px;
       padding: 8px 12px;
@@ -336,13 +370,13 @@
 
     .crawl-card:hover {
       transform: scale(1.02);
-      background: rgba(244, 196, 48, 0.25);
+      background: rgba(var(--gold-rgb), 0.25);
       border-color: var(--imperial-gold);
     }
 
     .crawl-card .crawl-tag {
       font-size: 0.85rem;
-      color: #ffdca8;
+      color: var(--text-soft);
       font-weight: bold;
     }
 
@@ -355,14 +389,14 @@
     }
 
     .crawl-controls {
-      background: #100102;
-      border-top: 1px solid rgba(244, 196, 48, 0.3);
+      background: var(--bg-filter-panel);
+      border-top: 1px solid rgba(var(--gold-rgb), 0.3);
       padding: 6px 10px;
       display: flex;
       flex-direction: column;
       gap: 4px;
       font-size: 0.78rem;
-      color: #e0d0b0;
+      color: var(--text-muted);
       flex-shrink: 0;
     }
 
@@ -380,7 +414,7 @@
 
     .main-stage {
       background: var(--paper-cream);
-      color: #2b0204;
+      color: var(--text-on-paper);
       border: 3px solid var(--imperial-gold);
       border-radius: 14px;
       display: flex;
@@ -395,7 +429,7 @@
       text-align: center;
       font-weight: 900;
       color: #fff;
-      background: linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%);
+      background: linear-gradient(90deg, var(--gold-dark) 0%, var(--cinnabar-red) 50%, var(--gold-dark) 100%);
       border: 2px solid var(--imperial-gold);
       padding: 5px 12px;
       border-radius: 20px;
@@ -429,7 +463,7 @@
     .tab-btn.active {
       background: var(--cinnabar-red);
       color: var(--imperial-gold);
-      box-shadow: 0 4px 10px rgba(152, 18, 22, 0.4);
+      box-shadow: 0 4px 10px rgba(var(--red-rgb), 0.4);
     }
 
     .panel {
@@ -445,15 +479,15 @@
     }
 
     .action-btn {
-      background: linear-gradient(135deg, #f4c430 0%, #b8860b 100%);
-      color: #350306;
+      background: linear-gradient(135deg, var(--imperial-gold) 0%, var(--gold-dark) 100%);
+      color: var(--text-on-gold);
       font-weight: 900;
       font-size: clamp(1.1rem, 2.2vw, 1.35rem);
       border: 2px solid #fff;
       padding: 10px 32px;
       border-radius: 30px;
       cursor: pointer;
-      box-shadow: 0 5px 16px rgba(184, 134, 11, 0.5);
+      box-shadow: 0 5px 16px rgba(var(--gold-dark-rgb), 0.5);
       margin-bottom: 10px;
       letter-spacing: 2px;
       transition: transform 0.1s;
@@ -487,8 +521,8 @@
     }
 
     .number-tag {
-      background: #fff6e5;
-      border: 2px solid #b8860b;
+      background: var(--paper-cream);
+      border: 2px solid var(--gold-dark);
       border-radius: 10px;
       display: flex;
       flex-direction: column;
@@ -511,7 +545,7 @@
 
     .number-tag .sub-seq {
       font-size: clamp(0.7rem, 1vw, 0.78rem);
-      color: #8c6810;
+      color: var(--gold-dark);
       font-weight: 800;
       margin-bottom: 1px;
     }
@@ -534,7 +568,7 @@
       font-size: clamp(3.6rem, 8vw, 5.8rem);
       font-weight: 900;
       color: var(--cinnabar-red);
-      background: #fff8eb;
+      background: var(--paper-cream);
       border: 5px solid var(--imperial-gold);
       border-radius: 20px;
       width: 90%;
@@ -544,14 +578,14 @@
       align-items: center;
       justify-content: center;
       letter-spacing: clamp(3px, 1vw, 6px);
-      box-shadow: inset 0 0 25px rgba(184, 134, 11, 0.2), 0 6px 20px rgba(0,0,0,0.15);
+      box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.2), 0 6px 20px rgba(0,0,0,0.15);
       margin-bottom: 14px;
       line-height: 1;
     }
 
     .manual-card {
-      background: #fffaf0;
-      border: 2px dashed #b8860b;
+      background: var(--paper-cream);
+      border: 2px dashed var(--gold-dark);
       border-radius: 12px;
       padding: 16px;
       width: 100%;
@@ -606,12 +640,12 @@
       transition: background 0.2s;
     }
     .btn-manual-confirm:hover {
-      background: #7a0e12;
+      background: var(--red-deep);
     }
 
     .btn-manual-redraw {
       flex: 1;
-      background: linear-gradient(135deg, #1f7a4d 0%, #27ae60 100%);
+      background: linear-gradient(135deg, var(--success-green-dark) 0%, var(--success-green-deep) 100%);
       color: #fff;
       border: none;
       padding: 10px;
@@ -622,7 +656,7 @@
       transition: background 0.2s;
     }
     .btn-manual-redraw:hover {
-      background: #19633e;
+      background: var(--success-green-dark);
     }
 
     .billboard-column {
@@ -630,8 +664,8 @@
     }
 
     .filter-panel {
-      background: #120102;
-      border-bottom: 2px solid rgba(244, 196, 48, 0.35);
+      background: var(--bg-filter-panel);
+      border-bottom: 2px solid rgba(var(--gold-rgb), 0.35);
       padding: 6px 8px;
       display: flex;
       flex-direction: column;
@@ -649,7 +683,7 @@
     .filter-input {
       width: 55px;
       padding: 4px 4px;
-      background: #250204;
+      background: var(--bg-input);
       border: 1px solid var(--imperial-gold);
       color: #fff;
       border-radius: 4px;
@@ -660,7 +694,7 @@
     }
 
     .filter-select {
-      background: #250204;
+      background: var(--bg-input);
       border: 1px solid var(--imperial-gold);
       color: var(--imperial-gold);
       padding: 3px 4px;
@@ -673,7 +707,7 @@
     }
 
     .filter-btn {
-      background: rgba(244, 196, 48, 0.25);
+      background: rgba(var(--gold-rgb), 0.25);
       border: 1px solid var(--imperial-gold);
       color: var(--imperial-gold);
       padding: 3px 6px;
@@ -684,7 +718,7 @@
       white-space: nowrap;
     }
     .filter-btn:hover {
-      background: rgba(244, 196, 48, 0.25);
+      background: rgba(var(--gold-rgb), 0.25);
       color: #000;
     }
 
@@ -697,8 +731,8 @@
 
     .chip-btn {
       background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(244, 196, 48, 0.3);
-      color: #ffdca8;
+      border: 1px solid rgba(var(--gold-rgb), 0.3);
+      color: var(--text-soft);
       padding: 2px 5px;
       border-radius: 10px;
       font-size: 0.7rem;
@@ -714,8 +748,8 @@
 
     .search-container {
       padding: 5px 8px;
-      background: #140102;
-      border-bottom: 1px solid rgba(244, 196, 48, 0.25);
+      background: var(--bg-toolbar);
+      border-bottom: 1px solid rgba(var(--gold-rgb), 0.25);
       display: flex;
       gap: 6px;
       flex-shrink: 0;
@@ -724,7 +758,7 @@
     .search-container input {
       flex: 1;
       padding: 5px 8px;
-      background: #250204;
+      background: var(--bg-input);
       border: 1px solid var(--imperial-gold);
       color: #fff;
       border-radius: 4px;
@@ -745,7 +779,7 @@
 
     .billboard-card {
       background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(244, 196, 48, 0.35);
+      border: 1px solid rgba(var(--gold-rgb), 0.35);
       padding: 5px 7px;
       border-radius: 5px;
       display: flex;
@@ -759,15 +793,15 @@
     }
 
     .billboard-card:hover {
-      background: rgba(244, 196, 48, 0.2);
+      background: rgba(var(--gold-rgb), 0.2);
     }
 
     .billboard-card.claimed {
-      background: rgba(46, 204, 113, 0.25) !important;
+      background: rgba(var(--green-rgb), 0.25) !important;
       border-color: var(--jade-green) !important;
     }
     .billboard-card.claimed .bb-num {
-      color: #2ecc71 !important;
+      color: var(--jade-green) !important;
     }
 
     .billboard-card.highlight {
@@ -779,7 +813,7 @@
     }
 
     .billboard-card .bb-seq {
-      color: #ffdca8;
+      color: var(--text-soft);
       font-size: 0.72rem;
     }
     .billboard-card .bb-num {
@@ -798,7 +832,7 @@
       align-items: center;
       padding-top: 8px;
       margin-top: 4px;
-      border-top: 1px solid #e0d0b0;
+      border-top: 1px solid var(--text-muted);
       font-size: 0.78rem;
       color: #777;
       flex-shrink: 0;
@@ -816,7 +850,7 @@
     }
 
     .modal-box {
-      background: #1c0204;
+      background: var(--deep-lacquer);
       border: 2px solid var(--imperial-gold);
       border-radius: 12px;
       width: 100%;
@@ -833,7 +867,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(244, 196, 48, 0.4);
+      border-bottom: 1px solid rgba(var(--gold-rgb), 0.4);
       padding-bottom: 8px;
       margin-bottom: 10px;
     }
@@ -865,7 +899,7 @@
     }
 
     .btn-recycle-action {
-      background: rgba(244, 196, 48, 0.2);
+      background: rgba(var(--gold-rgb), 0.2);
       border: 1px solid var(--imperial-gold);
       color: var(--imperial-gold);
       padding: 3px 7px;
@@ -875,7 +909,7 @@
       cursor: pointer;
     }
     .btn-recycle-action:hover {
-      background: rgba(244, 196, 48, 0.00);
+      background: rgba(var(--gold-rgb), 0.00);
       color: #000;
     }
 
@@ -887,9 +921,9 @@
       font-weight: bold;
       margin-top: 4px;
     }
-    .p2p-status-tag.connected { background: #27ae60; color: #fff; }
-    .p2p-status-tag.waiting { background: #e67e22; color: #fff; }
-    .p2p-status-tag.disconnected { background: #c0392b; color: #fff; }
+    .p2p-status-tag.connected { background: var(--success-green-deep); color: #fff; }
+    .p2p-status-tag.waiting { background: var(--wait-amber); color: #fff; }
+    .p2p-status-tag.disconnected { background: var(--danger-red-deep); color: #fff; }
 
     #spotlightModal {
       display: none;
@@ -903,13 +937,13 @@
     }
 
     .spotlight-card {
-      background: radial-gradient(circle at center, #8a1518 0%, #300305 100%);
+      background: radial-gradient(circle at center, var(--cinnabar-red) 0%, var(--deep-lacquer) 100%);
       border: 4px solid var(--imperial-gold);
       border-radius: 18px;
       padding: clamp(20px, 4vw, 36px);
       text-align: center;
       color: #fff;
-      box-shadow: 0 0 50px rgba(244, 196, 48, 0.6);
+      box-shadow: 0 0 50px rgba(var(--gold-rgb), 0.6);
       animation: popIn 0.3s ease;
       max-width: 480px;
       width: 100%;
@@ -928,7 +962,7 @@
       color: #fff;
       letter-spacing: 5px;
       font-family: monospace;
-      text-shadow: 0 0 20px rgba(244, 196, 48, 0.8);
+      text-shadow: 0 0 20px rgba(var(--gold-rgb), 0.8);
       margin: 10px 0;
       line-height: 1;
     }
@@ -939,7 +973,7 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(231, 76, 60, 0.98);
+      background: rgba(var(--danger-rgb), 0.98);
       border: 3px solid var(--imperial-gold);
       border-radius: 35px;
       padding: 8px 18px;
@@ -956,7 +990,7 @@
 
     .btn-timer-redraw {
       background: var(--imperial-gold);
-      color: #1a0102;
+      color: var(--text-on-gold);
       border: 2px solid #fff;
       font-weight: 900;
       padding: 5px 12px;
@@ -968,7 +1002,7 @@
     .btn-timer-redraw:hover {
       transform: scale(1.04);
       background: #fff;
-      color: #981216;
+      color: var(--cinnabar-red);
     }
 
     #projectorView {
@@ -976,7 +1010,7 @@
       position: fixed;
       inset: 0;
       z-index: 10000;
-      background: #140103;
+      background: var(--bg-toolbar);
       flex-direction: column;
       pointer-events: auto;
       transition: background 0.3s ease;
@@ -992,13 +1026,15 @@
     }
 
     .proj-toolbar {
-      height: 48px;
-      background: rgba(20, 2, 4, 0.95);
+      min-height: 48px;
+      height: auto;
+      background: rgba(var(--lacquer-rgb), 0.95);
       border-bottom: 2px solid var(--imperial-gold);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 14px;
+      padding: 8px 14px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
@@ -1022,7 +1058,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      background: #190103;
+      background: var(--bg-panel);
       box-shadow: 0 4px 20px rgba(0,0,0,0.8);
       padding: 20px;
     }
@@ -1037,7 +1073,7 @@
     }
 
     .proj-grid-card {
-      background: linear-gradient(135deg, rgba(152, 18, 22, 0.9) 0%, rgba(35, 2, 4, 0.95) 100%);
+      background: linear-gradient(135deg, rgba(var(--red-rgb), 0.9) 0%, rgba(var(--lacquer-rgb), 0.95) 100%);
       border: 2px solid var(--imperial-gold);
       border-radius: 10px;
       padding: 10px;
@@ -1046,7 +1082,7 @@
     }
     .proj-grid-card .pg-seq {
       font-size: 0.8rem;
-      color: #ffdca8;
+      color: var(--text-soft);
       margin-bottom: 2px;
     }
     .proj-grid-card .pg-num {
@@ -1057,32 +1093,33 @@
       letter-spacing: 2px;
     }
     .proj-grid-card.claimed {
-      background: rgba(46, 204, 113, 0.25) !important;
-      border-color: #2ecc71 !important;
+      background: rgba(var(--green-rgb), 0.25) !important;
+      border-color: var(--jade-green) !important;
     }
     .proj-grid-card.claimed .pg-num {
-      color: #2ecc71 !important;
+      color: var(--jade-green) !important;
     }
 
     .proj-timer-chip {
       display: none;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       background: #000;
       border: 2px solid var(--imperial-gold);
-      border-radius: 20px;
-      padding: 3px 10px;
+      border-radius: 28px;
+      padding: 6px 16px;
       white-space: nowrap;
     }
     .proj-timer-chip .proj-timer-digits-inline {
       color: var(--imperial-gold);
       font-weight: 900;
       font-family: monospace;
-      font-size: 1.05rem;
-      letter-spacing: 1px;
+      font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+      letter-spacing: 3px;
+      line-height: 1;
     }
     .proj-timer-chip .proj-timer-digits-inline.timeout {
-      color: #ff4d4f;
+      color: var(--danger-bright);
       animation: timerPulse 0.5s ease infinite alternate;
     }
 
@@ -1092,13 +1129,13 @@
     }
 
     .proj-timer-btn-mini {
-      padding: 1px 8px;
-      font-size: 0.85rem;
+      padding: 4px 12px;
+      font-size: 0.95rem;
       font-weight: 900;
       background: var(--imperial-gold);
       color: #000;
       border: 1px solid #fff;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
     }
     .proj-timer-btn-mini:hover {
@@ -1169,6 +1206,55 @@
       cursor: not-allowed !important;
       pointer-events: none !important;
     }
+
+    .theme-grid {
+      flex: 1;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      padding: 4px;
+      min-height: 120px;
+    }
+
+    .theme-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+      background: rgba(var(--lacquer-rgb), 0.55);
+      border: 2px solid rgba(var(--gold-rgb), 0.35);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+    }
+    .theme-swatch:hover {
+      transform: scale(1.03);
+      border-color: var(--imperial-gold);
+    }
+    .theme-swatch.active {
+      border-color: var(--imperial-gold);
+      box-shadow: 0 0 12px rgba(var(--gold-rgb), 0.6);
+    }
+
+    .theme-swatch-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .theme-swatch-bars div {
+      height: 10px;
+    }
+    .theme-swatch-name {
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: var(--text-soft);
+      text-align: center;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -1180,7 +1266,7 @@
   <div class="modal-backdrop" id="syncModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:#00cec9;">📡 <span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
+        <h3 style="color:var(--teal-sync);">📡 <span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
         <button class="icon-btn" onclick="toggleSyncModal(false)">✕</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
@@ -1195,10 +1281,24 @@
           <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;" data-i18n="scanQr">副机 / 显示端扫码一键加入:</div>
           <div id="qrcode" style="background:#fff; padding:8px; border-radius:6px;"></div>
           <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制显示端链接分享给副机:</div>
-          <input type="text" id="shareLinkInput" readonly style="width:100%; margin-top:4px; padding:6px; background:#1c0204; border:1px solid var(--imperial-gold); color:#ffdca8; font-size:0.75rem;">
+          <input type="text" id="shareLinkInput" readonly style="width:100%; margin-top:4px; padding:6px; background:var(--deep-lacquer); border:1px solid var(--imperial-gold); color:var(--text-soft); font-size:0.75rem;">
           <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">📋 复制显示端链接</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- THEME PICKER MODAL -->
+  <div class="modal-backdrop" id="themeModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 style="color:var(--imperial-gold);">🎨 <span data-i18n="themeTitle">节日主题配色 / Festival Theme</span></h3>
+        <button class="icon-btn" onclick="toggleThemeModal(false)">✕</button>
+      </div>
+      <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:12px;" data-i18n="themeDesc">
+        选择一套灯会主题配色，将同步应用到主控台、大屏投影、桌面悬浮条与副机显示端:
+      </p>
+      <div class="theme-grid" id="themeGrid"></div>
     </div>
   </div>
 
@@ -1207,11 +1307,11 @@
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
       <div class="spotlight-num" id="spotlightNum">0000</div>
-      <div style="font-size:1.15rem; color:#ffdca8;" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
+      <div style="font-size:1.15rem; color:var(--text-soft);" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:#2ecc71; color:#fff; border-color:#2ecc71;" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--jade-green); color:#fff; border-color:var(--jade-green);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
         <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#e74c3c; color:#ff9b90;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废重抽</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger-red); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
@@ -1229,7 +1329,7 @@
   <div class="modal-backdrop" id="recycleModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:#2ecc71;">♻️ <span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
+        <h3 style="color:var(--jade-green);">♻️ <span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
         <button class="icon-btn" onclick="toggleRecycleModal(false)">✕</button>
       </div>
       <p style="font-size:0.85rem; color:#ccc; margin-bottom:12px;" data-i18n="recycleDesc">
@@ -1265,7 +1365,7 @@
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
           <strong data-i18n="blacklistLabel">🚫 临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" style="flex:1; padding:6px 10px; background:#2b0305; border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" style="flex:1; padding:6px 10px; background:var(--bg-input); border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
             <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
@@ -1328,6 +1428,7 @@
           <option value="BI">English (BI)</option>
         </select>
 
+        <button class="icon-btn" onclick="toggleThemeModal(true)" id="themeBtn" data-i18n="navTheme">🎨 主题 / Theme</button>
         <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn" data-i18n="navSync">📡 联机大厅</button>
         <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" data-i18n="navSuspenseOff">🔒 隐蔽模式: 关</button>
         <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)">♻️ <span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)</button>
@@ -1339,7 +1440,7 @@
         <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">🔊 音效: 开</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
         <button class="icon-btn" onclick="exportCSV()">💾 CSV</button>
-        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
+        <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
       </div>
     </div>
 
@@ -1352,7 +1453,7 @@
         </div>
         <div class="crawl-viewport" id="opCrawlViewport">
           <div class="crawl-track" id="opCrawlTrack">
-            <div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;" data-i18n="crawlWaiting">
+            <div style="text-align:center; color:var(--text-soft); padding:40px 10px; font-size:1rem;" data-i18n="crawlWaiting">
               抽奖尚未开始<br>祝各位佳节好运吉祥！
             </div>
           </div>
@@ -1388,7 +1489,7 @@
         <div id="batchPanel" class="panel active">
           <button class="action-btn" id="batchDrawBtn" onclick="drawTen()" data-i18n="btnDraw10">🎲 摇出 10 位幸运儿</button>
           <div class="batch-grid" id="batchGrid">
-            <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;" data-i18n="batchEmptyHint">
+            <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;" data-i18n="batchEmptyHint">
               点击上方按钮同时抽出 10 个幸运号码
             </div>
           </div>
@@ -1398,7 +1499,7 @@
         <div id="vipPanel" class="panel">
           <div class="vip-display" id="vipDisplay">----</div>
           <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()" data-i18n="btnStartRoll">开 始 滚 动</button>
-          <div style="font-size:0.85rem; color:#8c6810; font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
+          <div style="font-size:0.85rem; color:var(--gold-dark); font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
         </div>
 
         <!-- Mode 3: Manual Insertion -->
@@ -1421,13 +1522,13 @@
 
         <div class="stage-footer">
           <span data-i18n="stageFooterLeft">中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪</span>
-          <span style="color:#b8860b; font-weight:bold;" data-i18n="stageFooterRight">现场专委会监制</span>
+          <span style="color:var(--gold-dark); font-weight:bold;" data-i18n="stageFooterRight">现场专委会监制</span>
         </div>
       </div>
 
       <!-- 3. RIGHT COLUMN: MASTER BILLBOARD WITH RANGE FILTER -->
       <div class="traditional-frame billboard-column">
-        <div class="column-banner" style="background: linear-gradient(90deg, #1f7a4d 0%, #2ecc71 50%, #1f7a4d 100%); color:#fff;">
+        <div class="column-banner" style="background: linear-gradient(90deg, var(--success-green-dark) 0%, var(--jade-green) 50%, var(--success-green-dark) 100%); color:#fff;">
           <span>📋</span> <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
@@ -1438,7 +1539,7 @@
               <option value="ticket" data-i18n="optByTicket">按中奖票号 (Ticket #)</option>
             </select>
             <input type="number" class="filter-input" id="rangeStart" placeholder="1" oninput="applyRangeFilter()">
-            <span style="color:#ffdca8; font-size:0.8rem;" data-i18n="rangeTo">至</span>
+            <span style="color:var(--text-soft); font-size:0.8rem;" data-i18n="rangeTo">至</span>
             <input type="number" class="filter-input" id="rangeEnd" placeholder="70" oninput="applyRangeFilter()">
             <button class="filter-btn" onclick="clearRangeFilter()" data-i18n="btnFilterAll">全部</button>
             <button class="filter-btn" onclick="exportRangeCSV()" data-i18n="btnExportSegment">💾 导出</button>
@@ -1459,7 +1560,7 @@
         </div>
 
         <div class="billboard-grid" id="billboardGrid">
-          <div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;" data-i18n="bbEmpty">暂无得奖数据</div>
+          <div style="grid-column:1/-1; text-align:center; color:var(--text-soft); padding-top:40px;" data-i18n="bbEmpty">暂无得奖数据</div>
         </div>
       </div>
     </div>
@@ -1491,7 +1592,7 @@
         </span>
         <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">🚫 隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
-        <button class="icon-btn" style="border-color:#ff8585; color:#ffa8a8;" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
+        <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
     </div>
 
@@ -1504,6 +1605,7 @@
     const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
     const HOST_TOKEN = "TL2026LANTERN";
     let currentLang = 'BC';
+    let currentTheme = 'cinnabar';
     let isViewerMode = false;
 
     let maxPrizes = 110;
@@ -1555,6 +1657,9 @@
         wonLabel: "已抽出",
         leftLabel: "剩余名额",
         navSync: "📡 联机大厅",
+        navTheme: "🎨 主题 / Theme",
+        themeTitle: "节日主题配色 / Festival Theme",
+        themeDesc: "选择一套灯会主题配色，将同步应用到主控台、大屏投影、桌面悬浮条与副机显示端:",
         navSuspenseOn: "🔒 隐蔽模式: 开",
         navSuspenseOff: "🔒 隐蔽模式: 关",
         navRecycle: "回收站",
@@ -1651,6 +1756,9 @@
         wonLabel: "Telah Dicabut",
         leftLabel: "Baki Hadiah",
         navSync: "📡 Sync Bilik",
+        navTheme: "🎨 Tema / Theme",
+        themeTitle: "Tema Festival / Festival Theme",
+        themeDesc: "Pilih set tema festival tanglung — diselaraskan ke konsol, projektor, bar terapung & penonton:",
         navSuspenseOn: "🔒 Mod Rahsia: On",
         navSuspenseOff: "🔒 Mod Rahsia: Off",
         navRecycle: "Tong Kitar",
@@ -1747,6 +1855,9 @@
         wonLabel: "Drawn",
         leftLabel: "Prizes Left",
         navSync: "📡 Cloud Sync",
+        navTheme: "🎨 Theme",
+        themeTitle: "Festival Theme / Festival Theme",
+        themeDesc: "Pick a lantern-festival color scheme — synced to console, projection, floating bar & remote viewers:",
         navSuspenseOn: "🔒 Conceal Mode: On",
         navSuspenseOff: "🔒 Conceal Mode: Off",
         navRecycle: "Recycle Bin",
@@ -1837,6 +1948,234 @@
         hostWrong: "Invalid host console PIN"
       }
     };
+
+    const THEMES = {
+      cinnabar: {
+        name: "硃砂金 · Cinnabar",
+        colors: {
+          '--cinnabar-red': '#981216', '--deep-lacquer': '#1c0204', '--imperial-gold': '#f4c430',
+          '--gold-dark': '#b8860b', '--paper-cream': '#fffaf0', '--jade-green': '#2ecc71',
+          '--bg-flame': '#7b0e12', '--bg-flame-mid': '#350406',
+          '--text-soft': '#ffdca8', '--text-faint': '#fce8cc', '--text-muted': '#e0d0b0',
+          '--text-on-paper': '#2b0204', '--text-on-gold': '#3b0306',
+          '--bg-panel': '#190204', '--bg-toolbar': '#140103', '--bg-filter-panel': '#100102', '--bg-input': '#250204',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff4d4f', '--danger-soft': '#ff9b90', '--red-deep': '#7a0e12',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1f7a4d', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#0984e3', '--teal-sync': '#00cec9',
+          '--red-rgb': '152, 18, 22', '--gold-rgb': '244, 196, 48', '--gold-dark-rgb': '184, 134, 11',
+          '--lacquer-rgb': '20, 1, 3', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      festivalRed: {
+        name: "大紅燈籠 · Festive Red",
+        colors: {
+          '--cinnabar-red': '#e03a3a', '--deep-lacquer': '#2a0608', '--imperial-gold': '#ffd166',
+          '--gold-dark': '#c98a2d', '--paper-cream': '#fff5e6', '--jade-green': '#2ecc71',
+          '--bg-flame': '#b52430', '--bg-flame-mid': '#54101a',
+          '--text-soft': '#ffd9a3', '--text-faint': '#ffe3c2', '--text-muted': '#f0c9a8',
+          '--text-on-paper': '#4a0a0c', '--text-on-gold': '#4a0a0c',
+          '--bg-panel': '#2d0a0c', '--bg-toolbar': '#240708', '--bg-filter-panel': '#1d0506', '--bg-input': '#40101a',
+          '--danger-red': '#ff5252', '--danger-red-deep': '#c62828', '--danger-bright': '#ff8a80', '--danger-soft': '#ffb6a3', '--red-deep': '#b52430',
+          '--success-green-deep': '#2e9e5b', '--success-green-dark': '#1e6b3a', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#ffa726', '--neutral-grey': '#8a8a8a',
+          '--blue-sync': '#2196f3', '--teal-sync': '#26c6da',
+          '--red-rgb': '224, 58, 58', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '201, 138, 45',
+          '--lacquer-rgb': '42, 10, 8', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 82, 82'
+        }
+      },
+      jade: {
+        name: "翠玉青瓷 · Jade",
+        colors: {
+          '--cinnabar-red': '#1b7f5c', '--deep-lacquer': '#06231a', '--imperial-gold': '#e9b84c',
+          '--gold-dark': '#a98332', '--paper-cream': '#eff6ef', '--jade-green': '#2ecc71',
+          '--bg-flame': '#0c4f38', '--bg-flame-mid': '#0a3325',
+          '--text-soft': '#bfe6d3', '--text-faint': '#cfe8da', '--text-muted': '#a9cdbb',
+          '--text-on-paper': '#173a2c', '--text-on-gold': '#173a2c',
+          '--bg-panel': '#0a2c21', '--bg-toolbar': '#081f18', '--bg-filter-panel': '#061812', '--bg-input': '#123a2e',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff6b5e', '--danger-soft': '#ff9b90', '--red-deep': '#14553f',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#2078c8', '--teal-sync': '#27b9c8',
+          '--red-rgb': '27, 127, 92', '--gold-rgb': '233, 184, 76', '--gold-dark-rgb': '169, 131, 50',
+          '--lacquer-rgb': '8, 30, 22', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      midnight: {
+        name: "深海夜燈 · Midnight",
+        colors: {
+          '--cinnabar-red': '#5a4bcf', '--deep-lacquer': '#131030', '--imperial-gold': '#ffd166',
+          '--gold-dark': '#c9972d', '--paper-cream': '#f0edff', '--jade-green': '#2ecc71',
+          '--bg-flame': '#2b245e', '--bg-flame-mid': '#171238',
+          '--text-soft': '#cdc5ff', '--text-faint': '#ddd6ff', '--text-muted': '#b3a9e0',
+          '--text-on-paper': '#2b2870', '--text-on-gold': '#2b2870',
+          '--bg-panel': '#1a1638', '--bg-toolbar': '#141130', '--bg-filter-panel': '#0f0d24', '--bg-input': '#241e4a',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff7768', '--danger-soft': '#ff9b90', '--red-deep': '#463a9e',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#4d6bff', '--teal-sync': '#42d5f0',
+          '--red-rgb': '90, 75, 207', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '201, 151, 45',
+          '--lacquer-rgb': '20, 16, 48', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      noir: {
+        name: "黑金夜宴 · Black & Gold",
+        colors: {
+          '--cinnabar-red': '#c98a2d', '--deep-lacquer': '#101010', '--imperial-gold': '#ffd34d',
+          '--gold-dark': '#c9973d', '--paper-cream': '#fff8e4', '--jade-green': '#2ecc71',
+          '--bg-flame': '#2a2415', '--bg-flame-mid': '#151210',
+          '--text-soft': '#ffe4ae', '--text-faint': '#ffeccc', '--text-muted': '#d8c6a4',
+          '--text-on-paper': '#3a2a08', '--text-on-gold': '#3a2a08',
+          '--bg-panel': '#1c1a16', '--bg-toolbar': '#131210', '--bg-filter-panel': '#0e0d0b', '--bg-input': '#2a2415',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff6b5e', '--danger-soft': '#ff9b90', '--red-deep': '#88601d',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#c9a227', '--teal-sync': '#e6c34d',
+          '--red-rgb': '201, 138, 45', '--gold-rgb': '255, 211, 77', '--gold-dark-rgb': '201, 151, 61',
+          '--lacquer-rgb': '16, 16, 16', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      plum: {
+        name: "粉梅燈海 · Plum",
+        colors: {
+          '--cinnabar-red': '#c2315f', '--deep-lacquer': '#2a0d1a', '--imperial-gold': '#ffd166',
+          '--gold-dark': '#c9972d', '--paper-cream': '#fff0f4', '--jade-green': '#2ecc71',
+          '--bg-flame': '#7c1f40', '--bg-flame-mid': '#3b1222',
+          '--text-soft': '#ffd9e3', '--text-faint': '#ffe3ea', '--text-muted': '#e0b9c5',
+          '--text-on-paper': '#5a1030', '--text-on-gold': '#5a1030',
+          '--bg-panel': '#2f1420', '--bg-toolbar': '#270e19', '--bg-filter-panel': '#1d0a12', '--bg-input': '#421c2c',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff8373', '--danger-soft': '#ff9b90', '--red-deep': '#9b1f45',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#e573a8', '--teal-sync': '#f2a5c5',
+          '--red-rgb': '194, 49, 95', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '201, 151, 45',
+          '--lacquer-rgb': '42, 13, 26', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      teal: {
+        name: "碧水青燈 · Teal",
+        colors: {
+          '--cinnabar-red': '#0a8f86', '--deep-lacquer': '#03201f', '--imperial-gold': '#ffca5e',
+          '--gold-dark': '#c99a2e', '--paper-cream': '#eafffb', '--jade-green': '#2ecc71',
+          '--bg-flame': '#0c5550', '--bg-flame-mid': '#072f2d',
+          '--text-soft': '#bfe9e5', '--text-faint': '#d0efec', '--text-muted': '#a9d5d1',
+          '--text-on-paper': '#0a3a37', '--text-on-gold': '#0a3a37',
+          '--bg-panel': '#082b28', '--bg-toolbar': '#062220', '--bg-filter-panel': '#041917', '--bg-input': '#0f3e3b',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff7768', '--danger-soft': '#ff9b90', '--red-deep': '#07665f',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#12b8b0', '--teal-sync': '#3fe0d6',
+          '--red-rgb': '10, 143, 134', '--gold-rgb': '255, 202, 94', '--gold-dark-rgb': '201, 154, 46',
+          '--lacquer-rgb': '4, 30, 28', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      amethyst: {
+        name: "紫月燈海 · Amethyst",
+        colors: {
+          '--cinnabar-red': '#9c37d6', '--deep-lacquer': '#200b32', '--imperial-gold': '#ffd166',
+          '--gold-dark': '#cf9c31', '--paper-cream': '#f9efff', '--jade-green': '#2ecc71',
+          '--bg-flame': '#4d1b66', '--bg-flame-mid': '#2a1037',
+          '--text-soft': '#dbc4ff', '--text-faint': '#e7d5ff', '--text-muted': '#bba5dd',
+          '--text-on-paper': '#410f5e', '--text-on-gold': '#410f5e',
+          '--bg-panel': '#2a1238', '--bg-toolbar': '#220d2e', '--bg-filter-panel': '#180922', '--bg-input': '#3a1d4f',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff8373', '--danger-soft': '#ff9b90', '--red-deep': '#6f1f9e',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#b06fe0', '--teal-sync': '#d29bf3',
+          '--red-rgb': '156, 55, 214', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '207, 156, 49',
+          '--lacquer-rgb': '32, 11, 50', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      ink: {
+        name: "水墨青花 · Ink",
+        colors: {
+          '--cinnabar-red': '#1f5fa8', '--deep-lacquer': '#0d1722', '--imperial-gold': '#e8b640',
+          '--gold-dark': '#b0852a', '--paper-cream': '#f4f8fc', '--jade-green': '#2ecc71',
+          '--bg-flame': '#1d3a5e', '--bg-flame-mid': '#101e30',
+          '--text-soft': '#bcd4ea', '--text-faint': '#cfdff0', '--text-muted': '#a9bed2',
+          '--text-on-paper': '#173a5c', '--text-on-gold': '#173a5c',
+          '--bg-panel': '#15222f', '--bg-toolbar': '#101b26', '--bg-filter-panel': '#0c151f', '--bg-input': '#1b344d',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff7768', '--danger-soft': '#ff9b90', '--red-deep': '#16457f',
+          '--success-green-deep': '#2ea369', '--success-green-dark': '#1f7a4d', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
+          '--blue-sync': '#3a7fc9', '--teal-sync': '#5aa7d9',
+          '--red-rgb': '31, 95, 168', '--gold-rgb': '232, 182, 64', '--gold-dark-rgb': '176, 133, 42',
+          '--lacquer-rgb': '14, 23, 34', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      },
+      ember: {
+        name: "燭火暖橘 · Ember",
+        colors: {
+          '--cinnabar-red': '#e05a17', '--deep-lacquer': '#1d0f05', '--imperial-gold': '#ffb74d',
+          '--gold-dark': '#c9822e', '--paper-cream': '#fff4e8', '--jade-green': '#2ecc71',
+          '--bg-flame': '#8a3a10', '--bg-flame-mid': '#3a1a08',
+          '--text-soft': '#ffd9b0', '--text-faint': '#ffe4c7', '--text-muted': '#e0be9a',
+          '--text-on-paper': '#5a2a08', '--text-on-gold': '#5a2a08',
+          '--bg-panel': '#241202', '--bg-toolbar': '#1e0f03', '--bg-filter-panel': '#170c02', '--bg-input': '#3a2410',
+          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff8a66', '--danger-soft': '#ff9b90', '--red-deep': '#a8430f',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#f2994a', '--neutral-grey': '#8a8a8a',
+          '--blue-sync': '#e0893a', '--teal-sync': '#f5a25a',
+          '--red-rgb': '224, 90, 23', '--gold-rgb': '255, 183, 77', '--gold-dark-rgb': '201, 130, 46',
+          '--lacquer-rgb': '30, 15, 6', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+        }
+      }
+    };
+
+    function applyThemeToRoot(root, themeId) {
+      const theme = THEMES[themeId] || THEMES.cinnabar;
+      const css = theme.colors;
+      for (const key in css) {
+        root.style.setProperty(key, css[key]);
+      }
+    }
+
+    function applyTheme(themeId) {
+      if (!THEMES[themeId]) return;
+      currentTheme = themeId;
+      applyThemeToRoot(document.documentElement, themeId);
+      if (activePipWindow && !activePipWindow.closed) {
+        try { applyThemeToRoot(activePipWindow.document.documentElement, themeId); } catch (e) {}
+      }
+      updateThemePickerUI();
+    }
+
+    function setTheme(themeId) {
+      if (isViewerMode) return;
+      if (!THEMES[themeId] || themeId === currentTheme) {
+        toggleThemeModal(false);
+        return;
+      }
+      applyTheme(themeId);
+      saveAndBroadcast();
+      showToast(`Theme: ${THEMES[themeId].name}`);
+    }
+
+    function toggleThemeModal(show) {
+      document.getElementById('themeModal').style.display = show ? 'flex' : 'none';
+      if (show) updateThemePickerUI();
+    }
+
+    function updateThemePickerUI() {
+      const grid = document.getElementById('themeGrid');
+      if (!grid) return;
+      grid.innerHTML = Object.keys(THEMES).map(id => {
+        const th = THEMES[id];
+        const active = id === currentTheme ? ' active' : '';
+        const c = th.colors;
+        return `
+          <div class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}">
+            <div class="theme-swatch-bars">
+              <div style="background:${c['--bg-flame']};"></div>
+              <div style="background:${c['--cinnabar-red']};"></div>
+              <div style="background:${c['--imperial-gold']};"></div>
+              <div style="background:${c['--paper-cream']};"></div>
+              <div style="background:${c['--deep-lacquer']};"></div>
+            </div>
+            <div class="theme-swatch-name">${th.name}</div>
+          </div>`;
+      }).join('');
+    }
 
     function changeLanguage(lang) {
       currentLang = lang;
@@ -2028,6 +2367,7 @@
         projHideClaimed: Boolean(projHideClaimed),
         currentFontSize: Number(currentFontSize),
         currentLang,
+        currentTheme,
         mainTitle: document.getElementById('appMainTitle').innerText,
         subTitle: document.getElementById('appSubTitle').innerText,
         timestamp: Date.now()
@@ -2086,6 +2426,7 @@
         if (activePipWindow && !activePipWindow.closed) {
           try {
             activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+            applyThemeToRoot(activePipWindow.document.documentElement, currentTheme);
           } catch (e) {}
         }
       }
@@ -2094,6 +2435,10 @@
         currentLang = d.currentLang;
         document.getElementById('langSelect').value = currentLang;
         applyLanguageUI();
+      }
+
+      if (d.currentTheme && THEMES[d.currentTheme]) {
+        applyTheme(d.currentTheme);
       }
 
       if (d.mainTitle) {
@@ -2185,6 +2530,7 @@
       document.getElementById('timerRedrawBtn').style.display = 'none';
       document.getElementById('crisisBtn').style.display = 'none';
       document.getElementById('resetBtn').style.display = 'none';
+      document.getElementById('themeBtn').style.display = 'none';
       document.getElementById('poolBadgeEl').style.cursor = 'default';
       document.getElementById('poolBadgeEl').removeAttribute('onclick');
       document.getElementById('prizeBadgeEl').style.cursor = 'default';
@@ -2266,7 +2612,7 @@
       isRolling = true;
       const btn = document.getElementById('vipToggleBtn');
       btn.textContent = I18N[currentLang].btnStopRoll;
-      btn.style.background = "linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)";
+      btn.style.background = "linear-gradient(135deg, var(--danger-red) 0%, var(--danger-red-deep) 100%)";
       btn.style.color = "#fff";
 
       rollTimer = setInterval(() => {
@@ -2508,7 +2854,7 @@
       document.getElementById('bbFilteredCount').textContent = filtered.length;
 
       if (filtered.length === 0) {
-        bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#ffdca8; padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
+        bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-soft); padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
       } else {
         const tag = I18N[currentLang].claimedTag;
         bb.innerHTML = filtered.map(item => {
@@ -2551,10 +2897,10 @@
 
       if (claimedWinners.includes(ticket)) {
         claimBtn.textContent = I18N[currentLang].btnClaimVerified;
-        claimBtn.style.background = "#27ae60";
+        claimBtn.style.background = "var(--success-green-deep)";
       } else {
         claimBtn.textContent = I18N[currentLang].btnClaimVerify;
-        claimBtn.style.background = "#7f8c8d";
+        claimBtn.style.background = "var(--neutral-grey)";
       }
 
       document.getElementById('spotlightModal').style.display = 'flex';
@@ -2653,7 +2999,7 @@
           <div class="recycle-actions">
             ${!isViewerMode ? `
               <button class="btn-recycle-action" onclick="restoreToPool('${item.ticket}', ${idx})">♻️ Return to Pool</button>
-              <button class="btn-recycle-action" style="border-color:#2ecc71; color:#2ecc71;" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 Restore Winner</button>
+              <button class="btn-recycle-action" style="border-color:var(--jade-green); color:var(--jade-green);" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 Restore Winner</button>
             ` : ''}
           </div>
         </div>
@@ -2742,11 +3088,11 @@
         if (isSuspenseMode) {
           projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2.5rem; color:var(--imperial-gold); padding:50px;">${t.projSuspense}</div>`;
         } else if (all.length === 0) {
-          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:#ffdca8; padding:50px;">${t.projWaiting}</div>`;
+          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:var(--text-soft); padding:50px;">${t.projWaiting}</div>`;
         } else {
           const shown = projHideClaimed ? all.filter(item => !claimedWinners.includes(item.num)) : all;
           if (shown.length === 0) {
-            projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:#ffdca8; padding:50px;">${t.projWaiting}</div>`;
+            projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:var(--text-soft); padding:50px;">${t.projWaiting}</div>`;
           } else {
             projGrid.innerHTML = shown.map(item => {
               const isClaimed = claimedWinners.includes(item.num);
@@ -2798,7 +3144,7 @@
       const opTrack = document.getElementById('opCrawlTrack');
       if (opTrack) {
         if (unclaimed.length === 0) {
-          opTrack.innerHTML = `<div style="text-align:center; color:#ffdca8; padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
+          opTrack.innerHTML = `<div style="text-align:center; color:var(--text-soft); padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
         } else {
           const opCards = unclaimed.map(item => `
             <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
@@ -2857,13 +3203,13 @@
       const ribbon = document.getElementById('pacingRibbon');
       if (winners.length >= (maxPrizes - 10) && winners.length < maxPrizes) {
         ribbon.textContent = t.pacingGrand;
-        ribbon.style.background = "linear-gradient(90deg, #c0392b 0%, #e74c3c 50%, #c0392b 100%)";
+        ribbon.style.background = "linear-gradient(90deg, var(--danger-red-deep) 0%, var(--danger-red) 50%, var(--danger-red-deep) 100%)";
       } else if (winners.length >= maxPrizes) {
         ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
-        ribbon.style.background = "linear-gradient(90deg, #27ae60 0%, #2ecc71 50%, #27ae60 100%)";
+        ribbon.style.background = "linear-gradient(90deg, var(--success-green-dark) 0%, var(--jade-green) 50%, var(--success-green-dark) 100%)";
       } else {
         ribbon.textContent = t.pacingConsolation.replace('{quota}', Math.max(0, maxPrizes - 10));
-        ribbon.style.background = "linear-gradient(90deg, #b8860b 0%, #981216 50%, #b8860b 100%)";
+        ribbon.style.background = "linear-gradient(90deg, var(--gold-dark) 0%, var(--cinnabar-red) 50%, var(--gold-dark) 100%)";
       }
 
       const exhausted = winners.length >= maxPrizes || available.length === 0;
@@ -2881,7 +3227,7 @@
         auditList.innerHTML = voidAuditLogs.map(item => `
           <div class="modal-item">
             <div>
-              <strong>#${item.seq}</strong>: <span style="text-decoration:line-through; color:#ff7875;">${item.oldNum}</span> 
+              <strong>#${item.seq}</strong>: <span style="text-decoration:line-through; color:var(--danger-bright);">${item.oldNum}</span> 
               ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${item.newNum}</strong>
             </div>
             <div style="font-size:0.75rem; color:#aaa;">${item.time}</div>
@@ -3114,6 +3460,7 @@
           `;
 
           activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
+          applyThemeToRoot(activePipWindow.document.documentElement, currentTheme);
 
           activePipWindow.addEventListener('pagehide', () => { activePipWindow = null; });
           activePipWindow.addEventListener('resize', () => { try { renderScrollers(); } catch (e) {} });
@@ -3190,7 +3537,7 @@
         filterActive = false;
         isSuspenseMode = false;
         document.getElementById('batchGrid').innerHTML = `
-          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:#8c6810; font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
+          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
           </div>`;
         document.getElementById('vipDisplay').textContent = '----';
