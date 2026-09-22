@@ -583,6 +583,16 @@
       line-height: 1;
     }
 
+    .vip-display.rolling {
+      color: var(--imperial-gold);
+      border-color: var(--jade-green);
+      animation: vipSlotPulse 0.4s ease infinite alternate;
+    }
+    @keyframes vipSlotPulse {
+      from { transform: scale(1); box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.25), 0 0 14px rgba(var(--gold-rgb), 0.4); }
+      to { transform: scale(1.04); box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.45), 0 0 30px rgba(var(--gold-rgb), 0.85); }
+    }
+
     .manual-card {
       background: var(--paper-cream);
       border: 2px dashed var(--gold-dark);
@@ -1612,6 +1622,7 @@
     let poolStart = 1;
     let poolEnd = 1500;
     const STORAGE_KEY = "tanglung_stage_v39_realtime";
+    const VIP_ROLL_TTL = 30000;
 
     let winners = [];
     let claimedWinners = [];
@@ -1619,6 +1630,8 @@
     let voidAuditLogs = [];
     let isRolling = false;
     let rollTimer = null;
+    let vipRollEvent = null;
+    let appliedVipRollKey = null;
     let soundOn = true;
     let currentFontSize = 1.35;
 
@@ -2365,6 +2378,7 @@
         filterType,
         isSuspenseMode: Boolean(isSuspenseMode),
         projHideClaimed: Boolean(projHideClaimed),
+        vipRollEvent: vipRollEvent || null,
         currentFontSize: Number(currentFontSize),
         currentLang,
         currentTheme,
@@ -2446,6 +2460,20 @@
         document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
       }
       if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
+
+      if (d.vipRollEvent) {
+        const e = d.vipRollEvent;
+        const key = (e.ts || 0) + ':' + e.phase + ':' + (e.num || '');
+        if (key !== appliedVipRollKey) {
+          appliedVipRollKey = key;
+          if (e.phase === 'start' && Date.now() - e.ts < VIP_ROLL_TTL) {
+            startVipRollAnimation();
+          } else if (e.phase === 'stop') {
+            stopVipRollAnimation();
+            if (e.num) document.getElementById('vipDisplay').textContent = e.num;
+          }
+        }
+      }
 
       updateUI();
       updateProjHideClaimedBtn();
@@ -2608,30 +2636,14 @@
       if (winners.length >= maxPrizes || candidates.length === 0) {
         return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
       }
-
-      isRolling = true;
-      const btn = document.getElementById('vipToggleBtn');
-      btn.textContent = I18N[currentLang].btnStopRoll;
-      btn.style.background = "linear-gradient(135deg, var(--danger-red) 0%, var(--danger-red-deep) 100%)";
-      btn.style.color = "#fff";
-
-      rollTimer = setInterval(() => {
-        const tempIdx = Math.floor(Math.random() * candidates.length);
-        document.getElementById('vipDisplay').textContent = candidates[tempIdx] || "----";
-        playTick();
-      }, 50);
+      startVipRollAnimation(true);
+      vipRollEvent = { phase: 'start', ts: Date.now() };
+      saveAndBroadcast();
     }
 
     function stopVip() {
       if (isViewerMode) return;
-      clearInterval(rollTimer);
-      isRolling = false;
-
-      const btn = document.getElementById('vipToggleBtn');
-      btn.textContent = I18N[currentLang].btnStartRoll;
-      btn.style.background = "";
-      btn.style.color = "";
-
+      stopVipRollAnimation();
       const candidates = getAvailablePool();
       if (candidates.length === 0) return;
       const finalIdx = Math.floor(Math.random() * candidates.length);
@@ -2639,11 +2651,43 @@
       winners.push(picked);
 
       document.getElementById('vipDisplay').textContent = picked;
+      vipRollEvent = { phase: 'stop', ts: Date.now(), num: picked };
       playFestiveGong();
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
       showToast(`🏆 ${picked}`);
+    }
+
+    function startVipRollAnimation(playSfx) {
+      if (isRolling) return;
+      const opView = document.getElementById('operatorView');
+      if (opView && getComputedStyle(opView).display === 'none') return;
+      const candidates = getAvailablePool();
+      if (candidates.length === 0) return;
+      isRolling = true;
+      const btn = document.getElementById('vipToggleBtn');
+      btn.textContent = I18N[currentLang].btnStopRoll;
+      btn.style.background = "linear-gradient(135deg, var(--danger-red) 0%, var(--danger-red-deep) 100%)";
+      btn.style.color = "#fff";
+      const disp = document.getElementById('vipDisplay');
+      disp.classList.add('rolling');
+      rollTimer = setInterval(() => {
+        const tempIdx = Math.floor(Math.random() * candidates.length);
+        disp.textContent = candidates[tempIdx] || "----";
+        if (playSfx) playTick();
+      }, 50);
+    }
+
+    function stopVipRollAnimation() {
+      clearInterval(rollTimer);
+      rollTimer = null;
+      isRolling = false;
+      const btn = document.getElementById('vipToggleBtn');
+      btn.textContent = I18N[currentLang].btnStartRoll;
+      btn.style.background = "";
+      btn.style.color = "";
+      document.getElementById('vipDisplay').classList.remove('rolling');
     }
 
     // MODE 3: MANUAL ENTRY
@@ -3526,7 +3570,7 @@
     function resetAll() {
       if (isViewerMode) return;
       if (confirm("Reset everything?")) {
-        if (isRolling) stopVip();
+        stopVipRollAnimation();
         stopClaimTimer();
         closeSpotlight();
         localStorage.removeItem(STORAGE_KEY);
@@ -3536,6 +3580,8 @@
         voidAuditLogs = [];
         filterActive = false;
         isSuspenseMode = false;
+        vipRollEvent = null;
+        appliedVipRollKey = null;
         document.getElementById('batchGrid').innerHTML = `
           <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
