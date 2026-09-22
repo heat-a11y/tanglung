@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%234c1e24'/%3E%3Ctext x='32' y='44' font-size='40' text-anchor='middle'%3E%F0%9F%8F%AE%3C/text%3E%3C/svg%3E">
   <!-- QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <!-- Firebase Official SDKs -->
@@ -1422,7 +1423,7 @@
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
           <strong data-i18n="blacklistLabel">🚫 临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" style="flex:1; padding:6px 10px; background:var(--bg-input); border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--bg-input); border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
             <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
@@ -1667,10 +1668,20 @@
 
   <script>
     const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
-    const HOST_TOKEN = "TL2026LANTERN";
+    const HOST_PIN_HASH = "43f0ec5f646db5f058b8240e7688e6eea09a84afa4ce36ac33b37df908b18b85";
+    const MASTER_AUTH_KEY = "tanglung_master_auth";
+    try {
+      const legacyUrl = new URL(window.location.href);
+      if (legacyUrl.searchParams.has('host')) {
+        legacyUrl.searchParams.delete('host');
+        history.replaceState(null, '', legacyUrl.pathname + legacyUrl.search + legacyUrl.hash);
+      }
+    } catch (e) {}
     let currentLang = 'BC';
     let currentTheme = 'cinnabar';
     let isViewerMode = false;
+    let customMainTitle = null;
+    let customSubTitle = null;
 
     let maxPrizes = 110;
     let poolStart = 1;
@@ -1714,6 +1725,8 @@
 
     let syncRef = null;
     let isPushingFirebase = false;
+    let lastPushedSig = null;
+    let pendingSnapshot = null;
     const syncChannel = new BroadcastChannel('tanglung_sync_v39');
     let audioCtx = null;
 
@@ -2422,16 +2435,32 @@
       if (!isViewerMode) saveAndBroadcast();
     }
 
-    function applyLanguageUI() {
+    function applyLanguageUI(onLoad) {
       const t = I18N[currentLang];
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (t[key]) el.innerHTML = t[key];
       });
 
-      document.getElementById('appMainTitle').innerText = t.brandTitle;
-      document.getElementById('appSubTitle').innerText = t.brandSub;
-      document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+      const allBrandTitles = new Set(Object.values(I18N).map(i => i.brandTitle.trim()));
+      const allBrandSubs = new Set(Object.values(I18N).map(i => i.brandSub.trim()));
+      const mainTitleEl = document.getElementById('appMainTitle');
+      const subTitleEl = document.getElementById('appSubTitle');
+      const curMain = mainTitleEl.innerText.trim();
+      const curSub = subTitleEl.innerText.trim();
+
+      if (!allBrandTitles.has(curMain)) customMainTitle = mainTitleEl.innerText;
+      if (!allBrandSubs.has(curSub)) customSubTitle = subTitleEl.innerText;
+
+      if (customMainTitle === null) {
+        mainTitleEl.innerText = t.brandTitle;
+        document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+      } else {
+        mainTitleEl.innerText = customMainTitle;
+        document.getElementById('projHeaderTitle').innerText = `🏮 ${customMainTitle}`;
+      }
+      if (customSubTitle === null) subTitleEl.innerText = t.brandSub;
+      else subTitleEl.innerText = customSubTitle;
 
       const pView = document.getElementById('projectorView');
       const isTrans = pView && pView.classList.contains('transparent-mode');
@@ -2445,11 +2474,20 @@
       updateUI();
     }
 
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function showToast(msg, isError = false) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast ${isError ? 'error' : ''}`;
-      toast.innerHTML = `<span>${isError ? '⚠️' : '🎉'}</span> <span>${msg}</span>`;
+      toast.innerHTML = `<span>${isError ? '⚠️' : '🎉'}</span> <span>${esc(msg)}</span>`;
       container.appendChild(toast);
       setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
@@ -2540,8 +2578,11 @@
 
     function sanitizeList(raw) {
       if (!raw) return [];
-      if (Array.isArray(raw)) return raw.filter(Boolean);
-      return Object.values(raw).filter(Boolean);
+      const arr = Array.isArray(raw) ? raw : Object.values(raw);
+      return arr.filter(Boolean).slice(0, 500).map(x => {
+        if (typeof x === 'string') return /^\d{4}$/.test(x) ? x : null;
+        return x;
+      }).filter(Boolean);
     }
 
     function getAvailablePool() {
@@ -2621,9 +2662,20 @@
       if (syncRef) {
         if (!isViewerMode || forceFullSync) {
           isPushingFirebase = true;
+          lastPushedSig = JSON.stringify(payload);
           syncRef.set(payload)
+            .then(() => {
+              syncRef.once('value').then(snap => {
+                const v = (snap && snap.val()) || pendingSnapshot;
+                pendingSnapshot = null;
+                if (v && JSON.stringify(v) !== lastPushedSig) {
+                  isPushingFirebase = false;
+                  applyStateData(v);
+                }
+              });
+            })
             .catch((err) => console.warn("Firebase Write Error:", err))
-            .finally(() => { setTimeout(() => { isPushingFirebase = false; }, 100); });
+            .finally(() => { setTimeout(() => { isPushingFirebase = false; lastPushedSig = null; }, 150); });
         } else {
           syncRef.child('claimedWinners').set(payload.claimedWinners).catch(() => {});
         }
@@ -2649,12 +2701,12 @@
       recycleBin = sanitizeList(d.recycleBin);
       voidAuditLogs = sanitizeList(d.voidAuditLogs);
 
-      if (d.maxPrizes) maxPrizes = Number(d.maxPrizes);
-      if (d.poolStart) poolStart = Number(d.poolStart);
-      if (d.poolEnd) poolEnd = Number(d.poolEnd);
+      if (d.maxPrizes) maxPrizes = Math.max(1, Math.min(500, Number(d.maxPrizes) || maxPrizes));
+      if (d.poolStart) poolStart = Math.max(1, Math.min(9999, Number(d.poolStart) || poolStart));
+      if (d.poolEnd) poolEnd = Math.max(Number(d.poolStart) || poolStart, Math.min(9999, Number(d.poolEnd) || poolEnd));
       if (typeof d.filterActive === 'boolean') filterActive = d.filterActive;
-      if (d.filterStartVal !== undefined) filterStartVal = d.filterStartVal;
-      if (d.filterEndVal !== undefined) filterEndVal = d.filterEndVal;
+      if (d.filterStartVal !== undefined && d.filterStartVal !== null) filterStartVal = Math.max(1, Math.min(9999, Number(d.filterStartVal) || filterStartVal));
+      if (d.filterEndVal !== undefined && d.filterEndVal !== null) filterEndVal = Math.max(1, Math.min(9999, Number(d.filterEndVal) || filterEndVal));
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
       if (typeof d.projHideClaimed === 'boolean') projHideClaimed = d.projHideClaimed;
@@ -2683,8 +2735,12 @@
       if (d.mainTitle) {
         document.getElementById('appMainTitle').innerText = d.mainTitle;
         document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
+        if (d.mainTitle !== I18N[currentLang].brandTitle) customMainTitle = d.mainTitle;
       }
-      if (d.subTitle) document.getElementById('appSubTitle').innerText = d.subTitle;
+      if (d.subTitle) {
+        document.getElementById('appSubTitle').innerText = d.subTitle;
+        if (d.subTitle !== I18N[currentLang].brandSub) customSubTitle = d.subTitle;
+      }
 
       if (d.vipRollEvent) {
         const e = d.vipRollEvent;
@@ -2718,6 +2774,16 @@
 
     ['appMainTitle', 'appSubTitle'].forEach(id => {
       document.getElementById(id).addEventListener('input', () => {
+        if (id === 'appMainTitle') {
+          const v = document.getElementById(id).innerText;
+          const isDefault = Object.values(I18N).some(i => i.brandTitle.trim() === v.trim());
+          customMainTitle = isDefault ? null : v;
+          document.getElementById('projHeaderTitle').innerText = `🏮 ${document.getElementById(id).innerText}`;
+        } else {
+          const v = document.getElementById(id).innerText;
+          const isDefault = Object.values(I18N).some(i => i.brandSub.trim() === v.trim());
+          customSubTitle = isDefault ? null : v;
+        }
         if (!isViewerMode) saveAndBroadcast();
       });
     });
@@ -2731,7 +2797,9 @@
         syncRef = db.ref("tanglung_live_state");
 
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('viewer') === 'true' || urlParams.get('host') !== HOST_TOKEN) {
+        const forcedViewer = (urlParams.get('viewer') === 'true' || urlParams.get('projection') === 'true' || urlParams.get('pipbar') === 'true');
+        const isMasterBrowser = localStorage.getItem(MASTER_AUTH_KEY) === '1';
+        if (forcedViewer || !isMasterBrowser) {
           isViewerMode = true;
           enableViewerModeUI();
         } else {
@@ -2740,8 +2808,11 @@
         }
 
         syncRef.on("value", (snapshot) => {
-          if (isPushingFirebase) return;
           const val = snapshot.val();
+          if (isPushingFirebase) {
+            pendingSnapshot = val;
+            return;
+          }
           if (val) {
             applyStateData(val);
           } else if (!isViewerMode) {
@@ -2750,7 +2821,8 @@
           }
         });
 
-        const viewerUrl = new URL(window.location.href);
+        const cleanBase = window.location.origin + window.location.pathname;
+        const viewerUrl = new URL(cleanBase);
         viewerUrl.searchParams.set('viewer', 'true');
         document.getElementById('shareLinkInput').value = viewerUrl.toString();
         const qrContainer = document.getElementById('qrcode');
@@ -2792,7 +2864,11 @@
     }
 
     function switchTab(tab) {
-      if (isRolling) stopVip();
+      if (isRolling) {
+        stopVipRollAnimation();
+        vipRollEvent = null;
+        if (!isViewerMode) saveAndBroadcast();
+      }
       const btns = document.querySelectorAll('.tab-btn');
       btns[0].classList.toggle('active', tab === 'batch');
       btns[1].classList.toggle('active', tab === 'vip');
@@ -2836,7 +2912,7 @@
         const seqNum = winners.length - batch.length + i + 1;
         div.innerHTML = `
           <div class="sub-seq">${t.prizeItemPrefix.replace('{seq}', seqNum)}</div>
-          <div class="main-num">${num}</div>
+          <div class="main-num">${esc(num)}</div>
         `;
         grid.appendChild(div);
       });
@@ -3168,9 +3244,9 @@
         bb.innerHTML = filtered.map(item => {
           const isClaimed = claimedWinners.includes(item.num);
           return `
-            <div class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${item.num}" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
+            <div class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${esc(item.num)}" title="Click to verify" onclick="openSpotlight('${esc(item.num)}', ${item.seq})">
               <span class="bb-seq">#${item.seq}${isClaimed ? tag : ''}</span>
-              <span class="bb-num">${item.num}</span>
+              <span class="bb-num">${esc(item.num)}</span>
             </div>
           `;
         }).join('');
@@ -3301,13 +3377,13 @@
       container.innerHTML = recycleBin.map((item, idx) => `
         <div class="modal-item">
           <div>
-            <strong style="color:var(--imperial-gold); font-size:1.15rem; font-family:monospace;">${item.ticket}</strong>
-            <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(#${item.originalSeq} • ${item.time})</span>
+            <strong style="color:var(--imperial-gold); font-size:1.15rem; font-family:monospace;">${esc(item.ticket)}</strong>
+            <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(#${esc(item.originalSeq)} • ${esc(item.time)})</span>
           </div>
           <div class="recycle-actions">
             ${!isViewerMode ? `
-              <button class="btn-recycle-action" onclick="restoreToPool('${item.ticket}', ${idx})">♻️ Return to Pool</button>
-              <button class="btn-recycle-action" style="border-color:var(--jade-green); color:var(--jade-green);" onclick="restoreAsWinner('${item.ticket}', ${idx})">🏆 Restore Winner</button>
+              <button class="btn-recycle-action" onclick="restoreToPool('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">♻️ Return to Pool</button>
+              <button class="btn-recycle-action" style="border-color:var(--jade-green); color:var(--jade-green);" onclick="restoreAsWinner('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">🏆 Restore Winner</button>
             ` : ''}
           </div>
         </div>
@@ -3341,8 +3417,9 @@
     function excludeBlacklistTicket() {
       if (isViewerMode) return;
       const input = document.getElementById('blacklistInput');
-      let val = input.value.trim().padStart(4, '0');
-      if (!val) return;
+      const raw = input.value.trim();
+      if (!raw) return;
+      const val = raw.replace(/\D/g, '').padStart(4, '0');
       recycleBin.unshift({
         ticket: val,
         originalSeq: 'Excluded',
@@ -3407,7 +3484,7 @@
               return `
                 <div class="proj-grid-card ${isClaimed ? 'claimed' : ''}">
                   <div class="pg-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
-                  <div class="pg-num">${item.num}</div>
+                  <div class="pg-num">${esc(item.num)}</div>
                 </div>`;
             }).join('');
           }
@@ -3429,7 +3506,7 @@
               cardsHtml = unclaimed.map(item => `
                 <div class="proj-card">
                   <span class="p-seq">${t.prizeItemPrefix.replace('{seq}', item.seq)}</span>
-                  <span class="p-num">${item.num}</span>
+                  <span class="p-num">${esc(item.num)}</span>
                 </div>
               `).join('');
             }
@@ -3455,12 +3532,12 @@
           opTrack.innerHTML = `<div style="text-align:center; color:var(--text-soft); padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
         } else {
           const opCards = unclaimed.map(item => `
-            <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${item.num}', ${item.seq})">
+            <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${esc(item.num)}', ${item.seq})">
               <div>
                 <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
                 <div class="crawl-hint">⚡ ${I18N[currentLang].btnFocusVerify}</div>
               </div>
-              <span class="crawl-num">${item.num}</span>
+              <span class="crawl-num">${esc(item.num)}</span>
             </div>
           `).join('');
           opTrack.innerHTML = opCards + opCards;
@@ -3535,10 +3612,10 @@
         auditList.innerHTML = voidAuditLogs.map(item => `
           <div class="modal-item">
             <div>
-              <strong>#${item.seq}</strong>: <span style="text-decoration:line-through; color:var(--danger-bright);">${item.oldNum}</span> 
-              ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${item.newNum}</strong>
+              <strong>#${esc(item.seq)}</strong>: <span style="text-decoration:line-through; color:var(--danger-bright);">${esc(item.oldNum)}</span> 
+              ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${esc(item.newNum)}</strong>
             </div>
-            <div style="font-size:0.75rem; color:#aaa;">${item.time}</div>
+            <div style="font-size:0.75rem; color:#aaa;">${esc(item.time)}</div>
           </div>
         `).join('');
       }
@@ -3587,7 +3664,7 @@
     }
 
     function openProjectionTab() {
-      const url = new URL(window.location.href);
+      const url = new URL(window.location.origin + window.location.pathname);
       url.searchParams.set('projection', 'true');
       url.searchParams.set('viewer', 'true');
       window.open(url.toString(), '_blank');
@@ -3617,9 +3694,7 @@
     }
 
     function closeProjectionMode() {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('projection');
-      url.searchParams.delete('viewer');
+      const url = new URL(window.location.origin + window.location.pathname);
       window.location.href = url.toString();
     }
 
@@ -3826,9 +3901,10 @@
     }
 
     function openPiPBarPopup() {
-      const url = new URL(window.location.href);
+      const url = new URL(window.location.origin + window.location.pathname);
       url.searchParams.set('pipbar', 'true');
       url.searchParams.set('viewer', 'true');
+      url.searchParams.set('t', String(Date.now()));
       const screenW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 3840));
       const features = `left=0,top=0,width=${screenW},height=76,toolbar=no,menubar=no,location=no,status=no,scrollbars=no,resizable=yes`;
       const win = window.open(url.toString(), 'TanglungPiPBar', features);
@@ -3859,6 +3935,8 @@
         claimedWinners = [];
         recycleBin = [];
         voidAuditLogs = [];
+        customMainTitle = null;
+        customSubTitle = null;
         filterActive = false;
         isSuspenseMode = false;
         vipRollEvent = null;
@@ -3961,18 +4039,28 @@
       });
     }
 
-    function promptBecomeHost() {
+    async function sha256Hex(text) {
+  const data = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+    async function promptBecomeHost() {
       const pin = prompt(I18N[currentLang].hostPrompt);
       if (!pin) return;
-      if (pin !== HOST_TOKEN) {
+      let ok = false;
+      try {
+        ok = (await sha256Hex(pin)) === HOST_PIN_HASH;
+      } catch (e) {
         showToast(I18N[currentLang].hostWrong, true);
         return;
       }
-      const url = new URL(window.location.href);
-      url.searchParams.set('host', HOST_TOKEN);
-      url.searchParams.delete('viewer');
-      url.searchParams.delete('projection');
-      url.searchParams.delete('pipbar');
+      if (!ok) {
+        showToast(I18N[currentLang].hostWrong, true);
+        return;
+      }
+      localStorage.setItem(MASTER_AUTH_KEY, '1');
+      const url = new URL(window.location.origin + window.location.pathname);
       window.location.href = url.toString();
     }
 
