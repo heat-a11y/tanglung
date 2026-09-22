@@ -1110,6 +1110,48 @@
       color: var(--jade-green) !important;
     }
 
+    .proj-vip-slot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.88);
+      border: 4px solid var(--imperial-gold);
+      border-radius: 24px;
+      padding: 30px 52px;
+      z-index: 30;
+      box-shadow: 0 0 50px rgba(var(--gold-rgb), 0.55);
+    }
+    .proj-vip-slot .proj-vip-label {
+      color: var(--imperial-gold);
+      font-weight: 900;
+      font-size: clamp(1.4rem, 3vw, 2.4rem);
+      letter-spacing: 3px;
+    }
+    .proj-vip-slot .proj-vip-num {
+      font-family: monospace;
+      font-weight: 900;
+      font-size: clamp(4rem, 14vw, 10rem);
+      line-height: 1;
+      color: var(--cinnabar-red);
+      background: var(--paper-cream);
+      border: 4px solid var(--imperial-gold);
+      border-radius: 22px;
+      padding: 16px 38px;
+      min-width: 320px;
+      text-align: center;
+    }
+    .proj-vip-slot.rolling .proj-vip-num {
+      color: var(--imperial-gold);
+      border-color: var(--jade-green);
+      animation: vipSlotPulse 0.4s ease infinite alternate;
+    }
+
     .proj-timer-chip {
       display: none;
       align-items: center;
@@ -1117,16 +1159,21 @@
       background: #000;
       border: 2px solid var(--imperial-gold);
       border-radius: 28px;
-      padding: 6px 16px;
+      padding: 10px 20px;
       white-space: nowrap;
     }
     .proj-timer-chip .proj-timer-digits-inline {
       color: var(--imperial-gold);
       font-weight: 900;
       font-family: monospace;
-      font-size: clamp(1.9rem, 3.4vw, 2.6rem);
-      letter-spacing: 3px;
+      font-size: var(--proj-timer-font, 2.8rem);
+      letter-spacing: 4px;
       line-height: 1;
+    }
+    .proj-timer-sep {
+      color: rgba(var(--gold-rgb), 0.5);
+      font-weight: 900;
+      margin: 0 2px;
     }
     .proj-timer-chip .proj-timer-digits-inline.timeout {
       color: var(--danger-bright);
@@ -1599,6 +1646,9 @@
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(5)">+5</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(10)">+10</button>
           <button class="proj-timer-btn-mini" onclick="projTimerReset()">↺</button>
+          <span class="proj-timer-sep">|</span>
+          <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(-0.3)" title="Font −">A−</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(0.3)" title="Font +">A+</button>
         </span>
         <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">🚫 隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
@@ -1607,6 +1657,10 @@
     </div>
 
     <div class="proj-body" id="projBody">
+      <div class="proj-vip-slot" id="projVipSlot" style="display:none;">
+        <div class="proj-vip-label">👑 贵宾大奖 · VIP</div>
+        <div class="proj-vip-num" id="projVipNum">----</div>
+      </div>
       <div class="proj-static-grid" id="projStaticGrid"></div>
     </div>
   </div>
@@ -1630,6 +1684,7 @@
     let voidAuditLogs = [];
     let isRolling = false;
     let rollTimer = null;
+    let vipRollStartTs = 0;
     let vipRollEvent = null;
     let appliedVipRollKey = null;
     let soundOn = true;
@@ -2132,6 +2187,176 @@
           '--red-rgb': '224, 90, 23', '--gold-rgb': '255, 183, 77', '--gold-dark-rgb': '201, 130, 46',
           '--lacquer-rgb': '30, 15, 6', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
         }
+      },
+      peach: {
+        name: "蜜桃粉 · Peach",
+        colors: {
+          '--cinnabar-red': '#e8437c', '--deep-lacquer': '#2a0713', '--imperial-gold': '#f7b267',
+          '--gold-dark': '#c98a5e', '--paper-cream': '#fff3eb', '--jade-green': '#2ecc71',
+          '--bg-flame': '#8a2a4a', '--bg-flame-mid': '#3d1222',
+          '--text-soft': '#ffd3c9', '--text-faint': '#ffe1db', '--text-muted': '#eec3b8',
+          '--text-on-paper': '#4a0a1d', '--text-on-gold': '#4a0a1d',
+          '--bg-panel': '#2d0d16', '--bg-toolbar': '#250a12', '--bg-filter-panel': '#1e080e', '--bg-input': '#4a1a28',
+          '--danger-red': '#ff5c8a', '--danger-red-deep': '#e0456e', '--danger-bright': '#ff8fae', '--danger-soft': '#ffb6c6', '--red-deep': '#b3355c',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#ffa94d', '--neutral-grey': '#9a8a90',
+          '--blue-sync': '#ff7ca3', '--teal-sync': '#26c6da',
+          '--red-rgb': '232, 67, 124', '--gold-rgb': '247, 178, 103', '--gold-dark-rgb': '201, 138, 94',
+          '--lacquer-rgb': '42, 7, 19', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 92, 138'
+        }
+      },
+      roseGold: {
+        name: "玫瑰金 · Rose Gold",
+        colors: {
+          '--cinnabar-red': '#c4757e', '--deep-lacquer': '#1c0710', '--imperial-gold': '#f2cc8f',
+          '--gold-dark': '#bd8b4f', '--paper-cream': '#fdf0f1', '--jade-green': '#2ecc71',
+          '--bg-flame': '#7c3a4d', '--bg-flame-mid': '#33121e',
+          '--text-soft': '#f2c9cf', '--text-faint': '#f7d9de', '--text-muted': '#dbb4bb',
+          '--text-on-paper': '#33101c', '--text-on-gold': '#33101c',
+          '--bg-panel': '#250b14', '--bg-toolbar': '#1e0911', '--bg-filter-panel': '#18070c', '--bg-input': '#43192a',
+          '--danger-red': '#e85d75', '--danger-red-deep': '#c7445c', '--danger-bright': '#ff8fa0', '--danger-soft': '#ffb6c1', '--red-deep': '#8d2f44',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e8a14f', '--neutral-grey': '#9a8d90',
+          '--blue-sync': '#e07b8d', '--teal-sync': '#26c6da',
+          '--red-rgb': '196, 117, 126', '--gold-rgb': '242, 204, 143', '--gold-dark-rgb': '189, 139, 79',
+          '--lacquer-rgb': '28, 7, 16', '--green-rgb': '46, 204, 113', '--danger-rgb': '232, 93, 117'
+        }
+      },
+      sunset: {
+        name: "落日絳橙 · Sunset",
+        colors: {
+          '--cinnabar-red': '#ff5e3a', '--deep-lacquer': '#200709', '--imperial-gold': '#ffbc70',
+          '--gold-dark': '#d08b3a', '--paper-cream': '#fff2e0', '--jade-green': '#2ecc71',
+          '--bg-flame': '#c2410f', '--bg-flame-mid': '#571c07',
+          '--text-soft': '#ffcfa8', '--text-faint': '#ffdcc0', '--text-muted': '#e8b48f',
+          '--text-on-paper': '#521602', '--text-on-gold': '#521602',
+          '--bg-panel': '#2b1205', '--bg-toolbar': '#220e04', '--bg-filter-panel': '#1b0b03', '--bg-input': '#4a2410',
+          '--danger-red': '#ff6b5e', '--danger-red-deep': '#e04a3f', '--danger-bright': '#ff9e8f', '--danger-soft': '#ffc0ae', '--red-deep': '#a03718',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#ffa94d', '--neutral-grey': '#9a8478',
+          '--blue-sync': '#ff7a50', '--teal-sync': '#26c6da',
+          '--red-rgb': '255, 94, 58', '--gold-rgb': '255, 188, 112', '--gold-dark-rgb': '208, 139, 58',
+          '--lacquer-rgb': '32, 7, 9', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 94'
+        }
+      },
+      sky: {
+        name: "青雲霽 · Sky",
+        colors: {
+          '--cinnabar-red': '#2f8fd0', '--deep-lacquer': '#081626', '--imperial-gold': '#f4c430',
+          '--gold-dark': '#c9970f', '--paper-cream': '#eef7ff', '--jade-green': '#2ecc71',
+          '--bg-flame': '#1d5d96', '--bg-flame-mid': '#0c2f50',
+          '--text-soft': '#bfe0ff', '--text-faint': '#d2e9ff', '--text-muted': '#a8c6e0',
+          '--text-on-paper': '#0a2e4a', '--text-on-gold': '#0a2e4a',
+          '--bg-panel': '#0d2240', '--bg-toolbar': '#0a1c35', '--bg-filter-panel': '#08182c', '--bg-input': '#1d3f66',
+          '--danger-red': '#ff6b6b', '--danger-red-deep': '#e05555', '--danger-bright': '#ff9e9e', '--danger-soft': '#ffc2c2', '--red-deep': '#1d5d96',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#f0a92e', '--neutral-grey': '#7f96ae',
+          '--blue-sync': '#4da6ff', '--teal-sync': '#2fc3c9',
+          '--red-rgb': '47, 143, 208', '--gold-rgb': '244, 196, 48', '--gold-dark-rgb': '201, 151, 15',
+          '--lacquer-rgb': '8, 22, 38', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 107'
+        }
+      },
+      mint: {
+        name: "薄荷清 · Mint",
+        colors: {
+          '--cinnabar-red': '#28b8a8', '--deep-lacquer': '#04211c', '--imperial-gold': '#e8c54b',
+          '--gold-dark': '#b08c1e', '--paper-cream': '#f0fbf4', '--jade-green': '#2ecc71',
+          '--bg-flame': '#0e7a66', '--bg-flame-mid': '#063b31',
+          '--text-soft': '#bff3e0', '--text-faint': '#d5f7e9', '--text-muted': '#a6dcc9',
+          '--text-on-paper': '#05311f', '--text-on-gold': '#05311f',
+          '--bg-panel': '#0c2e24', '--bg-toolbar': '#09261e', '--bg-filter-panel': '#071f18', '--bg-input': '#1a4a3a',
+          '--danger-red': '#ff6b6b', '--danger-red-deep': '#e05555', '--danger-bright': '#ff9e9e', '--danger-soft': '#ffc2c2', '--red-deep': '#0e7a66',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#f0b429', '--neutral-grey': '#7fa596',
+          '--blue-sync': '#3fc1c1', '--teal-sync': '#2fceb2',
+          '--red-rgb': '40, 184, 168', '--gold-rgb': '232, 197, 75', '--gold-dark-rgb': '176, 140, 30',
+          '--lacquer-rgb': '4, 33, 28', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 107'
+        }
+      },
+      lilac: {
+        name: "丁香紫 · Lilac",
+        colors: {
+          '--cinnabar-red': '#8e5bd0', '--deep-lacquer': '#130625', '--imperial-gold': '#f2c94c',
+          '--gold-dark': '#b78e14', '--paper-cream': '#f7f1ff', '--jade-green': '#2ecc71',
+          '--bg-flame': '#5c2f9e', '--bg-flame-mid': '#2a1448',
+          '--text-soft': '#dcc9ff', '--text-faint': '#e6d6ff', '--text-muted': '#bfa8e8',
+          '--text-on-paper': '#2c0e4e', '--text-on-gold': '#2c0e4e',
+          '--bg-panel': '#1e0d38', '--bg-toolbar': '#180a2f', '--bg-filter-panel': '#130826', '--bg-input': '#3c1f66',
+          '--danger-red': '#ff6b9d', '--danger-red-deep': '#e04a7a', '--danger-bright': '#ff9ec2', '--danger-soft': '#ffc2da', '--red-deep': '#5c2f9e',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#f0a92e', '--neutral-grey': '#988aa8',
+          '--blue-sync': '#a06ee8', '--teal-sync': '#2fceb2',
+          '--red-rgb': '142, 91, 208', '--gold-rgb': '242, 201, 76', '--gold-dark-rgb': '183, 142, 20',
+          '--lacquer-rgb': '19, 6, 37', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 157'
+        }
+      },
+      wine: {
+        name: "酒韻釀紅 · Wine",
+        colors: {
+          '--cinnabar-red': '#a61b3a', '--deep-lacquer': '#1a0208', '--imperial-gold': '#d4af6a',
+          '--gold-dark': '#a1833f', '--paper-cream': '#fdf1ec', '--jade-green': '#2ecc71',
+          '--bg-flame': '#74203a', '--bg-flame-mid': '#2e0b1a',
+          '--text-soft': '#f0c0c9', '--text-faint': '#f5d3da', '--text-muted': '#d3a5af',
+          '--text-on-paper': '#3d0716', '--text-on-gold': '#3d0716',
+          '--bg-panel': '#26060f', '--bg-toolbar': '#1f050c', '--bg-filter-panel': '#19030a', '--bg-input': '#4a1528',
+          '--danger-red': '#e63956', '--danger-red-deep': '#cc2f48', '--danger-bright': '#ff7490', '--danger-soft': '#ffadbd', '--red-deep': '#74203a',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#c98f3e', '--neutral-grey': '#8a7a80',
+          '--blue-sync': '#d46a80', '--teal-sync': '#26c6da',
+          '--red-rgb': '166, 27, 58', '--gold-rgb': '212, 175, 106', '--gold-dark-rgb': '161, 131, 63',
+          '--lacquer-rgb': '26, 2, 8', '--green-rgb': '46, 204, 113', '--danger-rgb': '230, 57, 86'
+        }
+      },
+      cobalt: {
+        name: "寶藍鎏金 · Cobalt",
+        colors: {
+          '--cinnabar-red': '#2743e0', '--deep-lacquer': '#06071f', '--imperial-gold': '#f2b705',
+          '--gold-dark': '#b58a00', '--paper-cream': '#f2f3ff', '--jade-green': '#2ecc71',
+          '--bg-flame': '#1a2bb0', '--bg-flame-mid': '#0c155e',
+          '--text-soft': '#ccd6ff', '--text-faint': '#dce3ff', '--text-muted': '#aeb8e8',
+          '--text-on-paper': '#0d1440', '--text-on-gold': '#0d1440',
+          '--bg-panel': '#101640', '--bg-toolbar': '#0d1238', '--bg-filter-panel': '#0a0f2c', '--bg-input': '#1d2a6e',
+          '--danger-red': '#ff5d5d', '--danger-red-deep': '#e04343', '--danger-bright': '#ff9a9a', '--danger-soft': '#ffc4c4', '--red-deep': '#1a2bb0',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#eec93e', '--neutral-grey': '#8a90b0',
+          '--blue-sync': '#4da6ff', '--teal-sync': '#2fc3c9',
+          '--red-rgb': '39, 67, 224', '--gold-rgb': '242, 183, 5', '--gold-dark-rgb': '181, 138, 0',
+          '--lacquer-rgb': '6, 7, 31', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 93, 93'
+        }
+      },
+      aurora: {
+        name: "極光碧青 · Aurora",
+        colors: {
+          '--cinnabar-red': '#00c89b', '--deep-lacquer': '#04201a', '--imperial-gold': '#e8d44d',
+          '--gold-dark': '#a39320', '--paper-cream': '#effbf7', '--jade-green': '#2ecc71',
+          '--bg-flame': '#0b8d74', '--bg-flame-mid': '#053a2e',
+          '--text-soft': '#bfffe8', '--text-faint': '#d6fff1', '--text-muted': '#a4e0cf',
+          '--text-on-paper': '#05331f', '--text-on-gold': '#05331f',
+          '--bg-panel': '#0d3027', '--bg-toolbar': '#0a2821', '--bg-filter-panel': '#08211a', '--bg-input': '#1c4d3f',
+          '--danger-red': '#ff6b7a', '--danger-red-deep': '#e04a5c', '--danger-bright': '#ff9eaa', '--danger-soft': '#ffc4cd', '--red-deep': '#0b8d74',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#e8b93e', '--neutral-grey': '#7fa59c',
+          '--blue-sync': '#3fc1c1', '--teal-sync': '#2fceb2',
+          '--red-rgb': '0, 200, 155', '--gold-rgb': '232, 212, 77', '--gold-dark-rgb': '163, 147, 32',
+          '--lacquer-rgb': '4, 32, 26', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 122'
+        }
+      },
+      sand: {
+        name: "沙金米白 · Sand",
+        colors: {
+          '--cinnabar-red': '#c8862e', '--deep-lacquer': '#231407', '--imperial-gold': '#e6bd62',
+          '--gold-dark': '#b08a2e', '--paper-cream': '#fbf3e2', '--jade-green': '#2ecc71',
+          '--bg-flame': '#a3712c', '--bg-flame-mid': '#452d0e',
+          '--text-soft': '#f0d0a1', '--text-faint': '#f5ddb8', '--text-muted': '#d4b284',
+          '--text-on-paper': '#4a2a08', '--text-on-gold': '#4a2a08',
+          '--bg-panel': '#33210c', '--bg-toolbar': '#2b1b0a', '--bg-filter-panel': '#231708', '--bg-input': '#4d3315',
+          '--danger-red': '#e0713a', '--danger-red-deep': '#c6532a', '--danger-bright': '#ffa06a', '--danger-soft': '#ffc6a0', '--red-deep': '#8a5a22',
+          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
+          '--wait-amber': '#d9a441', '--neutral-grey': '#9a8c74',
+          '--blue-sync': '#e09754', '--teal-sync': '#5aa08a',
+          '--red-rgb': '200, 134, 46', '--gold-rgb': '230, 189, 98', '--gold-dark-rgb': '176, 138, 46',
+          '--lacquer-rgb': '35, 20, 7', '--green-rgb': '46, 204, 113', '--danger-rgb': '224, 113, 58'
+        }
       }
     };
 
@@ -2469,7 +2694,7 @@
           if (e.phase === 'start' && Date.now() - e.ts < VIP_ROLL_TTL) {
             startVipRollAnimation();
           } else if (e.phase === 'stop') {
-            stopVipRollAnimation();
+            stopVipRollAnimation(e.num);
             if (e.num) document.getElementById('vipDisplay').textContent = e.num;
           }
         }
@@ -2638,14 +2863,21 @@
       }
       startVipRollAnimation(true);
       vipRollEvent = { phase: 'start', ts: Date.now() };
-      saveAndBroadcast();
+      const payload = getPayload();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      syncChannel.postMessage({ type: 'UPDATE_STATE', data: payload });
+      if (syncRef && !isViewerMode) {
+        syncRef.child('vipRollEvent').set(vipRollEvent).catch(() => {});
+      }
     }
 
     function stopVip() {
       if (isViewerMode) return;
-      stopVipRollAnimation();
       const candidates = getAvailablePool();
-      if (candidates.length === 0) return;
+      if (candidates.length === 0) {
+        stopVipRollAnimation();
+        return;
+      }
       const finalIdx = Math.floor(Math.random() * candidates.length);
       const picked = candidates.splice(finalIdx, 1)[0];
       winners.push(picked);
@@ -2657,29 +2889,46 @@
       updateUI();
       saveAndBroadcast();
       showToast(`🏆 ${picked}`);
+      stopVipRollAnimation(picked);
     }
 
     function startVipRollAnimation(playSfx) {
       if (isRolling) return;
       const opView = document.getElementById('operatorView');
-      if (opView && getComputedStyle(opView).display === 'none') return;
+      const opVisible = opView && getComputedStyle(opView).display !== 'none';
+      const projVisible = document.getElementById('projectorView').style.display === 'flex';
+      if (!opVisible && !projVisible) return;
       const candidates = getAvailablePool();
       if (candidates.length === 0) return;
       isRolling = true;
+      vipRollStartTs = Date.now();
       const btn = document.getElementById('vipToggleBtn');
       btn.textContent = I18N[currentLang].btnStopRoll;
       btn.style.background = "linear-gradient(135deg, var(--danger-red) 0%, var(--danger-red-deep) 100%)";
       btn.style.color = "#fff";
       const disp = document.getElementById('vipDisplay');
       disp.classList.add('rolling');
+      const slot = document.getElementById('projVipSlot');
+      if (slot) {
+        clearTimeout(slot._hideT);
+        slot.style.display = 'flex';
+        slot.classList.add('rolling');
+      }
+      const slotNum = document.getElementById('projVipNum');
       rollTimer = setInterval(() => {
+        if (Date.now() - vipRollStartTs > 60000) {
+          stopVipRollAnimation();
+          return;
+        }
         const tempIdx = Math.floor(Math.random() * candidates.length);
-        disp.textContent = candidates[tempIdx] || "----";
+        const val = candidates[tempIdx] || "----";
+        disp.textContent = val;
+        if (slotNum) slotNum.textContent = val;
         if (playSfx) playTick();
       }, 50);
     }
 
-    function stopVipRollAnimation() {
+    function stopVipRollAnimation(finalNum) {
       clearInterval(rollTimer);
       rollTimer = null;
       isRolling = false;
@@ -2688,6 +2937,21 @@
       btn.style.background = "";
       btn.style.color = "";
       document.getElementById('vipDisplay').classList.remove('rolling');
+      const slot = document.getElementById('projVipSlot');
+      const slotNum = document.getElementById('projVipNum');
+      if (slot) {
+        clearTimeout(slot._hideT);
+        if (finalNum) {
+          slot.classList.remove('rolling');
+          if (slotNum) slotNum.textContent = finalNum;
+          slot.style.display = 'flex';
+          slot._hideT = setTimeout(() => {
+            if (slot && !slot.classList.contains('rolling')) slot.style.display = 'none';
+          }, 6000);
+        } else {
+          slot.style.display = 'none';
+        }
+      }
     }
 
     // MODE 3: MANUAL ENTRY
@@ -3390,6 +3654,23 @@
     let projTimerRunning = false;
     let projTimerAutoStarted = false;
     const projTimerDefault = 300;
+    let projTimerFontRem = 2.8;
+
+    function loadProjTimerFont() {
+      try {
+        const saved = localStorage.getItem('tanglung_proj_timer_font');
+        if (saved !== null && !isNaN(parseFloat(saved))) {
+          projTimerFontRem = Math.max(1.6, Math.min(4.2, parseFloat(saved)));
+        }
+      } catch (e) {}
+      document.documentElement.style.setProperty('--proj-timer-font', projTimerFontRem + 'rem');
+    }
+
+    function projTimerFontAdj(delta) {
+      projTimerFontRem = Math.max(1.6, Math.min(4.2, projTimerFontRem + delta));
+      document.documentElement.style.setProperty('--proj-timer-font', projTimerFontRem + 'rem');
+      try { localStorage.setItem('tanglung_proj_timer_font', String(projTimerFontRem)); } catch (e) {}
+    }
 
     function renderProjTimer() {
       const digits = document.getElementById('projTimerDigits');
@@ -3702,6 +3983,7 @@
     checkProjectionModeFromURL();
     checkPipBarModeFromURL();
     maybeAutoStartProjTimer();
+    loadProjTimerFont();
     setupFirebaseConnection();
     applyLanguageUI();
     requestAnimationFrame(animateScrollers);
