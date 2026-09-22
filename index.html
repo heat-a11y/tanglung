@@ -2952,6 +2952,7 @@
     function closeProjectionMode() {
       const url = new URL(window.location.href);
       url.searchParams.delete('projection');
+      url.searchParams.delete('viewer');
       window.location.href = url.toString();
     }
 
@@ -2970,11 +2971,15 @@
     }
 
     function toggleProjHideClaimed() {
-      if (isViewerMode) return;
       projHideClaimed = !projHideClaimed;
       updateProjHideClaimedBtn();
       renderScrollers();
-      if (!isViewerMode) saveAndBroadcast();
+      if (!syncRef) return;
+      if (isViewerMode) {
+        syncRef.child('projHideClaimed').set(Boolean(projHideClaimed)).catch((err) => console.warn("Firebase Write Error:", err));
+      } else {
+        saveAndBroadcast();
+      }
     }
 
     let projTimerRemaining = 300;
