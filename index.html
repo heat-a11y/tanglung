@@ -1481,6 +1481,8 @@
         <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">⏱️ 领奖倒计时</button>
         <span class="proj-timer-chip" id="projTimerChip">
           <span class="proj-timer-digits-inline" id="projTimerDigits">05:00</span>
+          <button class="proj-timer-btn-mini" id="projTimerPlayPauseBtn" onclick="projTimerToggle()" title="Play / Pause">▶</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerStop(true)" title="Stop">⏹</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(1)">+1</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(5)">+5</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(10)">+10</button>
@@ -2996,12 +2998,14 @@
       initAudio();
     }
 
-    function projTimerStop() {
+    function projTimerStop(resetToDefault) {
+      if (resetToDefault) projTimerRemaining = projTimerDefault;
       if (projTimerInterval) {
         clearInterval(projTimerInterval);
         projTimerInterval = null;
       }
       projTimerRunning = false;
+      updateProjTimerPlayBtn();
       renderProjTimer();
     }
 
@@ -3018,6 +3022,7 @@
       }
       if (projTimerRemaining <= 0) projTimerRemaining = projTimerDefault;
       projTimerRunning = true;
+      updateProjTimerPlayBtn();
       renderProjTimer();
       initAudio();
       if (projTimerInterval) clearInterval(projTimerInterval);
@@ -3027,10 +3032,15 @@
         if (projTimerRemaining === 0) {
           projTimerStop();
           playBuzzer();
-        } else {
+        } else if (projTimerRemaining <= 5) {
           playBeepCount();
         }
       }, 1000);
+    }
+
+    function updateProjTimerPlayBtn() {
+      const btn = document.getElementById('projTimerPlayPauseBtn');
+      if (btn) btn.textContent = projTimerRunning ? '⏸' : '▶';
     }
 
     function toggleProjTimer() {
