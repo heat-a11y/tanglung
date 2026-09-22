@@ -2922,6 +2922,7 @@
     function openProjectionTab() {
       const url = new URL(window.location.href);
       url.searchParams.set('projection', 'true');
+      url.searchParams.set('viewer', 'true');
       window.open(url.toString(), '_blank');
     }
 
@@ -3137,6 +3138,7 @@
     function openPiPBarPopup() {
       const url = new URL(window.location.href);
       url.searchParams.set('pipbar', 'true');
+      url.searchParams.set('viewer', 'true');
       const screenW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 3840));
       const features = `left=0,top=0,width=${screenW},height=76,toolbar=no,menubar=no,location=no,status=no,scrollbars=no,resizable=yes`;
       const win = window.open(url.toString(), 'TanglungPiPBar', features);
