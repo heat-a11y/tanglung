@@ -1188,6 +1188,7 @@
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
           <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
           <div id="modeIndicatorTag" style="margin-top:6px; font-weight:bold; color:var(--imperial-gold);"></div>
+          <button class="icon-btn btn-projector" id="goHostBtn" onclick="promptBecomeHost()" data-i18n="btnGoHost" style="display:none; margin-top:10px; width:100%;">🎛️ 进入主控台 (需要主控PIN)</button>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
@@ -1501,6 +1502,7 @@
 
   <script>
     const FIREBASE_DB_URL = "https://tanglung-firedraw-default-rtdb.asia-southeast1.firebasedatabase.app/";
+    const HOST_TOKEN = "TL2026LANTERN";
     let currentLang = 'BC';
     let isViewerMode = false;
 
@@ -1637,7 +1639,10 @@
         btnProjShowClaimed: "👁 显示已领奖",
         btnClaimVerify: "✓ 领奖核销 (Claim)",
         btnClaimVerified: "✓ 已领奖 (Claimed)",
-        claimedTag: " ✓已领"
+        claimedTag: " ✓已领",
+        btnGoHost: "🎛️ 进入主控台 (需要主控PIN)",
+        hostPrompt: "请输入主控台访问 PIN（主控电脑专用）",
+        hostWrong: "主控 PIN 不正确"
       },
       BM: {
         brandTitle: "Pesta Tanglung · Cabutan Bertuah",
@@ -1730,7 +1735,10 @@
         btnProjShowClaimed: "👁 Tunjuk Dituntut",
         btnClaimVerify: "✓ Sahkan Tuntutan",
         btnClaimVerified: "✓ Telah Dituntut",
-        claimedTag: " ✓Dituntut"
+        claimedTag: " ✓Dituntut",
+        btnGoHost: "🎛️ Masuk Konsol Utama (perlu PIN)",
+        hostPrompt: "Masukkan PIN akses konsol utama (khas komputer utama)",
+        hostWrong: "PIN konsol utama tidak sah"
       },
       BI: {
         brandTitle: "Lantern Festival · Lucky Draw",
@@ -1823,7 +1831,10 @@
         btnProjShowClaimed: "👁 Show Claimed",
         btnClaimVerify: "✓ Verify Claim",
         btnClaimVerified: "✓ Claimed",
-        claimedTag: " ✓Claimed"
+        claimedTag: " ✓Claimed",
+        btnGoHost: "🎛️ Enter Host Console (needs PIN)",
+        hostPrompt: "Enter host console access PIN (main computer only)",
+        hostWrong: "Invalid host console PIN"
       }
     };
 
@@ -2122,11 +2133,12 @@
         syncRef = db.ref("tanglung_live_state");
 
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('viewer') === 'true') {
+        if (urlParams.get('viewer') === 'true' || urlParams.get('host') !== HOST_TOKEN) {
           isViewerMode = true;
           enableViewerModeUI();
         } else {
           document.getElementById('modeIndicatorTag').textContent = "👑 主控模式 (Master Host - 控制端)";
+          document.getElementById('goHostBtn').style.display = 'none';
         }
 
         syncRef.on("value", (snapshot) => {
@@ -2177,6 +2189,7 @@
       document.getElementById('poolBadgeEl').removeAttribute('onclick');
       document.getElementById('prizeBadgeEl').style.cursor = 'default';
       document.getElementById('prizeBadgeEl').removeAttribute('onclick');
+      document.getElementById('goHostBtn').style.display = '';
     }
 
     function switchTab(tab) {
@@ -3272,6 +3285,21 @@
       navigator.clipboard.writeText(input.value).then(() => {
         showToast("已复制显示端链接！直接发送微信或在其他设备打开。");
       });
+    }
+
+    function promptBecomeHost() {
+      const pin = prompt(I18N[currentLang].hostPrompt);
+      if (!pin) return;
+      if (pin !== HOST_TOKEN) {
+        showToast(I18N[currentLang].hostWrong, true);
+        return;
+      }
+      const url = new URL(window.location.href);
+      url.searchParams.set('host', HOST_TOKEN);
+      url.searchParams.delete('viewer');
+      url.searchParams.delete('projection');
+      url.searchParams.delete('pipbar');
+      window.location.href = url.toString();
     }
 
     // BOOTSTRAP LIFECYCLE
