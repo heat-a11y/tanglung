@@ -2817,7 +2817,19 @@
             applyStateData(val);
           } else if (!isViewerMode) {
             updateUI();
-            saveAndBroadcast();
+            // Never auto-push an empty state here: a transient null snapshot
+            // (reconnect / local cache miss) hitting this branch would clobber
+            // a non-empty database that other devices just wrote. Only re-seed
+            // an actually-empty database when we hold real local progress.
+            try {
+              const localSaved = localStorage.getItem(STORAGE_KEY);
+              if (localSaved) {
+                const parsed = JSON.parse(localSaved);
+                const hasProgress = (parsed && Array.isArray(parsed.winners) && parsed.winners.length > 0) ||
+                                    (parsed && Array.isArray(parsed.recycleBin) && parsed.recycleBin.length > 0);
+                if (hasProgress) saveAndBroadcast();
+              }
+            } catch (e) {}
           }
         });
 
