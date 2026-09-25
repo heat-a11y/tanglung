@@ -3033,9 +3033,6 @@
           slot.classList.remove('rolling');
           if (slotNum) slotNum.textContent = finalNum;
           slot.style.display = 'flex';
-          slot._hideT = setTimeout(() => {
-            if (slot && !slot.classList.contains('rolling')) slot.style.display = 'none';
-          }, 6000);
         } else {
           slot.style.display = 'none';
         }
