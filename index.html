@@ -2615,16 +2615,34 @@
 
     function sanitizeList(raw) {
       if (!raw) return [];
+      const poolSize = Math.max(0, (Number(poolEnd) || 0) - (Number(poolStart) || 0) + 1);
+      // A legitimate list can never hold more entries than the pool has tickets.
+      // The old fixed cap of 500 silently dropped winners 501+, which made them
+      // drawable a second time, so the cap has to scale with the pool.
+      const cap = Math.max(500, Math.min(10100, poolSize + 100));
       const arr = Array.isArray(raw) ? raw : Object.values(raw);
-      return arr.filter(Boolean).slice(0, 500).map(x => {
+      const seen = new Set();
+      return arr.filter(Boolean).slice(0, cap).map(x => {
         if (typeof x === 'string') return /^\d{4}$/.test(x) ? x : null;
         return x;
-      }).filter(Boolean);
+      }).filter(Boolean).filter(x => {
+        const key = typeof x === 'string' ? x : (x && x.ticket);
+        if (key === undefined || key === null) return true;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function getRecycledTickets() {
+      return new Set(sanitizeList(recycleBin)
+        .map(r => (typeof r === 'string' ? r : (r && r.ticket)))
+        .filter(Boolean));
     }
 
     function getAvailablePool() {
       const wonSet = new Set(sanitizeList(winners));
-      const recycledSet = new Set(sanitizeList(recycleBin).map(r => r.ticket));
+      const recycledSet = getRecycledTickets();
       const available = [];
       for (let i = poolStart; i <= poolEnd; i++) {
         const s = String(i).padStart(4, '0');
@@ -3147,6 +3165,12 @@
         return;
       }
 
+      if (getRecycledTickets().has(val)) {
+        alert(`${val} is on the void / blacklist list — restore it from the recycle bin first!`);
+        input.select();
+        return;
+      }
+
       winners.push(val);
       input.value = '';
       playFestiveGong();
@@ -3488,6 +3512,14 @@
 
     function restoreToPool(ticket, index) {
       if (isViewerMode) return;
+      if (winners.includes(ticket)) {
+        recycleBin.splice(index, 1);
+        updateUI();
+        renderRecycleList();
+        saveAndBroadcast();
+        showToast(`#${ticket} is already a winner — stale bin entry removed, NOT re-drawn`);
+        return;
+      }
       recycleBin.splice(index, 1);
       updateUI();
       renderRecycleList();
@@ -3497,6 +3529,14 @@
 
     function restoreAsWinner(ticket, index) {
       if (isViewerMode) return;
+      if (winners.includes(ticket)) {
+        recycleBin.splice(index, 1);
+        updateUI();
+        renderRecycleList();
+        saveAndBroadcast();
+        showToast(`#${ticket} is already a winner — no duplicate created`);
+        return;
+      }
       if (winners.length >= maxPrizes) maxPrizes++;
       recycleBin.splice(index, 1);
       winners.push(ticket);
