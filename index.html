@@ -463,6 +463,18 @@
       border-color: var(--danger);
       color: var(--danger);
     }
+    /* Solid destructive action: red fill, paired ink. The old inline
+       text colour was a pale TINT, which is 1.06:1 on the toolbar -- effectively
+       invisible. */
+    .btn-danger {
+      background: var(--danger-strong);
+      border-color: var(--danger-strong);
+      color: var(--on-status);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
     .btn-suspense.active {
       background: var(--danger);
       color: var(--on-status);
@@ -1038,6 +1050,20 @@
       margin-top: var(--sp-4);
       padding-top: var(--sp-3);
       border-top: 1px solid var(--border-subtle);
+    }
+
+    /* Paired footer actions: a Cancel and an Apply sitting in one row must not
+       disagree on shape. .action-btn is --r-pill and .icon-btn is --r-sm, so a
+       footer that mixes them renders a 999px pill next to a 6px rectangle. The
+       secondary button in a footer adopts the primary's shape. */
+    .modal-footer .icon-btn {
+      border-radius: var(--r-pill);
+      padding: 10px 22px;
+      font-size: 0.9rem;
+    }
+    .modal-footer .action-btn {
+      padding: 10px 22px;
+      font-size: 0.9rem;
     }
 
     .pool-field-grid {
@@ -1701,7 +1727,7 @@
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--success); color:var(--on-status); border-color:var(--success);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>领奖核销 (Claim)</span></button>
         <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
+        <button class="icon-btn btn-danger" style="padding:7px 16px; font-size:0.95rem;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--border-strong);" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
@@ -1779,7 +1805,7 @@
 
       <div class="modal-footer">
         <button class="icon-btn" onclick="togglePoolModal(false)" data-i18n="poolCancel">取消</button>
-        <button class="action-btn" id="poolApplyBtn" style="padding:9px 22px; font-size:0.9rem;" onclick="applyPoolRange()" data-i18n="poolApply">应用范围</button>
+        <button class="action-btn" id="poolApplyBtn" onclick="applyPoolRange()" data-i18n="poolApply">应用范围</button>
       </div>
     </div>
   </div>
@@ -1870,7 +1896,7 @@
         <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">音效: 开</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
         <button class="icon-btn" onclick="exportCSV()">CSV</button>
-        <button class="icon-btn" style="border-color:var(--danger-strong); color:var(--danger-soft);" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
+        <button class="icon-btn btn-danger" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
       </div>
     </div>
 
@@ -1999,7 +2025,7 @@
         <button class="icon-btn" id="vipCardBtn" onclick="toggleVipCard()" data-i18n="btnVipCardHide">隐藏贵宾卡</button>
         <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
-        <button class="icon-btn" style="border-color:var(--danger-strong); color:var(--danger-soft);" onclick="closeProjectionMode()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span data-i18n="btnProjClose">返回</span></button>
+        <button class="icon-btn" style="border-color:var(--border-strong); color:var(--text-2);" onclick="closeProjectionMode()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span data-i18n="btnProjClose">返回</span></button>
       </div>
     </div>
 
@@ -4325,7 +4351,7 @@
 
     /* Bump BUILD_ID whenever the shipped file changes shape, so anyone
        reporting a stale render can be identified at a glance. */
-    const BUILD_ID = '2026.09.27-b';
+    const BUILD_ID = '2026.09.27-c';
 
     function renderBuildStamp() {
       const el = document.getElementById('buildStamp');
