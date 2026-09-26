@@ -1124,7 +1124,7 @@
       background: rgba(0, 0, 0, 0.88);
       border: 4px solid var(--imperial-gold);
       border-radius: 24px;
-      padding: 44px 60px 30px 52px;
+      padding: 44px 52px;
       z-index: 30;
       box-shadow: 0 0 50px rgba(var(--gold-rgb), 0.55);
     }
@@ -1678,6 +1678,7 @@
           <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(-0.3)" title="Font −">A−</button>
           <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(0.3)" title="Font +">A+</button>
         </span>
+        <button class="icon-btn" id="vipCardBtn" onclick="toggleVipCard()" data-i18n="btnVipCardHide">👑 隐藏贵宾卡</button>
         <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">🚫 隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
         <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
@@ -1852,6 +1853,8 @@
         projTimerBtn: "⏱️ 领奖倒计时",
         btnProjHideClaimed: "🚫 隐藏已领奖",
         btnProjShowClaimed: "👁 显示已领奖",
+        btnVipCardHide: "👑 隐藏贵宾卡",
+        btnVipCardShow: "👑 显示贵宾卡",
         btnClaimVerify: "✓ 领奖核销 (Claim)",
         btnClaimVerified: "✓ 已领奖 (Claimed)",
         claimedTag: " ✓已领",
@@ -1951,6 +1954,8 @@
         projTimerBtn: "⏱️ Kiraan Masa Menang",
         btnProjHideClaimed: "🚫 Sembunyi Dituntut",
         btnProjShowClaimed: "👁 Tunjuk Dituntut",
+        btnVipCardHide: "👑 Sembunyi Kad VIP",
+        btnVipCardShow: "👑 Tunjuk Kad VIP",
         btnClaimVerify: "✓ Sahkan Tuntutan",
         btnClaimVerified: "✓ Telah Dituntut",
         claimedTag: " ✓Dituntut",
@@ -2050,6 +2055,8 @@
         projTimerBtn: "⏱️ Claim Countdown",
         btnProjHideClaimed: "🚫 Hide Claimed",
         btnProjShowClaimed: "👁 Show Claimed",
+        btnVipCardHide: "👑 Hide VIP Card",
+        btnVipCardShow: "👑 Show VIP Card",
         btnClaimVerify: "✓ Verify Claim",
         btnClaimVerified: "✓ Claimed",
         claimedTag: " ✓Claimed",
@@ -2499,6 +2506,7 @@
       }
 
       updateProjHideClaimedBtn();
+      updateVipCardBtn();
       
       updateUI();
     }
@@ -2790,6 +2798,7 @@
       applyVipSlotDismiss();
       updateUI();
       updateProjHideClaimedBtn();
+      updateVipCardBtn();
     }
 
     syncChannel.onmessage = (event) => {
@@ -3074,21 +3083,47 @@
 
     function applyVipSlotDismiss() {
       const slot = document.getElementById('projVipSlot');
-      if (!slot || !vipSlotDismissed) return;
-      clearTimeout(slot._hideT);
-      slot.classList.remove('rolling');
-      slot.style.display = 'none';
+      if (!slot) return;
+      const slotNum = document.getElementById('projVipNum');
+      if (vipSlotDismissed) {
+        clearTimeout(slot._hideT);
+        slot.classList.remove('rolling');
+        slot.style.display = 'none';
+        return;
+      }
+      if (slot.style.display === 'none' && slotNum && slotNum.textContent !== '----') {
+        slot.style.display = 'flex';
+      }
+    }
+
+    function pushVipSlotDismiss() {
+      if (!syncRef) {
+        showToast('VIP card hidden on this screen only (no live sync)', true);
+        return;
+      }
+      if (isViewerMode) {
+        syncRef.child('vipSlotDismissed').set(Boolean(vipSlotDismissed))
+          .catch((err) => {
+            console.warn("Firebase Write Error:", err);
+            showToast('VIP card hidden on this screen only (sync failed)', true);
+          });
+      } else {
+        saveAndBroadcast();
+      }
     }
 
     function closeProjVipSlot() {
       vipSlotDismissed = true;
       applyVipSlotDismiss();
-      if (!syncRef) return;
-      if (isViewerMode) {
-        syncRef.child('vipSlotDismissed').set(true).catch((err) => console.warn("Firebase Write Error:", err));
-      } else {
-        saveAndBroadcast();
-      }
+      updateVipCardBtn();
+      pushVipSlotDismiss();
+    }
+
+    function toggleVipCard() {
+      vipSlotDismissed = !vipSlotDismissed;
+      applyVipSlotDismiss();
+      updateVipCardBtn();
+      pushVipSlotDismiss();
     }
 
     // MODE 3: MANUAL ENTRY
@@ -3771,6 +3806,11 @@
     function updateProjHideClaimedBtn() {
       const btn = document.getElementById('projHideClaimedBtn');
       if (btn) btn.textContent = projHideClaimed ? I18N[currentLang].btnProjShowClaimed : I18N[currentLang].btnProjHideClaimed;
+    }
+
+    function updateVipCardBtn() {
+      const btn = document.getElementById('vipCardBtn');
+      if (btn) btn.textContent = vipSlotDismissed ? I18N[currentLang].btnVipCardShow : I18N[currentLang].btnVipCardHide;
     }
 
     function toggleProjHideClaimed() {
