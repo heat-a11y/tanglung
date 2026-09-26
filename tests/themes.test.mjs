@@ -23,41 +23,68 @@ const ratio = (fg, bg) => {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 };
 
-/* The neutral scale is declared once in :root and never varies by theme, so a
-   theme is only ever the six --accent-* values below. Reading them out of the
-   file (rather than hardcoding them here) means this test fails if a theme is
-   edited without re-checking its contrast. */
-const NEUTRAL = (() => {
-  const root = css.match(/:root \{([\s\S]*?)\n {4}\}/)[1];
+/* Neutrals are declared per MODE, not per theme. A theme picks its mode and
+   the mode picks the scale, so 10 light themes and 10 dark themes can never
+   drift into each other's contrast behaviour. Reading them out of the file
+   (rather than hardcoding them here) means editing a scale without re-checking
+   its contrast fails this test. */
+function readScale(selectorRe) {
+  // selectorRe is already a regex fragment; only the block tail is appended.
+  const block = css.match(new RegExp(selectorRe + '\\s*\\{([\\s\\S]*?)\\n {4}\\}'));
+  if (!block) throw new Error(`could not find token block for ${selectorRe}`);
   const out = {};
-  for (const m of root.matchAll(/(--[a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/g)) out[m[1]] = hex2rgb(m[2]);
+  for (const m of block[1].matchAll(/(--[a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/g)) out[m[1]] = hex2rgb(m[2]);
+  // companions like --success-rgb: 14, 112, 61 are used as rgba(var(...), a)
+  for (const m of block[1].matchAll(/(--[a-z0-9-]+-rgb):\s*([\d, ]+?)\s*;/g)) {
+    out[m[1]] = m[2].trim();
+  }
   return out;
+}
+const LIGHT = readScale(':root,\n    \\[data-mode="light"\\]');
+const DARK = readScale('\\[data-mode="dark"\\]');
+
+/* The stage is deliberately dark in BOTH modes: a projector in a dim hall
+   washes out on a light ground, and the desktop bar floats over a desktop.
+   It therefore lives in the shared block and is merged into every scale. */
+const SHARED = (() => {
+  for (const m of css.matchAll(/([^{}]+)\{([\s\S]*?)\n {4}\}/g)) {
+    if (m[2].includes('--stage-bg:')) {
+      const out = {};
+      for (const t of m[2].matchAll(/(--[a-z0-9-]+):\s*(#[0-9a-f]{6})\s*;/g)) out[t[1]] = hex2rgb(t[2]);
+      return out;
+    }
+  }
+  throw new Error('no token block declares --stage-bg');
 })();
+for (const scale of [LIGHT, DARK]) Object.assign(scale, SHARED);
 
 const THEMES = {};
 for (const m of html.matchAll(
-  /^ {6}(\w+): \{\n {8}name: "([^"]+)",\n {8}colors: \{\n {10}'--accent': '(#[0-9a-f]{6})', '--accent-rgb': '([\d, ]+)',\n {10}'--accent-contrast': '(#[0-9a-f]{6})',\n {10}'--accent-strong': '(#[0-9a-f]{6})', '--accent-strong-rgb': '([\d, ]+)',\n {10}'--accent-deep': '(#[0-9a-f]{6})',\n {10}'--accent-bright': '(#[0-9a-f]{6})', '--accent-bright-rgb': '([\d, ]+)'(?=\n)/gm
+  /^ {6}(\w+): \{\n {8}mode: "(light|dark)",\n {8}name: "([^"]+)",\n {8}colors: \{\n {10}'--accent': '(#[0-9a-f]{6})', '--accent-rgb': '([\d, ]+)',\n {10}'--accent-contrast': '(#[0-9a-f]{6})',\n {10}'--accent-strong': '(#[0-9a-f]{6})', '--accent-strong-rgb': '([\d, ]+)',\n {10}'--accent-deep': '(#[0-9a-f]{6})',\n {10}'--accent-bright': '(#[0-9a-f]{6})', '--accent-bright-rgb': '([\d, ]+)'(?=\n)/gm
 )) {
   THEMES[m[1]] = {
-    name: m[2],
-    accent: hex2rgb(m[3]),
-    rgb: m[4].trim(),
-    contrast: hex2rgb(m[5]),
-    strong: hex2rgb(m[6]),
-    strongRgb: m[7].trim(),
-    deep: hex2rgb(m[8]),
-    bright: hex2rgb(m[9]),
-    brightRgb: m[10].trim(),
+    mode: m[2],
+    name: m[3],
+    accent: hex2rgb(m[4]),
+    rgb: m[5].trim(),
+    contrast: hex2rgb(m[6]),
+    strong: hex2rgb(m[7]),
+    strongRgb: m[8].trim(),
+    deep: hex2rgb(m[9]),
+    bright: hex2rgb(m[10]),
+    brightRgb: m[11].trim(),
   };
 }
+const scaleFor = (mode) => (mode === 'dark' ? DARK : LIGHT);
 
 /* Resolve the full token set for one theme, including the color-mix() tints
    the stylesheet derives from --accent. */
 function tokensFor(theme) {
-  const surface1 = NEUTRAL['--surface-1'];
-  const border = NEUTRAL['--border'];
+  const neutral = scaleFor(theme.mode);
+  const surface1 = neutral['--surface-1'];
+  const border = neutral['--border'];
   return {
-    ...NEUTRAL,
+    ...neutral,
     '--accent': theme.accent,
     '--accent-contrast': theme.contrast,
     '--accent-strong': theme.strong,
@@ -122,10 +149,36 @@ describe('theme palette alignment', () => {
     }
   });
 
-  it('derives accent-strong and accent-deep darker than the accent', () => {
+  it('splits 20 themes into 10 light and 10 dark', () => {
+    const light = Object.entries(THEMES).filter(([, t]) => t.mode === 'light');
+    const dark = Object.entries(THEMES).filter(([, t]) => t.mode === 'dark');
+    assert.equal(light.length, 10, 'expected 10 light themes');
+    assert.equal(dark.length, 10, 'expected 10 dark themes');
+  });
+
+  it('keeps one ink per mode, and every shade readable under it', () => {
+    // The bug this guards: picking the ink per-theme by luminance let sky/lime
+    // end up with dark ink on a dark shade, collapsing to 1.09:1.
     for (const [id, t] of Object.entries(THEMES)) {
-      assert.ok(lum(t.strong) < lum(t.accent), `${id}: --accent-strong must be darker than --accent`);
-      assert.ok(lum(t.deep) < lum(t.strong), `${id}: --accent-deep must be darker than --accent-strong`);
+      const want = t.mode === 'light' ? [255, 255, 255] : [11, 13, 16];
+      for (const [shade, label] of [[t.accent, 'accent'], [t.strong, 'accent-strong'], [t.deep, 'accent-deep']]) {
+        const got = ratio(want, shade);
+        assert.ok(got >= 4.5, `${id}/${t.mode}: ${label} under ${t.mode} ink is ${got.toFixed(2)}:1, needs 4.5:1`);
+      }
+      assert.deepEqual(t.contrast, want, `${id}: --accent-contrast must be the ${t.mode} ink`);
+    }
+  });
+
+  it('moves accent-strong toward the readable direction for its mode', () => {
+    for (const [id, t] of Object.entries(THEMES)) {
+      if (t.mode === 'light') {
+        assert.ok(lum(t.strong) < lum(t.accent), `${id}: light --accent-strong must be darker than --accent`);
+        assert.ok(lum(t.deep) < lum(t.strong), `${id}: light --accent-deep must be darker than --accent-strong`);
+      } else {
+        // On dark, --accent-strong is painted as text on a dark page, so it
+        // must be LIGHTER than the accent, not darker.
+        assert.ok(lum(t.strong) > lum(t.accent), `${id}: dark --accent-strong must be lighter than --accent to read as text`);
+      }
       assert.ok(lum(t.bright) > lum(t.accent), `${id}: --accent-bright must be lighter than --accent`);
     }
   });
@@ -219,5 +272,261 @@ describe('legacy theme aliases stay resolvable', () => {
       [],
       `aliases pointing at themes that no longer exist: ${JSON.stringify(dangling)}`
     );
+  });
+});
+
+describe('light and dark scales are independently valid', () => {
+  it('keeps the status ink readable on every solid status chip in both modes', () => {
+    for (const [mode, N] of [['light', LIGHT], ['dark', DARK]]) {
+      for (const s of ['success', 'success-strong', 'warning', 'danger', 'danger-strong', 'info']) {
+        const got = ratio(N['--on-status'], N['--' + s]);
+        assert.ok(got >= 4.5, `${mode}: ink on --${s} is ${got.toFixed(2)}:1, needs 4.5:1`);
+      }
+    }
+  });
+
+  it('keeps each status label readable on its own tint', () => {
+    // Regression: darkening the tints until they read as visible chips dragged
+    // the status labels down with them (success label was 3.82:1).
+    for (const [mode, N] of [['light', LIGHT], ['dark', DARK]]) {
+      for (const [fg, bg] of [['success', 'success-soft'], ['warning', 'warning-soft'],
+                              ['danger', 'danger-soft'], ['info', 'info-soft']]) {
+        const got = ratio(N['--' + fg], N['--' + bg]);
+        assert.ok(got >= 4.5, `${mode}: --${fg} on --${bg} is ${got.toFixed(2)}:1, needs 4.5:1`);
+      }
+    }
+  });
+
+  it('makes every status tint visible as a chip, not a wash', () => {
+    for (const [mode, N] of [['light', LIGHT], ['dark', DARK]]) {
+      for (const s of ['success-soft', 'warning-soft', 'danger-soft', 'info-soft']) {
+        const got = ratio(N['--' + s], N['--surface-1']);
+        assert.ok(got >= 1.32, `${mode}: --${s} against the card is ${got.toFixed(2)}:1, needs 1.32:1`);
+      }
+    }
+  });
+
+  it('declares the two scales from one shared stage and accent set', () => {
+    for (const t of ['--stage-bg', '--stage-surface', '--stage-text', '--scrim']) {
+      assert.deepEqual(LIGHT[t], DARK[t], `${t} must be mode-independent`);
+    }
+    for (const t of ['--bg', '--surface-1', '--text', '--border']) {
+      assert.notDeepEqual(LIGHT[t], DARK[t], `${t} must differ between modes, or dark themes are fake`);
+    }
+  });
+
+  it('keeps the -rgb companions in step with the status hexes', () => {
+    for (const N of [LIGHT, DARK]) {
+      for (const s of ['success', 'danger']) {
+        const [r, g, b] = N[`--${s}`];
+        assert.equal(N[`--${s}-rgb`], `${r}, ${g}, ${b}`, `--${s}-rgb is out of step with --${s}`);
+      }
+    }
+  });
+});
+
+/* Token-level tests prove the PALETTE is sound. They cannot prove the
+   stylesheet actually pairs those tokens correctly -- and that is where the
+   real bugs lived: `.tab-btn.active` and `.btn-manual-confirm` both declared
+   `color: var(--accent)` on `background: var(--accent)`, rendering the active
+   tab and the manual-entry confirm button at 1.00:1 (invisible) in all 20
+   themes, while every token-pair test still passed. So walk every rule, pair up
+   its color and background tokens, and check the combination actually used. */
+describe('every rule pairs its tokens legibly', () => {
+  const RULES = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(
+    ([sel]) => !/^(@|:root|\[data-mode)/.test(sel.trim().replace(/\s+/g, ' '))
+  );
+
+  it('finds the rules to audit', () => {
+    assert.ok(RULES.length > 100, `only found ${RULES.length} rules; the parser has drifted`);
+  });
+
+  const pairs = [];
+  for (const theme of Object.values(THEMES)) {
+    const T = tokensFor(theme);
+    for (const [, sel, body] of RULES) {
+      const fg = body.match(/(?:^|;)\s*color:\s*var\((--[a-z0-9-]+)\)/);
+      const bg = body.match(/(?:^|;)\s*background(?:-color)?:\s*var\((--[a-z0-9-]+)\)/);
+      if (!fg || !bg || !T[fg[1]] || !T[bg[1]]) continue;
+      // Only the element's own declarations are checked; inherited foregrounds
+      // resolve through the token PAIRS list above.
+      const size = parseFloat((body.match(/font-size:\s*([\d.]+)px/) || [])[1] || '0');
+      const weight = parseInt((body.match(/font-weight:\s*(\d+)/) || [])[1] || '400');
+      const large = size >= 24 || (size >= 18.66 && weight >= 700);
+      pairs.push({
+        selector: sel.trim().replace(/\s+/g, ' '),
+        fg: fg[1], bg: bg[1],
+        min: large ? 3 : 4.5,
+        got: ratio(T[fg[1]], T[bg[1]]),
+      });
+    }
+  }
+
+  it('audits a meaningful number of real combinations', () => {
+    assert.ok(pairs.length > 400, `only ${pairs.length} rule/theme pairs parsed`);
+  });
+
+  it('renders no rule at 1:1 (a same-token color/background is always a bug)', () => {
+    const invisible = pairs.filter((p) => p.got < 1.05);
+    assert.deepEqual(
+      invisible.map((p) => `${p.selector} { color:${p.fg}; background:${p.bg} }`),
+      [],
+      'these rules paint text in the same colour as their own background, so they are invisible'
+    );
+  });
+
+  it('meets its contrast floor in every one of the 20 themes', () => {
+    const failures = new Map();
+    for (const p of pairs) {
+      if (p.got >= p.min) continue;
+      const key = `${p.selector} { color:${p.fg}; background:${p.bg} } needs ${p.min}`;
+      const prev = failures.get(key);
+      if (!prev || p.got < prev) failures.set(key, p.got);
+    }
+    assert.deepEqual(
+      [...failures].map(([rule, got]) => `${got.toFixed(2)}:1  ${rule}`),
+      [],
+      'rule/theme combinations below their WCAG floor'
+    );
+  });
+
+  it('never pairs a foreground with a background of the same token', () => {
+    const same = RULES.filter(([, , body]) => {
+      const fg = (body.match(/(?:^|;)\s*color:\s*var\((--[a-z0-9-]+)\)/) || [])[1];
+      const bg = (body.match(/(?:^|;)\s*background(?:-color)?:\s*var\((--[a-z0-9-]+)\)/) || [])[1];
+      return fg && fg === bg;
+    }).map(([, sel]) => sel.trim().replace(/\s+/g, ' '));
+    assert.deepEqual(same, [], 'a rule sets color and background to the same custom property');
+  });
+});
+
+describe('theme words render correctly in every language', () => {
+  it('keeps no mode word baked into a theme name', () => {
+    // Names used to carry a hardcoded "(淺色)"/"(深色)", which stayed Chinese
+    // when the operator switched to BM or BI. The mode is conveyed by the
+    // localized group heading and the localized toast suffix instead.
+    for (const [id, t] of Object.entries(THEMES)) {
+      assert.equal(/[淺深]色/.test(t.name), false, `${id} name still bakes in a Chinese mode word: ${t.name}`);
+      assert.equal(/\((?:light|dark)\)/i.test(t.name), false, `${id} name still bakes in an English mode word`);
+    }
+  });
+
+  it('gives every language its own light and dark mode words', () => {
+    for (const m of html.matchAll(/(BC|BM|BI):\s*\{([\s\S]*?)\n {6}\},?\n/g)) {
+      const [, lang, body] = m;
+      const light = (body.match(/themeModeLight:\s*"([^"]+)"/) || [])[1];
+      const dark = (body.match(/themeModeDark:\s*"([^"]+)"/) || [])[1];
+      assert.ok(light, `${lang} is missing themeModeLight`);
+      assert.ok(dark, `${lang} is missing themeModeDark`);
+      assert.notEqual(light, dark, `${lang} uses the same word for light and dark`);
+    }
+  });
+
+  it('shows all 20 swatches under localized light and dark headings', async () => {
+    const { createApp } = await import('./_harness.mjs');
+    const host = createApp({ master: true });
+    try {
+      const { window: w, document: d } = host;
+      for (const lang of ['BC', 'BM', 'BI']) {
+        w.changeLanguage(lang);
+        w.toggleThemeModal(true);
+        const dict = host.get('I18N')[lang];
+        const modal = d.getElementById('themeModal');
+        assert.equal(modal.style.display, 'flex', `${lang}: picker did not open`);
+        assert.equal(d.querySelectorAll('.theme-swatch').length, 20, `${lang}: wrong swatch count`);
+        assert.equal(d.querySelectorAll('.theme-group').length, 2, `${lang}: expected a light and a dark group`);
+        const titles = [...d.querySelectorAll('.theme-group-title')].map((e) => e.textContent.trim());
+        assert.ok(titles[0].includes(dict.themeGroupLight), `${lang}: first group is not the light heading (${titles[0]})`);
+        assert.ok(titles[1].includes(dict.themeGroupDark), `${lang}: second group is not the dark heading (${titles[1]})`);
+        // No swatch label may leak a mode word from another language.
+        for (const n of d.querySelectorAll('.theme-swatch-name')) {
+          assert.equal(/[淺深]色/.test(n.textContent), false, `${lang}: swatch label leaks a Chinese mode word: ${n.textContent}`);
+        }
+        w.toggleThemeModal(false);
+      }
+    } finally {
+      host.dom.window.close();
+    }
+  });
+
+  it('applies the mode of the theme that was actually chosen', async () => {
+    const { createApp } = await import('./_harness.mjs');
+    const host = createApp({ master: true });
+    try {
+      const { window: w, document: d } = host;
+      for (const [id, t] of Object.entries(THEMES)) {
+        w.applyTheme(id);
+        assert.equal(d.documentElement.getAttribute('data-mode'), t.mode, `${id} should set data-mode=${t.mode}`);
+        const bg = w.getComputedStyle(d.body).getPropertyValue('--bg').trim();
+        assert.match(bg, /^#[0-9a-f]{6}$/, `${id} left --bg unresolved`);
+      }
+    } finally {
+      host.dom.window.close();
+    }
+  });
+});
+
+/* Every bug fixed above lived in an inline style="..." attribute, not in the
+   <style> block, so a stylesheet-only audit waves straight past them. These
+   checks read the markup, which is why the theme picker and the crisis toolbox
+   both went unnoticed: the picker built its colors from ${n.text}-style runtime
+   values and the toolbox hardcoded #fff and rgba(255,255,255,0.05). */
+describe('inline styles follow the theme too', () => {
+  const INLINE = [...html.matchAll(/style="([^"]*)"/g)].map((m) => m[1]);
+  const STATIC = INLINE.filter((v) => !v.includes('${'));
+
+  it('finds the inline styles to audit', () => {
+    assert.ok(STATIC.length > 50, `only found ${STATIC.length} static inline styles; parser drift`);
+  });
+
+  const problems = [];
+  for (const theme of Object.values(THEMES)) {
+    const T = tokensFor(theme);
+    for (const style of STATIC) {
+      const fg = (style.match(/(?:^|;)\s*color:\s*var\((--[a-z0-9-]+)\)/) || [])[1];
+      if (!fg || !T[fg]) continue;
+      // A gradient counts as every stop it interpolates through: the ink has to
+      // survive the whole ramp, not just the midpoint.
+      const bgDecl = (style.match(/(?:^|;)\s*background(?:-color)?:[^;]*/) || [''])[0];
+      const bgs = [...bgDecl.matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]);
+      for (const bg of bgs) {
+        if (!T[bg]) continue;
+        const got = ratio(T[fg], T[bg]);
+        if (got < 4.5) problems.push(`${theme.name} ${theme.mode}: ${style} -> ${got.toFixed(2)}:1`);
+      }
+    }
+  }
+
+  it('never drops an inline label below 4.5:1 in any theme', () => {
+    const unique = [...new Set(problems.map((p) => p.replace(/^[^:]+: /, '')))];
+    assert.deepEqual(unique, [], 'inline style combinations that are not legible');
+  });
+
+  it('has no hardcoded light or dark ink in a color declaration', () => {
+    // #fff on a solid chip and #000 on a surface both looked fine in one mode
+    // and failed in the other; --on-status / --bg / --text are the paired inks.
+    const offenders = [...html.matchAll(/(?:^|[\s;{])color:\s*(#[0-9a-f]{3,8})\b/g)]
+      .map((m) => m[1])
+      .filter((c) => /^#(fff|ffffff|000|000000)$/i.test(c));
+    assert.deepEqual([...new Set(offenders)], [], 'literal white/black text must use a token');
+  });
+
+  it('has no literal white/black surface outside the two that need one', () => {
+    // Three surfaces are literal on purpose: the audience QR needs an opaque
+    // white quiet zone or scanners refuse it, the picture-in-picture window is
+    // always the dark stage, and a scrim dims what is behind it in both modes.
+    // Every other surface must follow the mode.
+    const ALLOWED = [
+      { re: /\.qr-box\s*\{[^}]*background:\s*#fff/s, why: 'QR quiet zone must stay opaque white' },
+      { re: /background:\s*#000\s*!important/, why: 'the PiP window is always the dark stage' },
+      { re: /#spotlightModal\s*\{[\s\S]*?background:\s*rgba\(0,\s*0,\s*0,/, why: 'a scrim dims what is behind it in both modes' },
+    ];
+    for (const [i, m] of [...html.matchAll(/background(?:-color)?:\s*(#[0-9a-f]{3,8}|rgba\(\s*(?:0|255)[^)]*\))/gi)].entries()) {
+      const line = html.slice(0, m.index);
+      const context = html.slice(Math.max(0, m.index - 120), m.index + 40);
+      const hit = ALLOWED.find((a) => a.re.test(context));
+      assert.ok(hit, `literal surface ${m[1]} at offset ${m.index} is not one of the allowed exceptions: ${context.trim().slice(-90)}`);
+      void i; void line;
+    }
   });
 });
