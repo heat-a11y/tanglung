@@ -400,7 +400,7 @@ describe('Batch 10 draw (regression)', () => {
       assert.equal(new Set(G(host, 'winners')).size, 10, 'winners must be unique');
       for (const num of G(host, 'winners')) {
         assert.match(num, /^\d{4}$/);
-        assert.ok(parseInt(num, 10) >= 1 && parseInt(num, 10) <= 1500);
+        assert.ok(parseInt(num, 10) >= 1001 && parseInt(num, 10) <= 3000);
       }
       assert.equal(host.document.getElementById('wonCount').textContent, '10');
       assert.equal(host.document.querySelectorAll('.number-tag').length, 10);
@@ -465,9 +465,9 @@ describe('Manual entry / replacement (regression)', () => {
   it('adds a manually confirmed ticket', () => {
     const host = makeHost();
     try {
-      host.document.getElementById('manualTicketInput').value = '0042';
+      host.document.getElementById('manualTicketInput').value = '1042';
       host.window.confirmManualEntry();
-      assert.ok(G(host, 'winners').includes('0042'));
+      assert.ok(G(host, 'winners').includes('1042'));
       assert.equal(host.document.getElementById('manualTicketInput').value, '');
     } finally {
       close(host);
@@ -477,8 +477,8 @@ describe('Manual entry / replacement (regression)', () => {
   it('rejects duplicate tickets', () => {
     const host = makeHost();
     try {
-      S(host, 'winners', ['0042']);
-      host.document.getElementById('manualTicketInput').value = '0042';
+      S(host, 'winners', ['1042']);
+      host.document.getElementById('manualTicketInput').value = '1042';
       host.window.confirmManualEntry();
       assert.equal(G(host, 'winners').length, 1);
       assert.ok(host.dialogs().some(([k, m]) => k === 'alert' && String(m).includes('already won')));
@@ -817,6 +817,29 @@ describe('Reset, sound & themes (regression)', () => {
       host.window.setTheme('cobalt');
       assert.equal(G(host, 'currentTheme'), 'cobalt');
       assert.equal(host.window.getPayload().currentTheme, 'cobalt');
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Default pool & prize quota', () => {
+  it('defaults to tickets 1001-3000 with 110 prizes', () => {
+    const host = makeHost();
+    try {
+      assert.equal(G(host, 'poolStart'), 1001);
+      assert.equal(G(host, 'poolEnd'), 3000);
+      assert.equal(G(host, 'maxPrizes'), 110, 'prize quota unchanged');
+
+      const pool = host.window.getAvailablePool();
+      assert.equal(pool.length, 2000, '2000 tickets in the default pool');
+      assert.equal(pool[0], '1001');
+      assert.equal(pool[pool.length - 1], '3000');
+
+      const payload = host.window.getPayload();
+      assert.equal(payload.poolStart, 1001);
+      assert.equal(payload.poolEnd, 3000);
+      assert.equal(payload.maxPrizes, 110);
     } finally {
       close(host);
     }
