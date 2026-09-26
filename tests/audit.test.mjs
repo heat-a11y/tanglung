@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createApp } from './_harness.mjs';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+
+const INDEX_HTML = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'index.html'), 'utf8');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const close = (app) => { try { app.dom.window.close(); } catch (e) {} };
@@ -1907,6 +1912,151 @@ describe('Language switching preserves icon buttons', () => {
       }
     } finally {
       close(host);
+    }
+  });
+});
+
+describe('The custom ticket range survives a lucky draw', () => {
+  const setRange = (app, start, end, prizes) => {
+    const d = app.document;
+    app.window.togglePoolModal(true);
+    d.getElementById('poolStartInput').value = String(start);
+    d.getElementById('poolEndInput').value = String(end);
+    d.getElementById('poolPrizeInput').value = String(prizes);
+    app.window.applyPoolRange();
+  };
+
+  it('keeps the range through the roll, the payload, and a reload', () => {
+    const app = makeHost();
+    try {
+      setRange(app, 2050, 2075, 12);
+      assert.equal(G(app, 'poolStart'), 2050, 'range did not apply');
+      assert.equal(G(app, 'poolEnd'), 2075);
+      assert.equal(G(app, 'maxPrizes'), 12);
+
+      // The draw itself must not disturb the operator's range.
+      app.window.startVipRollAnimation(false);
+      app.window.updateUI();
+      app.window.stopVipRollAnimation();
+      assert.equal(G(app, 'poolStart'), 2050, 'the roll moved poolStart');
+      assert.equal(G(app, 'poolEnd'), 2075, 'the roll moved poolEnd');
+      assert.equal(G(app, 'maxPrizes'), 12, 'the roll moved the quota');
+
+      // It has to be in the persisted payload, not just in memory.
+      const payload = app.window.getPayload();
+      assert.equal(payload.poolStart, 2050, 'poolStart missing from the payload');
+      assert.equal(payload.poolEnd, 2075, 'poolEnd missing from the payload');
+
+      // And a fresh instance fed that payload must land on the same range.
+      const reloaded = makeHost();
+      try {
+        reloaded.applyState(payload);
+        assert.equal(G(reloaded, 'poolStart'), 2050, 'range lost on reload');
+        assert.equal(G(reloaded, 'poolEnd'), 2075, 'range lost on reload');
+        assert.equal(G(reloaded, 'maxPrizes'), 12, 'quota lost on reload');
+      } finally {
+        close(reloaded);
+      }
+    } finally {
+      close(app);
+    }
+  });
+
+  it('is not silently reset to the 1001-3000 default by a draw', () => {
+    // Regression guard: a range set mid-session used to fall back to the
+    // defaults whenever a payload without poolStart/poolEnd arrived.
+    const app = makeHost();
+    try {
+      setRange(app, 3010, 3040, 8);
+      app.applyState({ winners: [pad(3010)], maxPrizes: 8 });
+      assert.equal(G(app, 'poolStart'), 3010, 'range reverted to the default');
+      assert.equal(G(app, 'poolEnd'), 3040, 'range reverted to the default');
+      assert.ok(G(app, 'getAvailablePool')().includes(pad(3011)), 'the custom pool is not being used');
+    } finally {
+      close(app);
+    }
+  });
+
+  it('reaches a synced viewer with the same range', () => {
+    const app = makeHost();
+    const viewer = createApp({ viewer: true });
+    try {
+      setRange(app, 4001, 4030, 10);
+      viewer.applyState(app.window.getPayload());
+      assert.equal(G(viewer, 'poolStart'), 4001, 'viewer got a different range');
+      assert.equal(G(viewer, 'poolEnd'), 4030, 'viewer got a different range');
+      assert.equal(G(viewer, 'getAvailablePool')().length, 30, 'viewer pool is not the custom range');
+    } finally {
+      close(app); close(viewer);
+    }
+  });
+});
+
+describe('Destructive actions are visibly red and legible', () => {
+  it('gives every destructive button the solid danger treatment', () => {
+    const app = makeHost();
+    try {
+      const css = app.document.querySelector('style#mainStyles').textContent;
+      assert.match(css, /\.btn-danger\s*\{[\s\S]*?background:\s*var\(--danger-strong\)/,
+        'no solid danger button style');
+      assert.match(css, /\.btn-danger\s*\{[\s\S]*?color:\s*var\(--on-status\)/,
+        'the danger button does not use the paired ink');
+      for (const id of ['resetBtn', 'spotlightRedrawBtn']) {
+        const el = app.document.getElementById(id);
+        assert.ok(el, `${id} is missing`);
+        assert.match(el.className, /\bbtn-danger\b/, `${id} is not a danger button`);
+        assert.equal(/\bdanger-soft\b/.test(el.getAttribute('style') || ''), false,
+          `${id} still colours its text with the pale danger tint`);
+      }
+    } finally {
+      close(app);
+    }
+  });
+
+  it('never uses a soft tint as a text colour anywhere', () => {
+    // --danger-soft is a chip BACKGROUND; as text it was 1.06:1 on the toolbar.
+    const offenders = [...INDEX_HTML.matchAll(/color:\s*var\(--(?:success|warning|danger|info)-soft\)/g)];
+    assert.deepEqual(offenders.map((m) => m[0]), [],
+      'a *-soft tint is a surface colour, never a legible text colour');
+  });
+
+  it('pairs footer actions to one shape', () => {
+    // .action-btn is --r-pill (999px) and .icon-btn is --r-sm (6px); mixing
+    // them in one footer rendered a pill next to a rectangle.
+    const css = INDEX_HTML.match(/<style id="mainStyles">([\s\S]*?)<\/style>/)[1];
+    assert.match(css, /\.modal-footer \.icon-btn\s*\{[\s\S]*?border-radius:\s*var\(--r-pill\)/,
+      'the secondary footer button does not adopt the primary shape');
+    // The underlying classes still disagree, which is exactly why the footer
+    // needs its own rule: if someone drops the .modal-footer scope the pair
+    // silently splits back into a 999px pill and a 6px rectangle.
+    // Read each base rule on its own; a lazy cross-rule match would pick up the
+    // .modal-footer override and make the two look identical.
+    const radiusOf = (selector) => {
+      for (const m of css.matchAll(/^([^{}\n]+)\{([^}]*)\}/gm)) {
+        if (m[1].trim() !== selector) continue;
+        const r = m[2].match(/border-radius:\s*([^;]+);/);
+        if (r) return r[1].trim();
+      }
+      return null;
+    };
+    const actionRadius = radiusOf('.action-btn');
+    const iconRadius = radiusOf('.icon-btn');
+    assert.equal(actionRadius, 'var(--r-pill)', `action-btn radius is ${actionRadius}`);
+    assert.equal(iconRadius, 'var(--r-sm)', `icon-btn radius is ${iconRadius}`);
+    assert.notEqual(actionRadius, iconRadius,
+      'if the base shapes now match, the .modal-footer override is dead code');
+
+    const footers = [...INDEX_HTML.matchAll(/<div class="modal-footer">([\s\S]*?)<\/div>/g)];
+    assert.ok(footers.length >= 1, 'no modal footer found to audit');
+    for (const [body] of footers) {
+      // A footer may legitimately use both classes; the scoped rule is what
+      // makes them agree, so just assert every button carries a shape class.
+      const buttons = [...body.matchAll(/<button[^>]*class="([^"]+)"/g)].map((m) => m[1]);
+      assert.ok(buttons.length >= 2, 'a footer should hold a cancel and an apply');
+      for (const cls of buttons) {
+        assert.match(cls, /\b(action-btn|icon-btn)\b/,
+          `footer button "${cls}" has no shape class to unify`);
+      }
     }
   });
 });
