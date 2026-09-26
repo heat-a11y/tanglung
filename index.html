@@ -12,47 +12,77 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style id="mainStyles">
     :root {
-      --cinnabar-red: #981216;
-      --deep-lacquer: #1c0204;
-      --imperial-gold: #f4c430;
-      --gold-dark: #b8860b;
-      --paper-cream: #fffaf0;
-      --jade-green: #2ecc71;
+      /* ---------------------------------------------------------------
+         Modern light design system.
+
+         The whole app is built from one neutral scale plus exactly one
+         accent colour. A theme only overrides the five --accent-* tokens
+         underneath; surfaces, borders and text are shared by all 20 themes
+         so no palette can drift into an unreadable or casino-gold mix.
+         Accent tints are derived with color-mix, so a new theme is one hex
+         value rather than a hand-tuned 25-key colour object.
+         --------------------------------------------------------------- */
+
+      /* Neutral scale */
+      --bg: #f4f5f7;
+      --bg-2: #ffffff;
+      --surface-1: #ffffff;
+      --surface-2: #fafafa;
+      --surface-3: #f1f2f4;
+      --surface-input: #ffffff;
+      --surface-disabled: #eef0f2;
+      --border: #e3e5e9;
+      --border-subtle: #eef0f2;
+      --border-strong: #cdd1d8;
+      --text: #16181d;
+      --text-2: #565c66;
+      --text-3: #6b7280;
+      --text-disabled: #a6acb5;
       --strip-font: 1.35rem;
 
-      --bg-flame: #7b0e12;
-      --bg-flame-mid: #350406;
-      --text-soft: #ffdca8;
-      --text-faint: #fce8cc;
-      --text-muted: #e0d0b0;
-      --text-on-paper: #2b0204;
-      --text-on-gold: #3b0306;
-      --bg-panel: #190204;
-      --bg-toolbar: #140103;
-      --bg-filter-panel: #100102;
-      --bg-input: #250204;
+      /* Status colours are theme-independent and tuned for a light base. */
+      --success: #107e45;
+      --success-rgb: 18, 138, 76;
+      --success-strong: #0d6b3b;
+      --success-soft: #e4f5eb;
+      --warning: #af5109;
+      --warning-soft: #fdf1de;
+      --danger: #ce2b1e;
+      --danger-rgb: 217, 45, 32;
+      --danger-strong: #b42318;
+      --danger-soft: #fdecea;
+      --info: #175cd3;
+      --info-soft: #e8f0fe;
 
-      --danger-red: #e74c3c;
-      --danger-red-deep: #c0392b;
-      --danger-bright: #ff4d4f;
-      --danger-soft: #ff9b90;
-      --red-deep: #7a0e12;
+      /* Stage surfaces stay dark on purpose: a big screen in a dim hall and a
+         desktop overlay bar both need a dark ground, but it is a themed neutral
+         now, not a hardcoded #000. */
+      --stage-bg: #101216;
+      --stage-surface: #1a1d23;
+      --stage-surface-2: #24282f;
+      --stage-border: #2f343d;
+      --stage-text: #f7f8fa;
+      --stage-text-2: #a8aeba;
+      --scrim: rgba(16, 18, 24, 0.45);
 
-      --success-green-deep: #27ae60;
-      --success-green-dark: #1f7a4d;
-      --success-soft: #a8f0c3;
-      --wait-amber: #e67e22;
-      --neutral-grey: #7f8c8d;
+      /* Accent: the only per-theme colour. */
+      --accent: #4f46e5;
+      --accent-rgb: 79, 70, 229;
+      --accent-contrast: #ffffff;
+      --accent-strong: #4338ca;
+      --accent-strong-rgb: 67, 56, 202;
+      --accent-deep: #3730a3;
+      --accent-bright: #8b85ee;
+      --accent-bright-rgb: 139, 133, 238;
+      --accent-soft: color-mix(in srgb, var(--accent) 8%, var(--surface-1));
+      --accent-soft-2: color-mix(in srgb, var(--accent) 14%, var(--surface-1));
+      --accent-line: color-mix(in srgb, var(--accent) 26%, var(--border));
+      --accent-ring: rgba(var(--accent-rgb), 0.28);
+      --accent-glow: rgba(var(--accent-rgb), 0.14);
 
-      --blue-sync: #0984e3;
-      --teal-sync: #00cec9;
-
-      --red-rgb: 152, 18, 22;
-      --gold-rgb: 244, 196, 48;
-      --gold-dark-rgb: 184, 134, 11;
-      --lacquer-rgb: 20, 1, 3;
-      --green-rgb: 46, 204, 113;
-      --danger-rgb: 231, 76, 60;
+      /* Result card and translucent-surface helpers. */
+      --surface-result: #ffffff;
+      --surface-rgb: 255, 255, 255;
 
       /* Typography: one sans stack for every script, one tabular stack for
          every number so digits never jitter while the roller is running. */
@@ -62,9 +92,9 @@
       --font-num: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo,
         Consolas, "Liberation Mono", monospace;
 
-      --fs-xs: clamp(0.7rem, 0.67rem + 0.15vw, 0.78rem);
-      --fs-sm: clamp(0.78rem, 0.75rem + 0.15vw, 0.88rem);
-      --fs-md: clamp(0.88rem, 0.85rem + 0.15vw, 1rem);
+      --fs-xs: clamp(0.72rem, 0.69rem + 0.15vw, 0.8rem);
+      --fs-sm: clamp(0.8rem, 0.77rem + 0.15vw, 0.9rem);
+      --fs-md: clamp(0.9rem, 0.87rem + 0.15vw, 1rem);
       --fs-lg: clamp(1rem, 0.96rem + 0.2vw, 1.15rem);
       --fs-xl: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
       --fs-2xl: clamp(1.35rem, 1.15rem + 1vw, 2rem);
@@ -77,29 +107,15 @@
       --sp-6: 32px;
 
       --r-sm: 6px;
-      --r-md: 10px;
-      --r-lg: 14px;
+      --r-md: 8px;
+      --r-lg: 12px;
       --r-pill: 999px;
 
-      --sh-1: 0 1px 2px rgba(0, 0, 0, 0.28);
-      --sh-2: 0 4px 14px rgba(0, 0, 0, 0.36);
-      --sh-3: 0 10px 30px rgba(0, 0, 0, 0.5);
-
-      /* Semantic layer. These reference the theme colours, so all 20 themes
-         stay consistent without every one of them redefining them. */
-      --surface-1: rgba(255, 255, 255, 0.05);
-      --surface-2: rgba(255, 255, 255, 0.09);
-      --surface-3: rgba(0, 0, 0, 0.35);
-      --border-subtle: rgba(var(--gold-rgb), 0.22);
-      --border-strong: rgba(var(--gold-rgb), 0.55);
-      --text-body: var(--text-faint);
-      --text-dim: var(--text-soft);
-      --text-faintest: var(--text-muted);
-      --text-on-paper-dim: #6b6152;
-      --surface-disabled: #e7dfd1;
-      --text-disabled: #5c554a;
-      --divider-on-paper: rgba(0, 0, 0, 0.14);
-      --focus-ring: 0 0 0 3px rgba(var(--gold-rgb), 0.6);
+      /* Soft, low-contrast shadows: a light base does not need heavy ones. */
+      --sh-1: 0 1px 2px rgba(16, 18, 24, 0.06);
+      --sh-2: 0 4px 12px rgba(16, 18, 24, 0.08);
+      --sh-3: 0 12px 32px rgba(16, 18, 24, 0.12);
+      --focus-ring: 0 0 0 3px var(--accent-ring);
     }
 
     *,
@@ -124,7 +140,7 @@
     }
 
     :focus-visible {
-      outline: 2px solid var(--imperial-gold);
+      outline: 2px solid var(--accent);
       outline-offset: 2px;
       border-radius: var(--r-sm);
     }
@@ -139,9 +155,7 @@
       }
     }
 
-    body {
-      background: radial-gradient(circle at 50% 30%, var(--bg-flame) 0%, var(--bg-flame-mid) 55%, var(--deep-lacquer) 100%);
-      color: #fff;
+    body { background: var(--bg); color: var(--text);
       min-height: 100vh;
       width: 100vw;
       overflow-x: hidden;
@@ -157,15 +171,7 @@
       }
     }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(rgba(var(--gold-rgb), 0.05) 2px, transparent 2px);
-      background-size: 32px 32px;
-      pointer-events: none;
-      z-index: 1;
-    }
+    
 
     #confettiCanvas {
       position: fixed;
@@ -189,11 +195,7 @@
     }
 
     .toast {
-      background: rgba(var(--lacquer-rgb), 0.96);
-      border: 1px solid var(--border-strong);
-      border-left: 4px solid var(--imperial-gold);
-      color: #fff;
-      padding: 10px 18px;
+      background: var(--surface-1); border: 1px solid var(--border); border-left: 3px solid var(--accent); color: var(--text); padding: 10px 18px; box-shadow: var(--sh-2);
       border-radius: var(--r-sm);
       font-size: var(--fs-sm);
       font-weight: 600;
@@ -204,19 +206,19 @@
       gap: 10px;
     }
     .toast.error {
-      border-color: var(--danger-bright);
-      border-left-color: var(--danger-bright);
-      color: var(--danger-soft);
+      border-color: var(--danger-strong);
+      border-left-color: var(--danger-strong);
+      color: var(--danger);
     }
     .toast-mark {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--jade-green);
+      background: var(--success);
       flex-shrink: 0;
     }
     .toast-mark.err {
-      background: var(--danger-bright);
+      background: var(--danger-strong);
     }
 
     @keyframes toastIn {
@@ -234,9 +236,7 @@
       justify-content: space-between;
       align-items: center;
       padding: 8px 14px;
-      border-bottom: 3px solid var(--imperial-gold);
-      background: linear-gradient(180deg, rgba(var(--lacquer-rgb), 0.95) 0%, rgba(var(--lacquer-rgb), 0.85) 100%);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+      border-bottom: 2px solid var(--accent); background: var(--surface-1); box-shadow: var(--sh-1);
       position: relative;
       z-index: 10;
       flex-wrap: wrap;
@@ -257,22 +257,43 @@
     .brand-title {
       font-size: var(--fs-xl);
       font-weight: 800;
-      color: var(--imperial-gold);
-      letter-spacing: 0.04em;
-      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      color: var(--accent);
+      letter-spacing: -0.015em; text-shadow: none;
       outline: none;
       border-bottom: 1px dashed transparent;
       transition: border-color 0.2s;
     }
     .brand-title:hover, .brand-title:focus {
-      border-bottom: 1px dashed var(--imperial-gold);
+      border-bottom: 1px dashed var(--accent);
     }
 
     .brand-subtitle {
       font-size: var(--fs-xs);
-      color: var(--text-dim);
+      color: var(--text-3);
       letter-spacing: 0.04em;
       outline: none;
+    }
+
+    /* Surfaces the exact file version on screen, so a stale browser render is
+       self-evident instead of something the user has to report. */
+    /* Inline SVG stands in for the old dingbat characters: it inherits
+       currentColor, so it themes itself in every one of the 20 palettes. */
+    .icon-glyph {
+      width: 1em;
+      height: 1em;
+      vertical-align: -0.14em;
+      margin-right: 0.4em;
+      flex: none;
+    }
+    .icon-btn { display: inline-flex; align-items: center; justify-content: center; }
+
+    .build-stamp {
+      font-size: 10px;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums;
+      opacity: 0.75;
+      user-select: all;
     }
 
     .top-stats {
@@ -288,7 +309,7 @@
       padding: 5px 10px;
       border-radius: var(--r-pill);
       font-size: var(--fs-xs);
-      color: var(--text-body);
+      color: var(--text);
       user-select: none;
       white-space: nowrap;
     }
@@ -296,18 +317,18 @@
       border-color: var(--border-strong);
     }
     .stat-badge strong {
-      color: var(--imperial-gold);
+      color: var(--accent);
       font-size: 1.05em;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
     }
     .stat-edit {
-      border-bottom: 1px dashed rgba(var(--gold-rgb), 0.55);
+      border-bottom: 1px dashed rgba(var(--accent-rgb), 0.55);
       transition: color 0.15s, border-color 0.15s;
     }
     .stat-badge:hover .stat-edit {
-      color: var(--imperial-gold);
-      border-bottom-color: var(--imperial-gold);
+      color: var(--accent);
+      border-bottom-color: var(--accent);
     }
 
     .top-actions {
@@ -318,9 +339,9 @@
     }
 
     .lang-select {
-      background: var(--bg-input);
-      border: 1.5px solid var(--imperial-gold);
-      color: var(--imperial-gold);
+      background: var(--surface-input);
+      border: 1.5px solid var(--accent);
+      color: var(--accent);
       font-weight: 900;
       padding: 4px 7px;
       border-radius: 6px;
@@ -330,9 +351,9 @@
     }
 
     .icon-btn {
-      background: rgba(var(--gold-rgb), 0.12);
+      background: rgba(var(--accent-rgb), 0.12);
       border: 1px solid var(--border-strong);
-      color: var(--imperial-gold);
+      color: var(--accent);
       padding: 6px 10px;
       border-radius: var(--r-sm);
       cursor: pointer;
@@ -343,8 +364,8 @@
       white-space: nowrap;
     }
     .icon-btn:hover:not(:disabled) {
-      background: rgba(var(--gold-rgb), 0.24);
-      border-color: var(--imperial-gold);
+      background: rgba(var(--accent-rgb), 0.24);
+      border-color: var(--accent);
     }
     .icon-btn:active:not(:disabled) {
       transform: translateY(1px);
@@ -356,29 +377,29 @@
     }
 
     .btn-sync {
-      background: linear-gradient(135deg, var(--blue-sync) 0%, var(--teal-sync) 100%);
+      background: var(--info);
       color: #fff;
-      border-color: var(--blue-sync);
+      border-color: var(--info);
     }
 
     .btn-projector {
-      background: linear-gradient(135deg, var(--imperial-gold) 0%, var(--gold-dark) 100%);
-      color: var(--text-on-gold);
+      background: var(--accent);
+      color: var(--accent-contrast);
     }
 
     .btn-recycle {
-      background: rgba(var(--green-rgb), 0.18);
-      border-color: var(--jade-green);
-      color: var(--success-soft);
+      background: rgba(var(--success-rgb), 0.18);
+      border-color: var(--success);
+      color: var(--success);
     }
 
     .btn-suspense {
       background: rgba(var(--danger-rgb), 0.2);
-      border-color: var(--danger-red);
-      color: var(--danger-soft);
+      border-color: var(--danger);
+      color: var(--danger);
     }
     .btn-suspense.active {
-      background: var(--danger-red);
+      background: var(--danger);
       color: #fff;
     }
 
@@ -406,10 +427,10 @@
     }
 
     .traditional-frame {
-      background: rgba(var(--lacquer-rgb), 0.92);
+      background: rgba(var(--surface-rgb), 0.92);
       border: 1px solid var(--border-strong);
       border-radius: var(--r-lg);
-      box-shadow: var(--sh-3), inset 0 0 10px rgba(var(--gold-rgb), 0.12);
+      box-shadow: var(--sh-3), inset 0 0 10px rgba(var(--accent-rgb), 0.12);
       position: relative;
       display: flex;
       flex-direction: column;
@@ -417,8 +438,8 @@
     }
 
     .column-banner {
-      background: linear-gradient(90deg, var(--gold-dark) 0%, var(--imperial-gold) 50%, var(--gold-dark) 100%);
-      color: var(--text-on-gold);
+      background: var(--accent);
+      color: var(--accent-contrast);
       font-weight: 700;
       padding: 8px;
       text-align: center;
@@ -440,14 +461,14 @@
 
     .control-row input[type="range"] {
       width: 85px;
-      accent-color: var(--imperial-gold);
+      accent-color: var(--accent);
       cursor: pointer;
     }
 
     .main-stage {
-      background: var(--paper-cream);
-      color: var(--text-on-paper);
-      border: 2px solid var(--imperial-gold);
+      background: var(--surface-result);
+      color: var(--text);
+      border: 2px solid var(--accent);
       border-radius: var(--r-lg);
       display: flex;
       flex-direction: column;
@@ -461,7 +482,7 @@
       text-align: center;
       font-weight: 700;
       color: #fff;
-      background: linear-gradient(90deg, var(--gold-dark) 0%, var(--cinnabar-red) 50%, var(--gold-dark) 100%);
+      background: var(--accent);
       border-radius: var(--r-pill);
       margin-bottom: var(--sp-3);
       padding: 6px 14px;
@@ -483,20 +504,20 @@
       padding: 9px 6px;
       font-size: var(--fs-sm);
       font-weight: 700;
-      border: 1px solid var(--cinnabar-red);
-      background: #fff;
-      color: var(--cinnabar-red);
+      border: 1px solid var(--accent);
+      background: var(--surface-1);
+      color: var(--accent);
       border-radius: var(--r-sm);
       cursor: pointer;
       transition: background 0.15s, color 0.15s, box-shadow 0.15s;
     }
     .tab-btn:hover:not(.active) {
-      background: rgba(var(--red-rgb), 0.08);
+      background: rgba(var(--accent-rgb), 0.08);
     }
 
     .tab-btn.active {
-      background: var(--cinnabar-red);
-      color: var(--imperial-gold);
+      background: var(--accent);
+      color: var(--accent);
       box-shadow: var(--sh-2);
     }
 
@@ -513,15 +534,14 @@
     }
 
     .action-btn {
-      background: linear-gradient(135deg, var(--imperial-gold) 0%, var(--gold-dark) 100%);
-      color: var(--text-on-gold);
+      background: var(--accent);
+      color: var(--accent-contrast);
       font-weight: 800;
       font-size: clamp(1.05rem, 2vw, 1.3rem);
-      border: 1px solid rgba(255, 255, 255, 0.85);
-      padding: 12px 32px;
+      border: 1px solid transparent; padding: 12px 32px;
       border-radius: var(--r-pill);
       cursor: pointer;
-      box-shadow: 0 5px 16px rgba(var(--gold-dark-rgb), 0.5);
+      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 6px 16px rgba(var(--accent-rgb), 0.22);
       margin-bottom: var(--sp-3);
       letter-spacing: 0.05em;
       transition: transform 0.1s, box-shadow 0.15s;
@@ -529,7 +549,7 @@
     }
     .action-btn:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 8px 22px rgba(var(--gold-dark-rgb), 0.6);
+      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 10px 24px rgba(var(--accent-rgb), 0.28);
     }
     .action-btn:active:not(:disabled) {
       transform: translateY(0);
@@ -560,8 +580,8 @@
     }
 
     .number-tag {
-      background: var(--paper-cream);
-      border: 2px solid var(--gold-dark);
+      background: var(--surface-result);
+      border: 2px solid var(--accent-strong);
       border-radius: var(--r-md);
       display: flex;
       flex-direction: column;
@@ -576,7 +596,7 @@
 
     .number-tag .sub-seq {
       font-size: var(--fs-xs);
-      color: var(--gold-dark);
+      color: var(--accent-strong);
       font-weight: 700;
       margin-bottom: 2px;
       text-align: center;
@@ -585,7 +605,7 @@
     .number-tag .main-num {
       font-size: clamp(1.5rem, 2.8vw, 2.1rem);
       font-weight: 800;
-      color: var(--cinnabar-red);
+      color: var(--accent);
       letter-spacing: 0.04em;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
@@ -600,9 +620,9 @@
     .vip-display {
       font-size: clamp(3.6rem, 8vw, 5.8rem);
       font-weight: 800;
-      color: var(--cinnabar-red);
-      background: var(--paper-cream);
-      border: 4px solid var(--imperial-gold);
+      color: var(--accent);
+      background: var(--surface-result);
+      border: 4px solid var(--accent);
       border-radius: var(--r-lg);
       width: 90%;
       max-width: 360px;
@@ -613,24 +633,21 @@
       letter-spacing: 0.06em;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
-      box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.2), var(--sh-2);
+      box-shadow: inset 0 0 25px rgba(var(--accent-strong-rgb), 0.2), var(--sh-2);
       margin-bottom: var(--sp-4);
       line-height: 1;
     }
 
     .vip-display.rolling {
-      color: var(--imperial-gold);
-      border-color: var(--jade-green);
+      color: var(--accent);
+      border-color: var(--success);
       animation: vipSlotPulse 0.4s ease infinite alternate;
     }
-    @keyframes vipSlotPulse {
-      from { transform: scale(1); box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.25), 0 0 14px rgba(var(--gold-rgb), 0.4); }
-      to { transform: scale(1.04); box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.45), 0 0 30px rgba(var(--gold-rgb), 0.85); }
-    }
+    @keyframes vipSlotPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px var(--accent-glow); } 50% { transform: scale(1.015); box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0.05); } }
 
     .manual-card {
-      background: var(--paper-cream);
-      border: 2px dashed var(--gold-dark);
+      background: var(--surface-result);
+      border: 2px dashed var(--accent-strong);
       border-radius: 12px;
       padding: 16px;
       width: 100%;
@@ -659,12 +676,10 @@
       text-align: center;
       letter-spacing: 0.08em;
       font-weight: 800;
-      border: 2px solid var(--cinnabar-red);
+      border: 2px solid var(--accent);
       border-radius: var(--r-sm);
       outline: none;
-      background: #fff;
-      color: var(--cinnabar-red);
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+      background: var(--surface-input); color: var(--accent); box-shadow: inset 0 1px 2px rgba(16, 18, 24, 0.06);
     }
 
     .manual-actions {
@@ -675,8 +690,8 @@
 
     .btn-manual-confirm {
       flex: 1;
-      background: var(--cinnabar-red);
-      color: var(--imperial-gold);
+      background: var(--accent);
+      color: var(--accent);
       border: none;
       padding: 10px;
       font-size: var(--fs-sm);
@@ -686,12 +701,12 @@
       transition: background 0.2s;
     }
     .btn-manual-confirm:hover {
-      background: var(--red-deep);
+      background: var(--accent-deep);
     }
 
     .btn-manual-redraw {
       flex: 1;
-      background: linear-gradient(135deg, var(--success-green-dark) 0%, var(--success-green-deep) 100%);
+      background: var(--success-strong);
       color: #fff;
       border: none;
       padding: 10px;
@@ -702,7 +717,7 @@
       transition: background 0.2s;
     }
     .btn-manual-redraw:hover {
-      background: var(--success-green-dark);
+      background: var(--success-strong);
     }
 
     .billboard-column {
@@ -710,8 +725,8 @@
     }
 
     .filter-panel {
-      background: var(--bg-filter-panel);
-      border-bottom: 2px solid rgba(var(--gold-rgb), 0.35);
+      background: var(--surface-1);
+      border-bottom: 2px solid rgba(var(--accent-rgb), 0.35);
       padding: 6px 8px;
       display: flex;
       flex-direction: column;
@@ -729,10 +744,7 @@
     .filter-input {
       width: 60px;
       padding: 5px 6px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-strong);
-      color: #fff;
-      border-radius: var(--r-sm);
+      background: var(--surface-input); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-sm);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       font-size: var(--fs-xs);
@@ -740,13 +752,13 @@
       outline: none;
     }
     .filter-input:hover {
-      border-color: var(--imperial-gold);
+      border-color: var(--accent);
     }
 
     .filter-select {
-      background: var(--bg-input);
+      background: var(--surface-input);
       border: 1px solid var(--border-strong);
-      color: var(--imperial-gold);
+      color: var(--accent);
       padding: 4px 6px;
       border-radius: var(--r-sm);
       font-size: var(--fs-xs);
@@ -757,13 +769,13 @@
       min-width: 120px;
     }
     .filter-select:hover {
-      border-color: var(--imperial-gold);
+      border-color: var(--accent);
     }
 
     .filter-btn {
-      background: rgba(var(--gold-rgb), 0.18);
+      background: rgba(var(--accent-rgb), 0.18);
       border: 1px solid var(--border-strong);
-      color: var(--imperial-gold);
+      color: var(--accent);
       padding: 4px 8px;
       border-radius: var(--r-sm);
       font-size: var(--fs-xs);
@@ -773,9 +785,9 @@
       transition: background 0.15s, color 0.15s;
     }
     .filter-btn:hover {
-      background: var(--imperial-gold);
-      border-color: var(--imperial-gold);
-      color: var(--text-on-gold);
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
     }
 
     .preset-chips {
@@ -788,7 +800,7 @@
     .chip-btn {
       background: var(--surface-1);
       border: 1px solid var(--border-subtle);
-      color: var(--text-dim);
+      color: var(--text-3);
       padding: 3px 8px;
       border-radius: var(--r-pill);
       font-size: var(--fs-xs);
@@ -797,19 +809,19 @@
     }
     .chip-btn:hover {
       border-color: var(--border-strong);
-      color: var(--imperial-gold);
+      color: var(--accent);
     }
     .chip-btn.active {
-      background: var(--imperial-gold);
-      color: var(--text-on-gold);
-      border-color: var(--imperial-gold);
+      background: var(--accent);
+      color: var(--accent-contrast);
+      border-color: var(--accent);
       font-weight: 700;
     }
 
     .search-container {
       padding: 5px 8px;
-      background: var(--bg-toolbar);
-      border-bottom: 1px solid rgba(var(--gold-rgb), 0.25);
+      background: var(--surface-2);
+      border-bottom: 1px solid rgba(var(--accent-rgb), 0.25);
       display: flex;
       gap: 6px;
       flex-shrink: 0;
@@ -818,10 +830,7 @@
     .search-container input {
       flex: 1;
       padding: 6px 8px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-strong);
-      color: #fff;
-      border-radius: var(--r-sm);
+      background: var(--surface-input); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-sm);
       outline: none;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
@@ -829,7 +838,7 @@
       font-size: var(--fs-sm);
     }
     .search-container input:hover {
-      border-color: var(--imperial-gold);
+      border-color: var(--accent);
     }
 
     .billboard-grid {
@@ -861,29 +870,29 @@
     }
 
     .billboard-card:hover {
-      background: rgba(var(--gold-rgb), 0.2);
+      background: rgba(var(--accent-rgb), 0.2);
     }
 
     .billboard-card.claimed {
-      background: rgba(var(--green-rgb), 0.25) !important;
-      border-color: var(--jade-green) !important;
+      background: rgba(var(--success-rgb), 0.25) !important;
+      border-color: var(--success) !important;
     }
     .billboard-card.claimed .bb-num {
-      color: var(--jade-green) !important;
+      color: var(--success) !important;
     }
 
     .billboard-card.highlight {
-      background: var(--imperial-gold) !important;
-      border-color: #fff;
+      background: var(--accent) !important;
+      border-color: var(--accent-contrast);
       box-shadow: var(--sh-2);
     }
 
     .billboard-card .bb-seq {
-      color: var(--text-dim);
+      color: var(--text-3);
       font-size: var(--fs-xs);
     }
     .billboard-card .bb-num {
-      color: var(--imperial-gold);
+      color: var(--accent);
       font-weight: 800;
       font-size: var(--fs-lg);
     }
@@ -901,9 +910,9 @@
       align-items: center;
       padding-top: 8px;
       margin-top: 4px;
-      border-top: 1px solid var(--divider-on-paper);
+      border-top: 1px solid var(--border);
       font-size: var(--fs-xs);
-      color: var(--text-on-paper-dim);
+      color: var(--text-2);
       flex-shrink: 0;
     }
 
@@ -911,7 +920,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: var(--scrim);
       z-index: 10010;
       justify-content: center;
       align-items: center;
@@ -919,7 +928,7 @@
     }
 
     .modal-box {
-      background: var(--deep-lacquer);
+      background: var(--surface-2);
       border: 1px solid var(--border-strong);
       border-radius: var(--r-lg);
       width: 100%;
@@ -928,7 +937,7 @@
       display: flex;
       flex-direction: column;
       padding: var(--sp-4);
-      color: #fff;
+      color: var(--text);
       box-shadow: var(--sh-3);
     }
 
@@ -977,17 +986,14 @@
       font-size: var(--fs-xs);
       font-weight: 700;
       letter-spacing: 0.04em;
-      color: var(--text-body);
+      color: var(--text);
       text-transform: uppercase;
     }
 
     .pool-field input {
       width: 100%;
       padding: 8px 10px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-strong);
-      color: #fff;
-      border-radius: var(--r-sm);
+      background: var(--surface-input); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-sm);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       font-size: var(--fs-lg);
@@ -996,10 +1002,10 @@
       transition: border-color 0.15s;
     }
     .pool-field input:hover {
-      border-color: var(--imperial-gold);
+      border-color: var(--accent);
     }
     .pool-field input[readonly] {
-      color: var(--imperial-gold);
+      color: var(--accent);
       background: var(--surface-3);
       cursor: default;
     }
@@ -1007,7 +1013,7 @@
     .pool-note {
       margin: var(--sp-3) 0 0;
       font-size: var(--fs-sm);
-      color: var(--text-dim);
+      color: var(--text-3);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
     }
@@ -1015,7 +1021,7 @@
     .pool-error {
       margin: 5px 0 0;
       font-size: var(--fs-sm);
-      color: var(--danger-soft);
+      color: var(--danger);
       font-weight: 600;
     }
     .pool-error[hidden] {
@@ -1030,7 +1036,7 @@
 
     .modal-item {
       background: var(--surface-1);
-      border-left: 4px solid var(--imperial-gold);
+      border-left: 4px solid var(--accent);
       padding: 8px 12px;
       border-radius: 6px;
       font-size: var(--fs-sm);
@@ -1047,9 +1053,9 @@
     }
 
     .btn-recycle-action {
-      background: rgba(var(--gold-rgb), 0.18);
+      background: rgba(var(--accent-rgb), 0.18);
       border: 1px solid var(--border-strong);
-      color: var(--imperial-gold);
+      color: var(--accent);
       padding: 4px 8px;
       border-radius: var(--r-sm);
       font-size: var(--fs-xs);
@@ -1058,9 +1064,9 @@
       transition: background 0.15s, color 0.15s;
     }
     .btn-recycle-action:hover {
-      background: var(--imperial-gold);
-      border-color: var(--imperial-gold);
-      color: var(--text-on-gold);
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-contrast);
     }
 
     .p2p-status-tag {
@@ -1071,9 +1077,48 @@
       font-weight: bold;
       margin-top: 4px;
     }
-    .p2p-status-tag.connected { background: var(--success-green-deep); color: #fff; }
-    .p2p-status-tag.waiting { background: var(--wait-amber); color: #fff; }
-    .p2p-status-tag.disconnected { background: var(--danger-red-deep); color: #fff; }
+    .p2p-status-tag.connected { background: var(--success-strong); color: #fff; }
+    .p2p-status-tag.waiting { background: var(--warning); color: #fff; }
+    .p2p-status-tag.disconnected { background: var(--danger-strong); color: #fff; }
+
+    /* Sync modal: one status panel and two share panels, so the staff/display
+       link and the guest audience link read as two different destinations. */
+    .share-stack {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+      font-size: var(--fs-md);
+    }
+    .status-block {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--sp-3);
+    }
+    .status-block-title { font-weight: 700; margin-bottom: var(--sp-2); }
+    .mode-tag { margin-top: var(--sp-2); font-weight: 700; color: var(--accent); }
+    .share-block {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: var(--sp-4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .share-block-title { color: var(--accent); font-weight: 700; margin-bottom: var(--sp-2); text-align: center; }
+    .share-hint { margin-top: var(--sp-3); font-size: var(--fs-xs); color: var(--text-2); text-align: center; }
+    .share-input {
+      width: 100%;
+      margin-top: var(--sp-1);
+      padding: 6px;
+      background: var(--surface-input);
+      border: 1px solid var(--border);
+      color: var(--text-2);
+      font-size: var(--fs-xs);
+      border-radius: var(--r-sm);
+    }
+    .qr-box { background: #fff; padding: var(--sp-2); border-radius: var(--r-sm); }
 
     #spotlightModal {
       display: none;
@@ -1087,12 +1132,7 @@
     }
 
     .spotlight-card {
-      background: radial-gradient(circle at center, var(--cinnabar-red) 0%, var(--deep-lacquer) 100%);
-      border: 2px solid var(--imperial-gold);
-      border-radius: var(--r-lg);
-      padding: clamp(20px, 4vw, 36px);
-      text-align: center;
-      color: #fff;
+      background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-lg); padding: clamp(20px, 4vw, 36px); text-align: center; color: var(--text);
       box-shadow: var(--sh-3);
       animation: popIn 0.3s ease;
       max-width: 480px;
@@ -1100,7 +1140,7 @@
     }
 
     .spotlight-title {
-      color: var(--imperial-gold);
+      color: var(--accent);
       font-size: var(--fs-2xl);
       font-weight: 700;
       letter-spacing: 0.06em;
@@ -1110,11 +1150,7 @@
     .spotlight-num {
       font-size: clamp(3.5rem, 8vw, 5rem);
       font-weight: 800;
-      color: #fff;
-      letter-spacing: 0.06em;
-      font-family: var(--font-num);
-      font-variant-numeric: tabular-nums;
-      text-shadow: 0 0 20px rgba(var(--gold-rgb), 0.8);
+      color: var(--accent); letter-spacing: 0.02em; font-family: var(--font-num); font-variant-numeric: tabular-nums; text-shadow: none;
       margin: 10px 0;
       line-height: 1;
     }
@@ -1126,7 +1162,7 @@
       left: 50%;
       transform: translateX(-50%);
       background: rgba(var(--danger-rgb), 0.98);
-      border: 2px solid var(--imperial-gold);
+      border: 2px solid var(--accent);
       border-radius: var(--r-pill);
       padding: 10px 20px;
       color: #fff;
@@ -1141,8 +1177,8 @@
     }
 
     .btn-timer-redraw {
-      background: var(--imperial-gold);
-      color: var(--text-on-gold);
+      background: var(--accent);
+      color: var(--accent-contrast);
       border: 1px solid rgba(255, 255, 255, 0.9);
       font-weight: 700;
       padding: 6px 14px;
@@ -1152,8 +1188,8 @@
       transition: background 0.15s, color 0.15s;
     }
     .btn-timer-redraw:hover {
-      background: #fff;
-      color: var(--cinnabar-red);
+      background: var(--surface-1);
+      color: var(--accent);
     }
 
     #projectorView {
@@ -1161,7 +1197,8 @@
       position: fixed;
       inset: 0;
       z-index: 10000;
-      background: var(--bg-toolbar);
+      background: var(--stage-bg);
+  color: var(--stage-text);
       flex-direction: column;
       pointer-events: auto;
       transition: background 0.3s ease;
@@ -1179,8 +1216,9 @@
     .proj-toolbar {
       min-height: 48px;
       height: auto;
-      background: rgba(var(--lacquer-rgb), 0.95);
-      border-bottom: 2px solid var(--imperial-gold);
+      background: var(--stage-surface);
+      border-bottom: 1px solid var(--stage-border);
+      color: var(--stage-text);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -1190,7 +1228,7 @@
     }
 
     .proj-title {
-      color: var(--imperial-gold);
+      color: var(--accent-bright);
       font-size: var(--fs-sm);
       font-weight: 700;
       letter-spacing: 0.08em;
@@ -1203,7 +1241,7 @@
       width: 9px;
       height: 9px;
       flex-shrink: 0;
-      background: var(--imperial-gold);
+      background: var(--accent-bright);
       transform: rotate(45deg);
     }
 
@@ -1220,8 +1258,8 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      background: var(--bg-panel);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+      background: var(--stage-bg);
+      box-shadow: none;
       padding: 20px;
     }
 
@@ -1235,8 +1273,9 @@
     }
 
     .proj-grid-card {
-      background: linear-gradient(135deg, rgba(var(--red-rgb), 0.9) 0%, rgba(var(--lacquer-rgb), 0.95) 100%);
-      border: 1px solid var(--border-strong);
+      background: var(--stage-surface);
+      border: 1px solid var(--stage-border);
+      color: var(--stage-text);
       border-radius: var(--r-md);
       padding: 10px;
       text-align: center;
@@ -1244,23 +1283,23 @@
     }
     .proj-grid-card .pg-seq {
       font-size: var(--fs-sm);
-      color: var(--text-dim);
+      color: var(--stage-text-2);
       margin-bottom: 2px;
     }
     .proj-grid-card .pg-num {
       font-size: clamp(1.6rem, 3.4vw, 2.4rem);
       font-weight: 800;
-      color: var(--imperial-gold);
+      color: var(--accent-bright);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       letter-spacing: 0.04em;
     }
     .proj-grid-card.claimed {
-      background: rgba(var(--green-rgb), 0.25) !important;
-      border-color: var(--jade-green) !important;
+      background: var(--stage-surface-2) !important;
+      border-color: var(--success) !important;
     }
     .proj-grid-card.claimed .pg-num {
-      color: var(--jade-green) !important;
+      color: var(--success) !important;
     }
 
     .proj-vip-slot {
@@ -1273,8 +1312,7 @@
       align-items: center;
       justify-content: center;
       gap: var(--sp-4);
-      background: rgba(0, 0, 0, 0.9);
-      border: 3px solid var(--imperial-gold);
+      background: var(--stage-surface); border: 2px solid var(--accent-bright); color: var(--stage-text);
       border-radius: var(--r-lg);
       padding: clamp(28px, 4vw, 48px) clamp(32px, 5vw, 60px);
       z-index: 30;
@@ -1290,9 +1328,9 @@
       width: clamp(34px, 4.5vw, 46px);
       height: clamp(34px, 4.5vw, 46px);
       border-radius: 50%;
-      border: 1px solid var(--border-strong);
-      background: rgba(0, 0, 0, 0.6);
-      color: var(--imperial-gold);
+      background: var(--stage-surface-2);
+      border: 1px solid var(--stage-border);
+      color: var(--stage-text);
       font-family: var(--font-sans);
       font-size: clamp(1rem, 2vw, 1.5rem);
       font-weight: 700;
@@ -1302,15 +1340,15 @@
       transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     .proj-vip-close:hover {
-      background: var(--danger-red);
-      border-color: var(--danger-bright);
+      background: var(--danger);
+      border-color: var(--danger-strong);
       color: #fff;
     }
     .proj-vip-slot:not(.rolling) .proj-vip-close {
       display: flex;
     }
     .proj-vip-slot .proj-vip-label {
-      color: var(--imperial-gold);
+      color: var(--accent-bright);
       font-weight: 700;
       font-size: clamp(1.1rem, 2.4vw, 2rem);
       letter-spacing: 0.18em;
@@ -1322,17 +1360,17 @@
       font-weight: 800;
       font-size: clamp(4rem, 14vw, 10rem);
       line-height: 1;
-      color: var(--cinnabar-red);
-      background: var(--paper-cream);
-      border: 3px solid var(--imperial-gold);
+      color: var(--accent);
+      background: var(--surface-1);
+      border: 2px solid var(--accent);
       border-radius: var(--r-lg);
       padding: 16px 38px;
       min-width: 320px;
       text-align: center;
     }
     .proj-vip-slot.rolling .proj-vip-num {
-      color: var(--imperial-gold);
-      border-color: var(--jade-green);
+      color: var(--accent);
+      border-color: var(--success);
       animation: vipSlotPulse 0.4s ease infinite alternate;
     }
 
@@ -1340,14 +1378,12 @@
       display: none;
       align-items: center;
       gap: 6px;
-      background: #000;
-      border: 1px solid var(--border-strong);
-      border-radius: var(--r-pill);
+      background: var(--stage-surface); border: 1px solid var(--stage-border); border-radius: var(--r-pill);
       padding: 8px 16px;
       white-space: nowrap;
     }
     .proj-timer-chip .proj-timer-digits-inline {
-      color: var(--imperial-gold);
+      color: var(--accent-bright);
       font-weight: 800;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
@@ -1356,12 +1392,12 @@
       line-height: 1;
     }
     .proj-timer-sep {
-      color: rgba(var(--gold-rgb), 0.5);
+      color: rgba(var(--accent-bright-rgb), 0.5);
       font-weight: 700;
       margin: 0 2px;
     }
     .proj-timer-chip .proj-timer-digits-inline.timeout {
-      color: var(--danger-bright);
+      color: var(--danger-strong);
       animation: timerPulse 0.5s ease infinite alternate;
     }
 
@@ -1374,17 +1410,15 @@
       padding: 5px 10px;
       font-size: var(--fs-xs);
       font-weight: 700;
-      background: var(--imperial-gold);
-      color: var(--text-on-gold);
+      background: var(--accent-bright);
+      color: var(--stage-bg);
       border: 1px solid transparent;
       border-radius: var(--r-pill);
       cursor: pointer;
       min-width: 34px;
       transition: background 0.15s, color 0.15s;
     }
-    .proj-timer-btn-mini:hover {
-      background: #fff;
-      color: #000;
+    .proj-timer-btn-mini:hover { background: var(--stage-surface-2); color: var(--stage-text);
     }
     .mini-ico {
       display: block;
@@ -1398,7 +1432,7 @@
       width: 100%;
       display: flex;
       align-items: center;
-      background: #000;
+      background: var(--stage-surface);
       overflow: hidden;
       position: relative;
     }
@@ -1408,11 +1442,12 @@
       position: fixed;
       inset: 0;
       z-index: 20000;
-      background: #000;
+      background: var(--stage-bg);
+  color: var(--stage-text);
     }
     #pipBarView .pip-single-row-body {
-      border-top: 2px solid var(--imperial-gold);
-      border-bottom: 2px solid var(--imperial-gold);
+      border-top: 2px solid var(--accent-bright);
+      border-bottom: 2px solid var(--accent-bright);
       box-sizing: border-box;
     }
 
@@ -1425,9 +1460,7 @@
       will-change: transform;
     }
 
-    .proj-card {
-      background: #000;
-      border: 1px solid var(--border-strong);
+    .proj-card { background: var(--stage-surface); border: 1px solid var(--stage-border);
       border-radius: var(--r-sm);
       padding: 4px 12px;
       display: inline-flex;
@@ -1437,13 +1470,13 @@
       white-space: nowrap;
     }
     .proj-card .p-seq {
-      color: var(--imperial-gold);
+      color: var(--accent-bright);
       font-size: calc(var(--strip-font, 1.35rem) * 0.62);
       font-weight: 600;
       white-space: nowrap;
     }
     .proj-card .p-num {
-      color: var(--imperial-gold);
+      color: var(--accent-bright);
       font-size: calc(var(--strip-font, 1.35rem) * 1.35);
       font-weight: 800;
       font-family: var(--font-num);
@@ -1473,7 +1506,7 @@
       flex-direction: column;
       align-items: stretch;
       gap: 8px;
-      background: rgba(var(--lacquer-rgb), 0.55);
+      background: rgba(var(--surface-rgb), 0.55);
       border: 1px solid var(--border-subtle);
       border-radius: var(--r-md);
       padding: 10px;
@@ -1485,8 +1518,8 @@
       border-color: var(--border-strong);
     }
     .theme-swatch.active {
-      border-color: var(--imperial-gold);
-      box-shadow: 0 0 0 1px var(--imperial-gold), var(--sh-2);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent), var(--sh-2);
     }
 
     .theme-swatch-bars {
@@ -1502,7 +1535,7 @@
     .theme-swatch-name {
       font-size: var(--fs-xs);
       font-weight: 900;
-      color: var(--text-soft);
+      color: var(--text-2);
       text-align: center;
       white-space: nowrap;
     }
@@ -1517,23 +1550,34 @@
   <div class="modal-backdrop" id="syncModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--teal-sync);"><span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
-        <button class="icon-btn" onclick="toggleSyncModal(false)">✕</button>
+        <h3 style="color:var(--info);"><span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
+        <button class="icon-btn" onclick="toggleSyncModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
-      <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
-        <div style="background:rgba(255,255,255,0.05); padding:12px; border-radius:8px;">
-          <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
+      <div class="share-stack">
+        <div class="status-block">
+          <div class="status-block-title" data-i18n="syncStatusLabel">连接状态:</div>
           <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
-          <div id="modeIndicatorTag" style="margin-top:6px; font-weight:bold; color:var(--imperial-gold);"></div>
+          <div id="modeIndicatorTag" class="mode-tag"></div>
           <button class="icon-btn btn-projector" id="goHostBtn" onclick="promptBecomeHost()" data-i18n="btnGoHost" style="display:none; margin-top:10px; width:100%;">进入主控台 (需要主控PIN)</button>
         </div>
 
-        <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
-          <div style="color:var(--imperial-gold); font-weight:bold; margin-bottom:8px;" data-i18n="scanQr">副机 / 显示端扫码一键加入:</div>
-          <div id="qrcode" style="background:#fff; padding:8px; border-radius:6px;"></div>
-          <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制显示端链接分享给副机:</div>
-          <input type="text" id="shareLinkInput" readonly style="width:100%; margin-top:4px; padding:6px; background:var(--deep-lacquer); border:1px solid var(--imperial-gold); color:var(--text-soft); font-size:0.75rem;">
-          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">复制显示端链接</button>
+        <div class="share-block">
+          <div class="share-block-title" data-i18n="scanQr">副机 / 显示端扫码一键加入:</div>
+          <div id="qrcode" class="qr-box"></div>
+          <div class="share-hint" data-i18n="copyLinkText">或复制显示端链接分享给副机:</div>
+          <input type="text" id="shareLinkInput" class="share-input" readonly>
+          <button class="icon-btn" onclick="copyShareLink()" data-i18n="btnCopyLink">复制显示端链接</button>
+        </div>
+
+        <div class="share-block">
+          <div class="share-block-title" style="color:var(--info);" data-i18n="scanQrAudience">观众查询端扫码 (只读，不能领奖):</div>
+          <div id="audienceQrcode" class="qr-box"></div>
+          <div class="share-hint" data-i18n="copyLinkAudience">或复制查询端链接给现场观众:</div>
+          <input type="text" id="audienceLinkInput" class="share-input" readonly>
+          <div style="display:flex; gap:8px; margin-top:6px; width:100%;">
+            <button class="icon-btn" style="flex:1;" onclick="copyAudienceLink()" data-i18n="btnCopyAudienceLink">复制查询端链接</button>
+            <button class="icon-btn" style="flex:1;" onclick="openAudienceTab()" data-i18n="btnOpenAudience">打开查询端</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1543,10 +1587,10 @@
   <div class="modal-backdrop" id="themeModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);"><span data-i18n="themeTitle">节日主题配色 / Festival Theme</span></h3>
-        <button class="icon-btn" onclick="toggleThemeModal(false)">✕</button>
+        <h3 style="color:var(--accent);"><span data-i18n="themeTitle">节日主题配色 / Festival Theme</span></h3>
+        <button class="icon-btn" onclick="toggleThemeModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
-      <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:12px;" data-i18n="themeDesc">
+      <p style="font-size:0.85rem; color:var(--text-2); margin-bottom:12px;" data-i18n="themeDesc">
         选择一套灯会主题配色，将同步应用到主控台、大屏投影、桌面悬浮条与副机显示端:
       </p>
       <div class="theme-grid" id="themeGrid"></div>
@@ -1558,11 +1602,11 @@
     <div class="spotlight-card" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">恭喜中奖</div>
       <div class="spotlight-num" id="spotlightNum">0000</div>
-      <div style="font-size:1.15rem; color:var(--text-soft);" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
+      <div style="font-size:1.15rem; color:var(--text-2);" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--jade-green); color:#fff; border-color:var(--jade-green);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--success); color:#fff; border-color:var(--success);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>领奖核销 (Claim)</span></button>
         <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger-red); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
@@ -1571,7 +1615,7 @@
   <!-- COUNTDOWN TIMER FLOATING BADGE -->
   <div class="timer-overlay" id="timerOverlay">
     <span data-i18n="timerCalling">领奖呼叫:</span>
-    <span id="timerSeconds" style="font-size:1.8rem; font-family: var(--font-num); color:var(--imperial-gold);">10</span> <span data-i18n="secondsUnit">秒</span>
+    <span id="timerSeconds" style="font-size:1.8rem; font-family: var(--font-num); color:var(--accent);">10</span> <span data-i18n="secondsUnit">秒</span>
     <button class="btn-timer-redraw" id="timerRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">立即作废重抽</button>
     <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()">取消</button>
   </div>
@@ -1580,8 +1624,8 @@
   <div class="modal-backdrop" id="recycleModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--jade-green);"><span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
-        <button class="icon-btn" onclick="toggleRecycleModal(false)">✕</button>
+        <h3 style="color:var(--success);"><span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
+        <button class="icon-btn" onclick="toggleRecycleModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
       <p style="font-size:0.85rem; color:#ccc; margin-bottom:12px;" data-i18n="recycleDesc">
         所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：
@@ -1596,8 +1640,8 @@
   <div class="modal-backdrop" id="auditModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);"><span data-i18n="auditTitle">无人认领 / 作废重抽审核记录</span></h3>
-        <button class="icon-btn" onclick="toggleAuditModal(false)">✕</button>
+        <h3 style="color:var(--accent);"><span data-i18n="auditTitle">无人认领 / 作废重抽审核记录</span></h3>
+        <button class="icon-btn" onclick="toggleAuditModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
       <div class="modal-list" id="auditList">
         <div style="text-align:center; color:#888; padding:30px;" data-i18n="auditEmpty">暂无作废或重抽记录</div>
@@ -1609,10 +1653,10 @@
   <div class="modal-backdrop" id="poolModal">
     <div class="modal-box" style="max-width:480px;">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);"><span data-i18n="poolRangeTitle">自定义号池范围</span></h3>
-        <button class="icon-btn" onclick="togglePoolModal(false)">✕</button>
+        <h3 style="color:var(--accent);"><span data-i18n="poolRangeTitle">自定义号池范围</span></h3>
+        <button class="icon-btn" onclick="togglePoolModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
-      <p style="color:var(--text-body); font-size:0.85rem; margin:0 0 14px;" data-i18n="poolRangeDesc">
+      <p style="color:var(--text); font-size:0.85rem; margin:0 0 14px;" data-i18n="poolRangeDesc">
         设定参与抽奖的票号区间，系统会自动计算号池总数并防止任何号码重复。
       </p>
 
@@ -1649,14 +1693,14 @@
   <div class="modal-backdrop" id="crisisModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);"><span data-i18n="crisisTitle">应急危机处置工具箱</span></h3>
-        <button class="icon-btn" onclick="toggleCrisisModal(false)">✕</button>
+        <h3 style="color:var(--accent);"><span data-i18n="crisisTitle">应急危机处置工具箱</span></h3>
+        <button class="icon-btn" onclick="toggleCrisisModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; padding:6px 0;">
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
           <strong data-i18n="blacklistLabel">临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--bg-input); border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family: var(--font-num);">
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--surface-input); border:1px solid var(--accent); color:#fff; border-radius:4px; font-family: var(--font-num);">
             <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
@@ -1696,6 +1740,7 @@
           <span class="brand-subtitle" id="appSubTitle" contenteditable="true" spellcheck="false" title="点击直接编辑副标题">
             Tanglung Festival Grand Lucky Draw
           </span>
+          <span class="build-stamp" id="buildStamp" title="Build ID &mdash; if this looks out of date, hard-reload the page"></span>
         </div>
       </div>
 
@@ -1730,7 +1775,7 @@
         <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">音效: 开</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
         <button class="icon-btn" onclick="exportCSV()">CSV</button>
-        <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
+        <button class="icon-btn" style="border-color:var(--danger-strong); color:var(--danger-soft);" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
       </div>
     </div>
 
@@ -1752,7 +1797,7 @@
         <div id="batchPanel" class="panel active">
           <button class="action-btn" id="batchDrawBtn" onclick="drawTen()" data-i18n="btnDraw10">摇出 10 位幸运儿</button>
           <div class="batch-grid" id="batchGrid">
-            <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;" data-i18n="batchEmptyHint">
+            <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--accent-strong); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;" data-i18n="batchEmptyHint">
               点击上方按钮同时抽出 10 个幸运号码
             </div>
           </div>
@@ -1762,13 +1807,13 @@
         <div id="vipPanel" class="panel">
           <div class="vip-display" id="vipDisplay">----</div>
           <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()" data-i18n="btnStartRoll">开 始 滚 动</button>
-          <div style="font-size:0.85rem; color:var(--gold-dark); font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
+          <div style="font-size:0.85rem; color:var(--accent-strong); font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
         </div>
 
         <!-- Mode 3: Manual Insertion -->
         <div id="manualPanel" class="panel">
           <div class="manual-card">
-            <h3 style="color:var(--cinnabar-red); letter-spacing:1px; font-size:1.15rem;" data-i18n="manualTitle">无人认领现场录入 / 单号补抽</h3>
+            <h3 style="color:var(--accent); letter-spacing:1px; font-size:1.15rem;" data-i18n="manualTitle">无人认领现场录入 / 单号补抽</h3>
             <p style="font-size:0.85rem; color:#666; text-align:center;" data-i18n="manualDesc">
               严格防重校验：自动剔除已出号码，绝不与任何环节重复
             </p>
@@ -1777,7 +1822,7 @@
               <span style="font-size:0.75rem; color:#888;" data-i18n="manualInputHint">输入 1 至 4 位数字按回车或点确认</span>
             </div>
             <div class="manual-actions">
-              <button class="btn-manual-confirm" id="manualConfirmBtn" onclick="confirmManualEntry()" data-i18n="btnConfirmManual">✓ 确认手动录入</button>
+              <button class="btn-manual-confirm" id="manualConfirmBtn" onclick="confirmManualEntry()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="btnConfirmManual">确认手动录入</span></button>
               <button class="btn-manual-redraw" id="manualRedrawBtn" onclick="drawSingleManual()" data-i18n="btnDrawSingleManual">现场补抽 1 个</button>
             </div>
           </div>
@@ -1785,13 +1830,13 @@
 
         <div class="stage-footer">
           <span data-i18n="stageFooterLeft">中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪</span>
-          <span style="color:var(--gold-dark); font-weight:bold;" data-i18n="stageFooterRight">现场专委会监制</span>
+          <span style="color:var(--accent-strong); font-weight:bold;" data-i18n="stageFooterRight">现场专委会监制</span>
         </div>
       </div>
 
       <!-- 3. RIGHT COLUMN: MASTER BILLBOARD WITH RANGE FILTER -->
       <div class="traditional-frame billboard-column">
-        <div class="column-banner" style="background: linear-gradient(90deg, var(--success-green-dark) 0%, var(--jade-green) 50%, var(--success-green-dark) 100%); color:#fff;">
+        <div class="column-banner" style="background: linear-gradient(90deg, var(--success-strong) 0%, var(--success) 50%, var(--success-strong) 100%); color:#fff;">
           <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
@@ -1802,7 +1847,7 @@
               <option value="ticket" data-i18n="optByTicket">按中奖票号 (Ticket #)</option>
             </select>
             <input type="number" class="filter-input" id="rangeStart" placeholder="1" oninput="applyRangeFilter()">
-            <span style="color:var(--text-soft); font-size:0.8rem;" data-i18n="rangeTo">至</span>
+            <span style="color:var(--text-2); font-size:0.8rem;" data-i18n="rangeTo">至</span>
             <input type="number" class="filter-input" id="rangeEnd" placeholder="70" oninput="applyRangeFilter()">
             <button class="filter-btn" onclick="clearRangeFilter()" data-i18n="btnFilterAll">全部</button>
             <button class="filter-btn" onclick="exportRangeCSV()" data-i18n="btnExportSegment">导出</button>
@@ -1823,7 +1868,7 @@
         </div>
 
         <div class="billboard-grid" id="billboardGrid">
-          <div style="grid-column:1/-1; text-align:center; color:var(--text-soft); padding-top:40px;" data-i18n="bbEmpty">暂无得奖数据</div>
+          <div style="grid-column:1/-1; text-align:center; color:var(--text-2); padding-top:40px;" data-i18n="bbEmpty">暂无得奖数据</div>
         </div>
       </div>
     </div>
@@ -1859,13 +1904,13 @@
         <button class="icon-btn" id="vipCardBtn" onclick="toggleVipCard()" data-i18n="btnVipCardHide">隐藏贵宾卡</button>
         <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
-        <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
+        <button class="icon-btn" style="border-color:var(--danger-strong); color:var(--danger-soft);" onclick="closeProjectionMode()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg><span data-i18n="btnProjClose">返回</span></button>
       </div>
     </div>
 
     <div class="proj-body" id="projBody">
       <div class="proj-vip-slot" id="projVipSlot" style="display:none;">
-        <button class="proj-vip-close" id="projVipCloseBtn" onclick="closeProjVipSlot()" title="✕" aria-label="Close">✕</button>
+        <button class="proj-vip-close" id="projVipCloseBtn" onclick="closeProjVipSlot()" title="Close" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
         <div class="proj-vip-label" data-i18n="projVipLabel">贵宾大奖 · VIP</div>
         <div class="proj-vip-num" id="projVipNum">----</div>
       </div>
@@ -1885,8 +1930,15 @@
       }
     } catch (e) {}
     let currentLang = 'BC';
-    let currentTheme = 'cinnabar';
+    // Default theme id. Declared here with the other state because currentTheme
+    // initialises from it and const bindings are in the temporal dead zone above.
+    const DEFAULT_THEME_ID = 'indigo';
+    let currentTheme = DEFAULT_THEME_ID;
     let isViewerMode = false;
+    /* Audience mode is a viewer with one difference that matters: guests may
+       look a ticket up and watch the draw, but they can never mark a prize
+       claimed. The staff/display viewer (?viewer=true) keeps its claim button. */
+    let isAudienceMode = false;
     let customMainTitle = null;
     let customSubTitle = null;
 
@@ -1960,6 +2012,7 @@
         leftLabel: "剩余名额",
         navSync: "联机大厅",
         navTheme: "主题 / Theme",
+        themeLabel: "主题",
         themeTitle: "节日主题配色 / Festival Theme",
         themeDesc: "选择一套灯会主题配色，将同步应用到主控台、大屏投影、桌面悬浮条与副机显示端:",
         navSuspenseOn: "隐蔽模式: 开",
@@ -2058,7 +2111,15 @@
         hostPrompt: "请输入主控台访问 PIN（主控电脑专用）",
         hostWrong: "主控 PIN 不正确",
         modeHost: "主控模式 (Master Host - 控制端)",
-        modeViewer: "观众/显示端 (只读显示，支持领奖核销)"
+        modeViewer: "观众/显示端 (只读显示，支持领奖核销)",
+        modeAudience: "观众查询端 (只读，无法领奖核销)",
+        audienceNoClaim: "查询端为只读模式，请由工作人员核销领奖",
+        scanQrAudience: "观众查询端扫码 (只读，不能领奖):",
+        copyLinkAudience: "或复制查询端链接给现场观众:",
+        btnCopyAudienceLink: "复制查询端链接",
+        btnOpenAudience: "打开查询端",
+        audienceLinkCopied: "已复制查询端链接，可直接发给现场观众。",
+        claimVerifiedToast: "已核销领奖",
       },
       BM: {
         brandTitle: "Pesta Tanglung · Cabutan Bertuah",
@@ -2083,6 +2144,7 @@
         leftLabel: "Baki Hadiah",
         navSync: "Sync Bilik",
         navTheme: "Tema / Theme",
+        themeLabel: "Tema",
         themeTitle: "Tema Festival / Festival Theme",
         themeDesc: "Pilih set tema festival tanglung — diselaraskan ke konsol, projektor, bar terapung & penonton:",
         navSuspenseOn: "Mod Rahsia: On",
@@ -2181,7 +2243,15 @@
         hostPrompt: "Masukkan PIN akses konsol utama (khas komputer utama)",
         hostWrong: "PIN konsol utama tidak sah",
         modeHost: "Mod Hos (Konsol Utama)",
-        modeViewer: "Mod Penonton / Papar (baca sahaja, boleh sahkan tuntutan)"
+        modeViewer: "Mod Penonton / Papar (baca sahaja, boleh sahkan tuntutan)",
+        modeAudience: "Mod Semak Penonton (baca sahaja, tidak boleh sahkan tuntutan)",
+        audienceNoClaim: "Mod semak ialah baca sahaja — minta staf mengesahkan pengambilan hadiah",
+        scanQrAudience: "Imbasan kod untuk mod semak penonton (baca sahaja):",
+        copyLinkAudience: "Atau salin pautan semak untuk penonton di lokasi:",
+        btnCopyAudienceLink: "Salin pautan semak",
+        btnOpenAudience: "Buka mod semak",
+        audienceLinkCopied: "Pautan semak disalin — hantar terus kepada penonton.",
+        claimVerifiedToast: "Pengambilan hadiah disahkan",
       },
       BI: {
         brandTitle: "Lantern Festival · Lucky Draw",
@@ -2206,6 +2276,7 @@
         leftLabel: "Prizes Left",
         navSync: "Cloud Sync",
         navTheme: "Theme",
+        themeLabel: "Theme",
         themeTitle: "Festival Theme / Festival Theme",
         themeDesc: "Pick a lantern-festival color scheme — synced to console, projection, floating bar & remote viewers:",
         navSuspenseOn: "Conceal Mode: On",
@@ -2304,355 +2375,244 @@
         hostPrompt: "Enter host console access PIN (main computer only)",
         hostWrong: "Invalid host console PIN",
         modeHost: "Master Host (control console)",
-        modeViewer: "Viewer / Display (read-only, claim verification enabled)"
+        modeViewer: "Viewer / Display (read-only, claim verification enabled)",
+        modeAudience: "Audience check (read-only, cannot claim prizes)",
+        audienceNoClaim: "This audience view is read-only — ask a staff member to verify your prize",
+        scanQrAudience: "Audience check QR (read-only, cannot claim):",
+        copyLinkAudience: "Or copy the audience link to share with guests:",
+        btnCopyAudienceLink: "Copy audience link",
+        btnOpenAudience: "Open audience view",
+        audienceLinkCopied: "Audience link copied — share it with your guests.",
+        claimVerifiedToast: "Prize claim verified",
       }
     };
 
+    /* A theme is one accent colour. Everything else -- surfaces, borders,
+       text, status colours -- is shared by the neutral scale in :root, and
+       accent tints are derived with color-mix. So a palette is a single hex
+       value and cannot drift out of contrast. The LEGACY map keeps anyone
+       who already saved one of the old 20 ids on a working theme. */
     const THEMES = {
-      cinnabar: {
-        name: "硃砂金 · Cinnabar",
+      indigo: {
+        name: "靛藍 · Indigo",
         colors: {
-          '--cinnabar-red': '#981216', '--deep-lacquer': '#1c0204', '--imperial-gold': '#f4c430',
-          '--gold-dark': '#b8860b', '--paper-cream': '#fffaf0', '--jade-green': '#2ecc71',
-          '--bg-flame': '#7b0e12', '--bg-flame-mid': '#350406',
-          '--text-soft': '#ffdca8', '--text-faint': '#fce8cc', '--text-muted': '#e0d0b0',
-          '--text-on-paper': '#2b0204', '--text-on-gold': '#3b0306',
-          '--bg-panel': '#190204', '--bg-toolbar': '#140103', '--bg-filter-panel': '#100102', '--bg-input': '#250204',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff4d4f', '--danger-soft': '#ff9b90', '--red-deep': '#7a0e12',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1f7a4d', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#0984e3', '--teal-sync': '#00cec9',
-          '--red-rgb': '152, 18, 22', '--gold-rgb': '244, 196, 48', '--gold-dark-rgb': '184, 134, 11',
-          '--lacquer-rgb': '20, 1, 3', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
+          '--accent': '#4f46e5', '--accent-rgb': '79, 70, 229',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#443cc5', '--accent-strong-rgb': '68, 60, 197',
+          '--accent-deep': '#3a34a9',
+          '--accent-bright': '#8b85ee', '--accent-bright-rgb': '139, 133, 238'
         }
       },
-      festivalRed: {
-        name: "大紅燈籠 · Festive Red",
+      blue: {
+        name: "寶石藍 · Blue",
         colors: {
-          '--cinnabar-red': '#e03a3a', '--deep-lacquer': '#2a0608', '--imperial-gold': '#ffd166',
-          '--gold-dark': '#c98a2d', '--paper-cream': '#fff5e6', '--jade-green': '#2ecc71',
-          '--bg-flame': '#b52430', '--bg-flame-mid': '#54101a',
-          '--text-soft': '#ffd9a3', '--text-faint': '#ffe3c2', '--text-muted': '#f0c9a8',
-          '--text-on-paper': '#4a0a0c', '--text-on-gold': '#4a0a0c',
-          '--bg-panel': '#2d0a0c', '--bg-toolbar': '#240708', '--bg-filter-panel': '#1d0506', '--bg-input': '#40101a',
-          '--danger-red': '#ff5252', '--danger-red-deep': '#c62828', '--danger-bright': '#ff8a80', '--danger-soft': '#ffb6a3', '--red-deep': '#b52430',
-          '--success-green-deep': '#2e9e5b', '--success-green-dark': '#1e6b3a', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#ffa726', '--neutral-grey': '#8a8a8a',
-          '--blue-sync': '#2196f3', '--teal-sync': '#26c6da',
-          '--red-rgb': '224, 58, 58', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '201, 138, 45',
-          '--lacquer-rgb': '42, 10, 8', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 82, 82'
-        }
-      },
-      jade: {
-        name: "翠玉青瓷 · Jade",
-        colors: {
-          '--cinnabar-red': '#1b7f5c', '--deep-lacquer': '#06231a', '--imperial-gold': '#e9b84c',
-          '--gold-dark': '#a98332', '--paper-cream': '#eff6ef', '--jade-green': '#2ecc71',
-          '--bg-flame': '#0c4f38', '--bg-flame-mid': '#0a3325',
-          '--text-soft': '#bfe6d3', '--text-faint': '#cfe8da', '--text-muted': '#a9cdbb',
-          '--text-on-paper': '#173a2c', '--text-on-gold': '#173a2c',
-          '--bg-panel': '#0a2c21', '--bg-toolbar': '#081f18', '--bg-filter-panel': '#061812', '--bg-input': '#123a2e',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff6b5e', '--danger-soft': '#ff9b90', '--red-deep': '#14553f',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#2078c8', '--teal-sync': '#27b9c8',
-          '--red-rgb': '27, 127, 92', '--gold-rgb': '233, 184, 76', '--gold-dark-rgb': '169, 131, 50',
-          '--lacquer-rgb': '8, 30, 22', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      midnight: {
-        name: "深海夜燈 · Midnight",
-        colors: {
-          '--cinnabar-red': '#5a4bcf', '--deep-lacquer': '#131030', '--imperial-gold': '#ffd166',
-          '--gold-dark': '#c9972d', '--paper-cream': '#f0edff', '--jade-green': '#2ecc71',
-          '--bg-flame': '#2b245e', '--bg-flame-mid': '#171238',
-          '--text-soft': '#cdc5ff', '--text-faint': '#ddd6ff', '--text-muted': '#b3a9e0',
-          '--text-on-paper': '#2b2870', '--text-on-gold': '#2b2870',
-          '--bg-panel': '#1a1638', '--bg-toolbar': '#141130', '--bg-filter-panel': '#0f0d24', '--bg-input': '#241e4a',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff7768', '--danger-soft': '#ff9b90', '--red-deep': '#463a9e',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#4d6bff', '--teal-sync': '#42d5f0',
-          '--red-rgb': '90, 75, 207', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '201, 151, 45',
-          '--lacquer-rgb': '20, 16, 48', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      noir: {
-        name: "黑金夜宴 · Black & Gold",
-        colors: {
-          '--cinnabar-red': '#c98a2d', '--deep-lacquer': '#101010', '--imperial-gold': '#ffd34d',
-          '--gold-dark': '#c9973d', '--paper-cream': '#fff8e4', '--jade-green': '#2ecc71',
-          '--bg-flame': '#2a2415', '--bg-flame-mid': '#151210',
-          '--text-soft': '#ffe4ae', '--text-faint': '#ffeccc', '--text-muted': '#d8c6a4',
-          '--text-on-paper': '#3a2a08', '--text-on-gold': '#3a2a08',
-          '--bg-panel': '#1c1a16', '--bg-toolbar': '#131210', '--bg-filter-panel': '#0e0d0b', '--bg-input': '#2a2415',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff6b5e', '--danger-soft': '#ff9b90', '--red-deep': '#88601d',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#c9a227', '--teal-sync': '#e6c34d',
-          '--red-rgb': '201, 138, 45', '--gold-rgb': '255, 211, 77', '--gold-dark-rgb': '201, 151, 61',
-          '--lacquer-rgb': '16, 16, 16', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      plum: {
-        name: "粉梅燈海 · Plum",
-        colors: {
-          '--cinnabar-red': '#c2315f', '--deep-lacquer': '#2a0d1a', '--imperial-gold': '#ffd166',
-          '--gold-dark': '#c9972d', '--paper-cream': '#fff0f4', '--jade-green': '#2ecc71',
-          '--bg-flame': '#7c1f40', '--bg-flame-mid': '#3b1222',
-          '--text-soft': '#ffd9e3', '--text-faint': '#ffe3ea', '--text-muted': '#e0b9c5',
-          '--text-on-paper': '#5a1030', '--text-on-gold': '#5a1030',
-          '--bg-panel': '#2f1420', '--bg-toolbar': '#270e19', '--bg-filter-panel': '#1d0a12', '--bg-input': '#421c2c',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff8373', '--danger-soft': '#ff9b90', '--red-deep': '#9b1f45',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#e573a8', '--teal-sync': '#f2a5c5',
-          '--red-rgb': '194, 49, 95', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '201, 151, 45',
-          '--lacquer-rgb': '42, 13, 26', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      teal: {
-        name: "碧水青燈 · Teal",
-        colors: {
-          '--cinnabar-red': '#0a8f86', '--deep-lacquer': '#03201f', '--imperial-gold': '#ffca5e',
-          '--gold-dark': '#c99a2e', '--paper-cream': '#eafffb', '--jade-green': '#2ecc71',
-          '--bg-flame': '#0c5550', '--bg-flame-mid': '#072f2d',
-          '--text-soft': '#bfe9e5', '--text-faint': '#d0efec', '--text-muted': '#a9d5d1',
-          '--text-on-paper': '#0a3a37', '--text-on-gold': '#0a3a37',
-          '--bg-panel': '#082b28', '--bg-toolbar': '#062220', '--bg-filter-panel': '#041917', '--bg-input': '#0f3e3b',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff7768', '--danger-soft': '#ff9b90', '--red-deep': '#07665f',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#12b8b0', '--teal-sync': '#3fe0d6',
-          '--red-rgb': '10, 143, 134', '--gold-rgb': '255, 202, 94', '--gold-dark-rgb': '201, 154, 46',
-          '--lacquer-rgb': '4, 30, 28', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      amethyst: {
-        name: "紫月燈海 · Amethyst",
-        colors: {
-          '--cinnabar-red': '#9c37d6', '--deep-lacquer': '#200b32', '--imperial-gold': '#ffd166',
-          '--gold-dark': '#cf9c31', '--paper-cream': '#f9efff', '--jade-green': '#2ecc71',
-          '--bg-flame': '#4d1b66', '--bg-flame-mid': '#2a1037',
-          '--text-soft': '#dbc4ff', '--text-faint': '#e7d5ff', '--text-muted': '#bba5dd',
-          '--text-on-paper': '#410f5e', '--text-on-gold': '#410f5e',
-          '--bg-panel': '#2a1238', '--bg-toolbar': '#220d2e', '--bg-filter-panel': '#180922', '--bg-input': '#3a1d4f',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff8373', '--danger-soft': '#ff9b90', '--red-deep': '#6f1f9e',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#b06fe0', '--teal-sync': '#d29bf3',
-          '--red-rgb': '156, 55, 214', '--gold-rgb': '255, 209, 102', '--gold-dark-rgb': '207, 156, 49',
-          '--lacquer-rgb': '32, 11, 50', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      ink: {
-        name: "水墨青花 · Ink",
-        colors: {
-          '--cinnabar-red': '#1f5fa8', '--deep-lacquer': '#0d1722', '--imperial-gold': '#e8b640',
-          '--gold-dark': '#b0852a', '--paper-cream': '#f4f8fc', '--jade-green': '#2ecc71',
-          '--bg-flame': '#1d3a5e', '--bg-flame-mid': '#101e30',
-          '--text-soft': '#bcd4ea', '--text-faint': '#cfdff0', '--text-muted': '#a9bed2',
-          '--text-on-paper': '#173a5c', '--text-on-gold': '#173a5c',
-          '--bg-panel': '#15222f', '--bg-toolbar': '#101b26', '--bg-filter-panel': '#0c151f', '--bg-input': '#1b344d',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff7768', '--danger-soft': '#ff9b90', '--red-deep': '#16457f',
-          '--success-green-deep': '#2ea369', '--success-green-dark': '#1f7a4d', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e67e22', '--neutral-grey': '#7f8c8d',
-          '--blue-sync': '#3a7fc9', '--teal-sync': '#5aa7d9',
-          '--red-rgb': '31, 95, 168', '--gold-rgb': '232, 182, 64', '--gold-dark-rgb': '176, 133, 42',
-          '--lacquer-rgb': '14, 23, 34', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      ember: {
-        name: "燭火暖橘 · Ember",
-        colors: {
-          '--cinnabar-red': '#e05a17', '--deep-lacquer': '#1d0f05', '--imperial-gold': '#ffb74d',
-          '--gold-dark': '#c9822e', '--paper-cream': '#fff4e8', '--jade-green': '#2ecc71',
-          '--bg-flame': '#8a3a10', '--bg-flame-mid': '#3a1a08',
-          '--text-soft': '#ffd9b0', '--text-faint': '#ffe4c7', '--text-muted': '#e0be9a',
-          '--text-on-paper': '#5a2a08', '--text-on-gold': '#5a2a08',
-          '--bg-panel': '#241202', '--bg-toolbar': '#1e0f03', '--bg-filter-panel': '#170c02', '--bg-input': '#3a2410',
-          '--danger-red': '#e74c3c', '--danger-red-deep': '#c0392b', '--danger-bright': '#ff8a66', '--danger-soft': '#ff9b90', '--red-deep': '#a8430f',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#f2994a', '--neutral-grey': '#8a8a8a',
-          '--blue-sync': '#e0893a', '--teal-sync': '#f5a25a',
-          '--red-rgb': '224, 90, 23', '--gold-rgb': '255, 183, 77', '--gold-dark-rgb': '201, 130, 46',
-          '--lacquer-rgb': '30, 15, 6', '--green-rgb': '46, 204, 113', '--danger-rgb': '231, 76, 60'
-        }
-      },
-      peach: {
-        name: "蜜桃粉 · Peach",
-        colors: {
-          '--cinnabar-red': '#e8437c', '--deep-lacquer': '#2a0713', '--imperial-gold': '#f7b267',
-          '--gold-dark': '#c98a5e', '--paper-cream': '#fff3eb', '--jade-green': '#2ecc71',
-          '--bg-flame': '#8a2a4a', '--bg-flame-mid': '#3d1222',
-          '--text-soft': '#ffd3c9', '--text-faint': '#ffe1db', '--text-muted': '#eec3b8',
-          '--text-on-paper': '#4a0a1d', '--text-on-gold': '#4a0a1d',
-          '--bg-panel': '#2d0d16', '--bg-toolbar': '#250a12', '--bg-filter-panel': '#1e080e', '--bg-input': '#4a1a28',
-          '--danger-red': '#ff5c8a', '--danger-red-deep': '#e0456e', '--danger-bright': '#ff8fae', '--danger-soft': '#ffb6c6', '--red-deep': '#b3355c',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#ffa94d', '--neutral-grey': '#9a8a90',
-          '--blue-sync': '#ff7ca3', '--teal-sync': '#26c6da',
-          '--red-rgb': '232, 67, 124', '--gold-rgb': '247, 178, 103', '--gold-dark-rgb': '201, 138, 94',
-          '--lacquer-rgb': '42, 7, 19', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 92, 138'
-        }
-      },
-      roseGold: {
-        name: "玫瑰金 · Rose Gold",
-        colors: {
-          '--cinnabar-red': '#c4757e', '--deep-lacquer': '#1c0710', '--imperial-gold': '#f2cc8f',
-          '--gold-dark': '#bd8b4f', '--paper-cream': '#fdf0f1', '--jade-green': '#2ecc71',
-          '--bg-flame': '#7c3a4d', '--bg-flame-mid': '#33121e',
-          '--text-soft': '#f2c9cf', '--text-faint': '#f7d9de', '--text-muted': '#dbb4bb',
-          '--text-on-paper': '#33101c', '--text-on-gold': '#33101c',
-          '--bg-panel': '#250b14', '--bg-toolbar': '#1e0911', '--bg-filter-panel': '#18070c', '--bg-input': '#43192a',
-          '--danger-red': '#e85d75', '--danger-red-deep': '#c7445c', '--danger-bright': '#ff8fa0', '--danger-soft': '#ffb6c1', '--red-deep': '#8d2f44',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e8a14f', '--neutral-grey': '#9a8d90',
-          '--blue-sync': '#e07b8d', '--teal-sync': '#26c6da',
-          '--red-rgb': '196, 117, 126', '--gold-rgb': '242, 204, 143', '--gold-dark-rgb': '189, 139, 79',
-          '--lacquer-rgb': '28, 7, 16', '--green-rgb': '46, 204, 113', '--danger-rgb': '232, 93, 117'
-        }
-      },
-      sunset: {
-        name: "落日絳橙 · Sunset",
-        colors: {
-          '--cinnabar-red': '#ff5e3a', '--deep-lacquer': '#200709', '--imperial-gold': '#ffbc70',
-          '--gold-dark': '#d08b3a', '--paper-cream': '#fff2e0', '--jade-green': '#2ecc71',
-          '--bg-flame': '#c2410f', '--bg-flame-mid': '#571c07',
-          '--text-soft': '#ffcfa8', '--text-faint': '#ffdcc0', '--text-muted': '#e8b48f',
-          '--text-on-paper': '#521602', '--text-on-gold': '#521602',
-          '--bg-panel': '#2b1205', '--bg-toolbar': '#220e04', '--bg-filter-panel': '#1b0b03', '--bg-input': '#4a2410',
-          '--danger-red': '#ff6b5e', '--danger-red-deep': '#e04a3f', '--danger-bright': '#ff9e8f', '--danger-soft': '#ffc0ae', '--red-deep': '#a03718',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#ffa94d', '--neutral-grey': '#9a8478',
-          '--blue-sync': '#ff7a50', '--teal-sync': '#26c6da',
-          '--red-rgb': '255, 94, 58', '--gold-rgb': '255, 188, 112', '--gold-dark-rgb': '208, 139, 58',
-          '--lacquer-rgb': '32, 7, 9', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 94'
+          '--accent': '#2563eb', '--accent-rgb': '37, 99, 235',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#2055ca', '--accent-strong-rgb': '32, 85, 202',
+          '--accent-deep': '#1b49ae',
+          '--accent-bright': '#5f8df0', '--accent-bright-rgb': '95, 141, 240'
         }
       },
       sky: {
-        name: "青雲霽 · Sky",
+        name: "天藍 · Sky",
         colors: {
-          '--cinnabar-red': '#2f8fd0', '--deep-lacquer': '#081626', '--imperial-gold': '#f4c430',
-          '--gold-dark': '#c9970f', '--paper-cream': '#eef7ff', '--jade-green': '#2ecc71',
-          '--bg-flame': '#1d5d96', '--bg-flame-mid': '#0c2f50',
-          '--text-soft': '#bfe0ff', '--text-faint': '#d2e9ff', '--text-muted': '#a8c6e0',
-          '--text-on-paper': '#0a2e4a', '--text-on-gold': '#0a2e4a',
-          '--bg-panel': '#0d2240', '--bg-toolbar': '#0a1c35', '--bg-filter-panel': '#08182c', '--bg-input': '#1d3f66',
-          '--danger-red': '#ff6b6b', '--danger-red-deep': '#e05555', '--danger-bright': '#ff9e9e', '--danger-soft': '#ffc2c2', '--red-deep': '#1d5d96',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#f0a92e', '--neutral-grey': '#7f96ae',
-          '--blue-sync': '#4da6ff', '--teal-sync': '#2fc3c9',
-          '--red-rgb': '47, 143, 208', '--gold-rgb': '244, 196, 48', '--gold-dark-rgb': '201, 151, 15',
-          '--lacquer-rgb': '8, 22, 38', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 107'
+          '--accent': '#0275b1', '--accent-rgb': '2, 117, 177',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#026498', '--accent-strong-rgb': '2, 100, 152',
+          '--accent-deep': '#015683',
+          '--accent-bright': '#0398e6', '--accent-bright-rgb': '3, 152, 230'
         }
       },
-      mint: {
-        name: "薄荷清 · Mint",
+      cyan: {
+        name: "深青 · Cyan",
         colors: {
-          '--cinnabar-red': '#28b8a8', '--deep-lacquer': '#04211c', '--imperial-gold': '#e8c54b',
-          '--gold-dark': '#b08c1e', '--paper-cream': '#f0fbf4', '--jade-green': '#2ecc71',
-          '--bg-flame': '#0e7a66', '--bg-flame-mid': '#063b31',
-          '--text-soft': '#bff3e0', '--text-faint': '#d5f7e9', '--text-muted': '#a6dcc9',
-          '--text-on-paper': '#05311f', '--text-on-gold': '#05311f',
-          '--bg-panel': '#0c2e24', '--bg-toolbar': '#09261e', '--bg-filter-panel': '#071f18', '--bg-input': '#1a4a3a',
-          '--danger-red': '#ff6b6b', '--danger-red-deep': '#e05555', '--danger-bright': '#ff9e9e', '--danger-soft': '#ffc2c2', '--red-deep': '#0e7a66',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#f0b429', '--neutral-grey': '#7fa596',
-          '--blue-sync': '#3fc1c1', '--teal-sync': '#2fceb2',
-          '--red-rgb': '40, 184, 168', '--gold-rgb': '232, 197, 75', '--gold-dark-rgb': '176, 140, 30',
-          '--lacquer-rgb': '4, 33, 28', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 107'
+          '--accent': '#0e7490', '--accent-rgb': '14, 116, 144',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#0c647c', '--accent-strong-rgb': '12, 100, 124',
+          '--accent-deep': '#0a566b',
+          '--accent-bright': '#139dc3', '--accent-bright-rgb': '19, 157, 195'
         }
       },
-      lilac: {
-        name: "丁香紫 · Lilac",
+      teal: {
+        name: "松綠 · Teal",
         colors: {
-          '--cinnabar-red': '#8e5bd0', '--deep-lacquer': '#130625', '--imperial-gold': '#f2c94c',
-          '--gold-dark': '#b78e14', '--paper-cream': '#f7f1ff', '--jade-green': '#2ecc71',
-          '--bg-flame': '#5c2f9e', '--bg-flame-mid': '#2a1448',
-          '--text-soft': '#dcc9ff', '--text-faint': '#e6d6ff', '--text-muted': '#bfa8e8',
-          '--text-on-paper': '#2c0e4e', '--text-on-gold': '#2c0e4e',
-          '--bg-panel': '#1e0d38', '--bg-toolbar': '#180a2f', '--bg-filter-panel': '#130826', '--bg-input': '#3c1f66',
-          '--danger-red': '#ff6b9d', '--danger-red-deep': '#e04a7a', '--danger-bright': '#ff9ec2', '--danger-soft': '#ffc2da', '--red-deep': '#5c2f9e',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#f0a92e', '--neutral-grey': '#988aa8',
-          '--blue-sync': '#a06ee8', '--teal-sync': '#2fceb2',
-          '--red-rgb': '142, 91, 208', '--gold-rgb': '242, 201, 76', '--gold-dark-rgb': '183, 142, 20',
-          '--lacquer-rgb': '19, 6, 37', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 157'
+          '--accent': '#0f766e', '--accent-rgb': '15, 118, 110',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#0d655f', '--accent-strong-rgb': '13, 101, 95',
+          '--accent-deep': '#0b5751',
+          '--accent-bright': '#14a196', '--accent-bright-rgb': '20, 161, 150'
         }
       },
-      wine: {
-        name: "酒韻釀紅 · Wine",
+      emerald: {
+        name: "翡翠 · Emerald",
         colors: {
-          '--cinnabar-red': '#a61b3a', '--deep-lacquer': '#1a0208', '--imperial-gold': '#d4af6a',
-          '--gold-dark': '#a1833f', '--paper-cream': '#fdf1ec', '--jade-green': '#2ecc71',
-          '--bg-flame': '#74203a', '--bg-flame-mid': '#2e0b1a',
-          '--text-soft': '#f0c0c9', '--text-faint': '#f5d3da', '--text-muted': '#d3a5af',
-          '--text-on-paper': '#3d0716', '--text-on-gold': '#3d0716',
-          '--bg-panel': '#26060f', '--bg-toolbar': '#1f050c', '--bg-filter-panel': '#19030a', '--bg-input': '#4a1528',
-          '--danger-red': '#e63956', '--danger-red-deep': '#cc2f48', '--danger-bright': '#ff7490', '--danger-soft': '#ffadbd', '--red-deep': '#74203a',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#c98f3e', '--neutral-grey': '#8a7a80',
-          '--blue-sync': '#d46a80', '--teal-sync': '#26c6da',
-          '--red-rgb': '166, 27, 58', '--gold-rgb': '212, 175, 106', '--gold-dark-rgb': '161, 131, 63',
-          '--lacquer-rgb': '26, 2, 8', '--green-rgb': '46, 204, 113', '--danger-rgb': '230, 57, 86'
+          '--accent': '#047857', '--accent-rgb': '4, 120, 87',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#03674b', '--accent-strong-rgb': '3, 103, 75',
+          '--accent-deep': '#035940',
+          '--accent-bright': '#05a477', '--accent-bright-rgb': '5, 164, 119'
         }
       },
-      cobalt: {
-        name: "寶藍鎏金 · Cobalt",
+      green: {
+        name: "草綠 · Green",
         colors: {
-          '--cinnabar-red': '#2743e0', '--deep-lacquer': '#06071f', '--imperial-gold': '#f2b705',
-          '--gold-dark': '#b58a00', '--paper-cream': '#f2f3ff', '--jade-green': '#2ecc71',
-          '--bg-flame': '#1a2bb0', '--bg-flame-mid': '#0c155e',
-          '--text-soft': '#ccd6ff', '--text-faint': '#dce3ff', '--text-muted': '#aeb8e8',
-          '--text-on-paper': '#0d1440', '--text-on-gold': '#0d1440',
-          '--bg-panel': '#101640', '--bg-toolbar': '#0d1238', '--bg-filter-panel': '#0a0f2c', '--bg-input': '#1d2a6e',
-          '--danger-red': '#ff5d5d', '--danger-red-deep': '#e04343', '--danger-bright': '#ff9a9a', '--danger-soft': '#ffc4c4', '--red-deep': '#1a2bb0',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#eec93e', '--neutral-grey': '#8a90b0',
-          '--blue-sync': '#4da6ff', '--teal-sync': '#2fc3c9',
-          '--red-rgb': '39, 67, 224', '--gold-rgb': '242, 183, 5', '--gold-dark-rgb': '181, 138, 0',
-          '--lacquer-rgb': '6, 7, 31', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 93, 93'
+          '--accent': '#157f3d', '--accent-rgb': '21, 127, 61',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#126e34', '--accent-strong-rgb': '18, 110, 52',
+          '--accent-deep': '#0f5e2d',
+          '--accent-bright': '#1ba74f', '--accent-bright-rgb': '27, 167, 79'
         }
       },
-      aurora: {
-        name: "極光碧青 · Aurora",
+      lime: {
+        name: "橄欖 · Olive",
         colors: {
-          '--cinnabar-red': '#00c89b', '--deep-lacquer': '#04201a', '--imperial-gold': '#e8d44d',
-          '--gold-dark': '#a39320', '--paper-cream': '#effbf7', '--jade-green': '#2ecc71',
-          '--bg-flame': '#0b8d74', '--bg-flame-mid': '#053a2e',
-          '--text-soft': '#bfffe8', '--text-faint': '#d6fff1', '--text-muted': '#a4e0cf',
-          '--text-on-paper': '#05331f', '--text-on-gold': '#05331f',
-          '--bg-panel': '#0d3027', '--bg-toolbar': '#0a2821', '--bg-filter-panel': '#08211a', '--bg-input': '#1c4d3f',
-          '--danger-red': '#ff6b7a', '--danger-red-deep': '#e04a5c', '--danger-bright': '#ff9eaa', '--danger-soft': '#ffc4cd', '--red-deep': '#0b8d74',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#e8b93e', '--neutral-grey': '#7fa59c',
-          '--blue-sync': '#3fc1c1', '--teal-sync': '#2fceb2',
-          '--red-rgb': '0, 200, 155', '--gold-rgb': '232, 212, 77', '--gold-dark-rgb': '163, 147, 32',
-          '--lacquer-rgb': '4, 32, 26', '--green-rgb': '46, 204, 113', '--danger-rgb': '255, 107, 122'
+          '--accent': '#4d7b0f', '--accent-rgb': '77, 123, 15',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#426a0d', '--accent-strong-rgb': '66, 106, 13',
+          '--accent-deep': '#395b0b',
+          '--accent-bright': '#63a013', '--accent-bright-rgb': '99, 160, 19'
         }
       },
-      sand: {
-        name: "沙金米白 · Sand",
+      amber: {
+        name: "琥珀 · Amber",
         colors: {
-          '--cinnabar-red': '#c8862e', '--deep-lacquer': '#231407', '--imperial-gold': '#e6bd62',
-          '--gold-dark': '#b08a2e', '--paper-cream': '#fbf3e2', '--jade-green': '#2ecc71',
-          '--bg-flame': '#a3712c', '--bg-flame-mid': '#452d0e',
-          '--text-soft': '#f0d0a1', '--text-faint': '#f5ddb8', '--text-muted': '#d4b284',
-          '--text-on-paper': '#4a2a08', '--text-on-gold': '#4a2a08',
-          '--bg-panel': '#33210c', '--bg-toolbar': '#2b1b0a', '--bg-filter-panel': '#231708', '--bg-input': '#4d3315',
-          '--danger-red': '#e0713a', '--danger-red-deep': '#c6532a', '--danger-bright': '#ffa06a', '--danger-soft': '#ffc6a0', '--red-deep': '#8a5a22',
-          '--success-green-deep': '#27ae60', '--success-green-dark': '#1c7a46', '--success-soft': '#a8f0c3',
-          '--wait-amber': '#d9a441', '--neutral-grey': '#9a8c74',
-          '--blue-sync': '#e09754', '--teal-sync': '#5aa08a',
-          '--red-rgb': '200, 134, 46', '--gold-rgb': '230, 189, 98', '--gold-dark-rgb': '176, 138, 46',
-          '--lacquer-rgb': '35, 20, 7', '--green-rgb': '46, 204, 113', '--danger-rgb': '224, 113, 58'
+          '--accent': '#b45309', '--accent-rgb': '180, 83, 9',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#9b4708', '--accent-strong-rgb': '155, 71, 8',
+          '--accent-deep': '#853d07',
+          '--accent-bright': '#e96c0c', '--accent-bright-rgb': '233, 108, 12'
         }
-      }
+      },
+      orange: {
+        name: "暖橙 · Orange",
+        colors: {
+          '--accent': '#c2410c', '--accent-rgb': '194, 65, 12',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#a7380a', '--accent-strong-rgb': '167, 56, 10',
+          '--accent-deep': '#903009',
+          '--accent-bright': '#f26329', '--accent-bright-rgb': '242, 99, 41'
+        }
+      },
+      red: {
+        name: "正紅 · Red",
+        colors: {
+          '--accent': '#d72525', '--accent-rgb': '215, 37, 37',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#b82020', '--accent-strong-rgb': '184, 32, 32',
+          '--accent-deep': '#9f1b1b',
+          '--accent-bright': '#e56a6a', '--accent-bright-rgb': '229, 106, 106'
+        }
+      },
+      rose: {
+        name: "薔薇 · Rose",
+        colors: {
+          '--accent': '#d81c45', '--accent-rgb': '216, 28, 69',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#ba183b', '--accent-strong-rgb': '186, 24, 59',
+          '--accent-deep': '#a01533',
+          '--accent-bright': '#eb6280', '--accent-bright-rgb': '235, 98, 128'
+        }
+      },
+      pink: {
+        name: "桃紅 · Pink",
+        colors: {
+          '--accent': '#be185d', '--accent-rgb': '190, 24, 93',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#a31550', '--accent-strong-rgb': '163, 21, 80',
+          '--accent-deep': '#8d1245',
+          '--accent-bright': '#eb5e99', '--accent-bright-rgb': '235, 94, 153'
+        }
+      },
+      fuchsia: {
+        name: "洋紅 · Fuchsia",
+        colors: {
+          '--accent': '#a21caf', '--accent-rgb': '162, 28, 175',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#8b1897', '--accent-strong-rgb': '139, 24, 151',
+          '--accent-deep': '#781582',
+          '--accent-bright': '#d95be5', '--accent-bright-rgb': '217, 91, 229'
+        }
+      },
+      purple: {
+        name: "葡萄 · Purple",
+        colors: {
+          '--accent': '#9333ea', '--accent-rgb': '147, 51, 234',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#7e2cc9', '--accent-strong-rgb': '126, 44, 201',
+          '--accent-deep': '#6d26ad',
+          '--accent-bright': '#b471f0', '--accent-bright-rgb': '180, 113, 240'
+        }
+      },
+      violet: {
+        name: "紫羅蘭 · Violet",
+        colors: {
+          '--accent': '#6d28d9', '--accent-rgb': '109, 40, 217',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#5e22bb', '--accent-strong-rgb': '94, 34, 187',
+          '--accent-deep': '#511ea1',
+          '--accent-bright': '#a57ae8', '--accent-bright-rgb': '165, 122, 232'
+        }
+      },
+      slate: {
+        name: "石板 · Slate",
+        colors: {
+          '--accent': '#475569', '--accent-rgb': '71, 85, 105',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#3d495a', '--accent-strong-rgb': '61, 73, 90',
+          '--accent-deep': '#353f4e',
+          '--accent-bright': '#8192aa', '--accent-bright-rgb': '129, 146, 170'
+        }
+      },
+      graphite: {
+        name: "石墨 · Graphite",
+        colors: {
+          '--accent': '#3f3f46', '--accent-rgb': '63, 63, 70',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#36363c', '--accent-strong-rgb': '54, 54, 60',
+          '--accent-deep': '#2f2f34',
+          '--accent-bright': '#90909b', '--accent-bright-rgb': '144, 144, 155'
+        }
+      },
+      steel: {
+        name: "鋼青 · Steel",
+        colors: {
+          '--accent': '#617086', '--accent-rgb': '97, 112, 134',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#536073', '--accent-strong-rgb': '83, 96, 115',
+          '--accent-deep': '#475363',
+          '--accent-bright': '#8391a6', '--accent-bright-rgb': '131, 145, 166'
+        }
+      },
+      mocha: {
+        name: "可可 · Mocha",
+        colors: {
+          '--accent': '#78350f', '--accent-rgb': '120, 53, 15',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#672e0d', '--accent-strong-rgb': '103, 46, 13',
+          '--accent-deep': '#59270b',
+          '--accent-bright': '#e46d2a', '--accent-bright-rgb': '228, 109, 42'
+        }
+      },
     };
 
+    const LEGACY_THEME_ALIAS = {
+      cinnabar: 'red', festivalRed: 'rose', jade: 'emerald', midnight: 'indigo',
+      noir: 'graphite', plum: 'purple', teal: 'teal', amethyst: 'violet',
+      ink: 'slate', ember: 'orange', peach: 'pink', roseGold: 'amber',
+      sunset: 'orange', sky: 'sky', mint: 'emerald', lilac: 'fuchsia',
+      wine: 'mocha', cobalt: 'blue', aurora: 'cyan', sand: 'lime'
+    };
+
+
+
+    function resolveThemeId(themeId) {
+      if (THEMES[themeId]) return themeId;
+      const aliased = LEGACY_THEME_ALIAS[themeId];
+      return THEMES[aliased] ? aliased : DEFAULT_THEME_ID;
+    }
+
     function applyThemeToRoot(root, themeId) {
-      const theme = THEMES[themeId] || THEMES.cinnabar;
+      const theme = THEMES[resolveThemeId(themeId)];
       const css = theme.colors;
       for (const key in css) {
         root.style.setProperty(key, css[key]);
@@ -2660,24 +2620,30 @@
     }
 
     function applyTheme(themeId) {
-      if (!THEMES[themeId]) return;
-      currentTheme = themeId;
-      applyThemeToRoot(document.documentElement, themeId);
+      const id = resolveThemeId(themeId);
+      if (!THEMES[themeId] && !LEGACY_THEME_ALIAS[themeId]) return;
+      currentTheme = id;
+      applyThemeToRoot(document.documentElement, id);
       if (activePipWindow && !activePipWindow.closed) {
-        try { applyThemeToRoot(activePipWindow.document.documentElement, themeId); } catch (e) {}
+        try { applyThemeToRoot(activePipWindow.document.documentElement, id); } catch (e) {}
       }
       updateThemePickerUI();
     }
 
     function setTheme(themeId) {
       if (isViewerMode) return;
-      if (!THEMES[themeId] || themeId === currentTheme) {
+      if (!THEMES[themeId] && !LEGACY_THEME_ALIAS[themeId]) {
         toggleThemeModal(false);
         return;
       }
-      applyTheme(themeId);
+      const id = resolveThemeId(themeId);
+      if (id === currentTheme) {
+        toggleThemeModal(false);
+        return;
+      }
+      applyTheme(id);
       saveAndBroadcast();
-      showToast(`Theme: ${THEMES[themeId].name}`);
+      showToast(`${I18N[currentLang].themeLabel}: ${THEMES[id].name}`);
     }
 
     function toggleThemeModal(show) {
@@ -2694,12 +2660,12 @@
         const c = th.colors;
         return `
           <div class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}">
-            <div class="theme-swatch-bars">
-              <div style="background:${c['--bg-flame']};"></div>
-              <div style="background:${c['--cinnabar-red']};"></div>
-              <div style="background:${c['--imperial-gold']};"></div>
-              <div style="background:${c['--paper-cream']};"></div>
-              <div style="background:${c['--deep-lacquer']};"></div>
+            <div class="theme-swatch-bars" style="--sw:${c['--accent']}">
+              <div style="background:${c['--accent-deep']};"></div>
+              <div style="background:${c['--accent']};"></div>
+              <div style="background:${c['--accent-strong']};"></div>
+              <div style="background:${c['--accent-contrast']};"></div>
+              <div style="background:${c['--accent-ring']};"></div>
             </div>
             <div class="theme-swatch-name">${th.name}</div>
           </div>`;
@@ -3156,7 +3122,7 @@
         applyLanguageUI();
       }
 
-      if (d.currentTheme && THEMES[d.currentTheme]) {
+      if (d.currentTheme && (THEMES[d.currentTheme] || LEGACY_THEME_ALIAS[d.currentTheme])) {
         applyTheme(d.currentTheme);
       }
 
@@ -3228,6 +3194,7 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const forcedViewer = (urlParams.get('viewer') === 'true' || urlParams.get('projection') === 'true' || urlParams.get('pipbar') === 'true');
+        isAudienceMode = urlParams.get('audience') === 'true';
         const isMasterBrowser = localStorage.getItem(MASTER_AUTH_KEY) === '1';
         if (forcedViewer || !isMasterBrowser) {
           isViewerMode = true;
@@ -3274,6 +3241,19 @@
           width: 140,
           height: 140
         });
+
+        /* Second link: the guest audience view. Same data, no claim control. */
+        const audienceUrl = new URL(cleanBase);
+        audienceUrl.searchParams.set('viewer', 'true');
+        audienceUrl.searchParams.set('audience', 'true');
+        document.getElementById('audienceLinkInput').value = audienceUrl.toString();
+        const audienceQr = document.getElementById('audienceQrcode');
+        audienceQr.innerHTML = '';
+        new QRCode(audienceQr, {
+          text: audienceUrl.toString(),
+          width: 140,
+          height: 140
+        });
       } catch (err) {
         console.warn("Firebase connect error:", err);
       }
@@ -3281,7 +3261,8 @@
 
     function enableViewerModeUI() {
       document.getElementById('p2pStatusTag').textContent = I18N[currentLang].syncConnected;
-      document.getElementById('modeIndicatorTag').textContent = I18N[currentLang].modeViewer;
+      document.getElementById('modeIndicatorTag').textContent =
+        isAudienceMode ? I18N[currentLang].modeAudience : I18N[currentLang].modeViewer;
       document.getElementById('appMainTitle').removeAttribute('contenteditable');
       document.getElementById('appSubTitle').removeAttribute('contenteditable');
       
@@ -3294,6 +3275,7 @@
 
       document.getElementById('spotlightRedrawBtn').style.display = 'none';
       document.getElementById('spotlightCallBtn').style.display = 'none';
+      document.getElementById('spotlightClaimBtn').style.display = canClaimPrize() ? '' : 'none';
       document.getElementById('timerRedrawBtn').style.display = 'none';
       document.getElementById('crisisBtn').style.display = 'none';
       document.getElementById('resetBtn').style.display = 'none';
@@ -3423,7 +3405,7 @@
       vipRollStartTs = Date.now();
       const btn = document.getElementById('vipToggleBtn');
       btn.textContent = I18N[currentLang].btnStopRoll;
-      btn.style.background = "linear-gradient(135deg, var(--danger-red) 0%, var(--danger-red-deep) 100%)";
+      btn.style.background = "linear-gradient(135deg, var(--danger) 0%, var(--danger-strong) 100%)";
       btn.style.color = "#fff";
       const disp = document.getElementById('vipDisplay');
       disp.classList.add('rolling');
@@ -3615,7 +3597,16 @@
       }
     }
 
+    /* Claiming a prize is a staff action. Audience viewers can look, not claim. */
+    function canClaimPrize() {
+      return !isAudienceMode;
+    }
+
     function toggleClaimCurrentSpotlight() {
+      if (!canClaimPrize()) {
+        showToast(I18N[currentLang].audienceNoClaim, true);
+        return;
+      }
       if (activeSpotlightTicket) {
         const idx = claimedWinners.indexOf(activeSpotlightTicket);
         if (idx !== -1) {
@@ -3623,7 +3614,7 @@
           showToast(`[${activeSpotlightTicket}] Unclaimed`);
         } else {
           claimedWinners.push(activeSpotlightTicket);
-          showToast(`✓ [${activeSpotlightTicket}] Claimed!`);
+          showToast(`[${activeSpotlightTicket}] ${I18N[currentLang].claimVerifiedToast}`);
         }
         updateUI();
         saveAndBroadcast();
@@ -3719,7 +3710,7 @@
       document.getElementById('bbFilteredCount').textContent = filtered.length;
 
       if (filtered.length === 0) {
-        bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-soft); padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
+        bb.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-2); padding-top:40px;">${I18N[currentLang].bbEmpty}</div>`;
       } else {
         const tag = I18N[currentLang].claimedTag;
         bb.innerHTML = filtered.map(item => {
@@ -3759,13 +3750,19 @@
       const claimBtn = document.getElementById('spotlightClaimBtn');
       const redrawBtn = document.getElementById('spotlightRedrawBtn');
       redrawBtn.style.display = isViewerMode ? 'none' : '';
+      /* Audience viewers get the result without any way to act on it. Only
+         hide here -- enableViewerModeUI has already hidden the rest. */
+      if (!canClaimPrize()) {
+        claimBtn.style.display = 'none';
+        document.getElementById('spotlightCallBtn').style.display = 'none';
+      }
 
       if (claimedWinners.includes(ticket)) {
         claimBtn.textContent = I18N[currentLang].btnClaimVerified;
-        claimBtn.style.background = "var(--success-green-deep)";
+        claimBtn.style.background = "var(--success-strong)";
       } else {
         claimBtn.textContent = I18N[currentLang].btnClaimVerify;
-        claimBtn.style.background = "var(--neutral-grey)";
+        claimBtn.style.background = "var(--text-3)";
       }
 
       document.getElementById('spotlightModal').style.display = 'flex';
@@ -3789,6 +3786,10 @@
     }
 
     function startClaimTimer() {
+      if (!canClaimPrize()) {
+        showToast(I18N[currentLang].audienceNoClaim, true);
+        return;
+      }
       stopClaimTimer();
       initAudio();
       claimTimeRemaining = 10;
@@ -3858,13 +3859,13 @@
       container.innerHTML = recycleBin.map((item, idx) => `
         <div class="modal-item">
           <div>
-            <strong style="color:var(--imperial-gold); font-size:1.15rem; font-family: var(--font-num);">${esc(item.ticket)}</strong>
+            <strong style="color:var(--accent); font-size:1.15rem; font-family: var(--font-num);">${esc(item.ticket)}</strong>
             <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(#${esc(item.originalSeq)} • ${esc(item.time)})</span>
           </div>
           <div class="recycle-actions">
             ${!isViewerMode ? `
               <button class="btn-recycle-action" onclick="restoreToPool('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">${I18N[currentLang].btnRestorePool}</button>
-              <button class="btn-recycle-action" style="border-color:var(--jade-green); color:var(--jade-green);" onclick="restoreAsWinner('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">${I18N[currentLang].btnRestoreWinner}</button>
+              <button class="btn-recycle-action" style="border-color:var(--success); color:var(--success);" onclick="restoreAsWinner('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">${I18N[currentLang].btnRestoreWinner}</button>
             ` : ''}
           </div>
         </div>
@@ -3995,13 +3996,13 @@
       const projGrid = document.getElementById('projStaticGrid');
       if (projGrid) {
         if (isSuspenseMode) {
-          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2.5rem; color:var(--imperial-gold); padding:50px;">${t.projSuspense}</div>`;
+          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2.5rem; color:var(--accent); padding:50px;">${t.projSuspense}</div>`;
         } else if (all.length === 0) {
-          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:var(--text-soft); padding:50px;">${t.projWaiting}</div>`;
+          projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:var(--text-2); padding:50px;">${t.projWaiting}</div>`;
         } else {
           const shown = projHideClaimed ? all.filter(item => !claimedWinners.includes(item.num)) : all;
           if (shown.length === 0) {
-            projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:var(--text-soft); padding:50px;">${t.projWaiting}</div>`;
+            projGrid.innerHTML = `<div style="grid-column:1/-1; text-align:center; font-size:2rem; color:var(--text-2); padding:50px;">${t.projWaiting}</div>`;
           } else {
             projGrid.innerHTML = shown.map(item => {
               const isClaimed = claimedWinners.includes(item.num);
@@ -4083,13 +4084,13 @@
       const ribbon = document.getElementById('pacingRibbon');
       if (winners.length >= (maxPrizes - 10) && winners.length < maxPrizes) {
         ribbon.textContent = t.pacingGrand;
-        ribbon.style.background = "linear-gradient(90deg, var(--danger-red-deep) 0%, var(--danger-red) 50%, var(--danger-red-deep) 100%)";
+        ribbon.style.background = "linear-gradient(90deg, var(--danger-strong) 0%, var(--danger) 50%, var(--danger-strong) 100%)";
       } else if (winners.length >= maxPrizes) {
         ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
-        ribbon.style.background = "linear-gradient(90deg, var(--success-green-dark) 0%, var(--jade-green) 50%, var(--success-green-dark) 100%)";
+        ribbon.style.background = "linear-gradient(90deg, var(--success-strong) 0%, var(--success) 50%, var(--success-strong) 100%)";
       } else {
         ribbon.textContent = t.pacingConsolation.replace('{quota}', Math.max(0, maxPrizes - 10));
-        ribbon.style.background = "linear-gradient(90deg, var(--gold-dark) 0%, var(--cinnabar-red) 50%, var(--gold-dark) 100%)";
+        ribbon.style.background = "linear-gradient(90deg, var(--accent-strong) 0%, var(--accent) 50%, var(--accent-strong) 100%)";
       }
 
       const exhausted = winners.length >= maxPrizes || available.length === 0;
@@ -4109,7 +4110,7 @@
             <div>
               ${item.msg
                 ? esc(item.msg)
-                : `<strong>#${esc(item.seq)}</strong>: <span style="text-decoration:line-through; color:var(--danger-bright);">${esc(item.oldNum)}</span> <span style="color:var(--text-dim);">&rarr;</span> <strong style="color:var(--imperial-gold); font-size:1.1rem;">${esc(item.newNum)}</strong>`}
+                : `<strong>#${esc(item.seq)}</strong>: <span style="text-decoration:line-through; color:var(--danger-strong);">${esc(item.oldNum)}</span> <span style="color:var(--text-3);">&rarr;</span> <strong style="color:var(--accent); font-size:1.1rem;">${esc(item.newNum)}</strong>`}
             </div>
             <div style="font-size:0.75rem; color:#aaa;">${esc(item.time)}</div>
           </div>
@@ -4147,6 +4148,15 @@
       url.searchParams.set('projection', 'true');
       url.searchParams.set('viewer', 'true');
       window.open(url.toString(), '_blank');
+    }
+
+    /* Bump BUILD_ID whenever the shipped file changes shape, so anyone
+       reporting a stale render can be identified at a glance. */
+    const BUILD_ID = '2026.09.27-a';
+
+    function renderBuildStamp() {
+      const el = document.getElementById('buildStamp');
+      if (el) el.textContent = 'build ' + BUILD_ID;
     }
 
     function checkProjectionModeFromURL() {
@@ -4428,7 +4438,7 @@
         appliedVipRollKey = null;
         clearVipSlotDismissed();
         document.getElementById('batchGrid').innerHTML = `
-          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
+          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--accent-strong); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
           </div>`;
         document.getElementById('vipDisplay').textContent = '----';
@@ -4531,6 +4541,28 @@
       });
     }
 
+    function copyAudienceLink() {
+      const input = document.getElementById('audienceLinkInput');
+      if (!input) return;
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast(I18N[currentLang].audienceLinkCopied);
+      });
+    }
+
+    function openAudienceTab() {
+      const input = document.getElementById('audienceLinkInput');
+      const url = input && input.value
+        ? input.value
+        : (() => {
+            const u = new URL(window.location.origin + window.location.pathname);
+            u.searchParams.set('viewer', 'true');
+            u.searchParams.set('audience', 'true');
+            return u.toString();
+          })();
+      window.open(url, '_blank');
+    }
+
     async function sha256Hex(text) {
   const data = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest('SHA-256', data);
@@ -4557,6 +4589,7 @@
     }
 
     // BOOTSTRAP LIFECYCLE
+    renderBuildStamp();
     if (!load()) {
       updateUI();
     }

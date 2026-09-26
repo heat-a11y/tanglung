@@ -156,7 +156,8 @@ describe('VIP slot dismiss button (projection-local)', () => {
       const btn = closeBtn(proj);
       assert.ok(btn, 'close button must exist');
       assert.equal(btn.parentElement, slot, 'X must live inside the VIP slot');
-      assert.equal(btn.textContent, '✕');
+      assert.ok(btn.querySelector('svg.icon-glyph'), 'close button renders an inline SVG glyph');
+      assert.equal(btn.textContent.trim(), '', 'glyph must not add stray text');
     } finally {
       close(proj);
     }
@@ -636,14 +637,14 @@ describe('Cross-device state sync (regression)', () => {
     const viewer = createApp({ viewer: true });
     try {
       host.window.changeLanguage('BI');
-      host.window.setTheme('jade');
+      host.window.setTheme('emerald');
       const payload = host.window.getPayload();
       assert.equal(payload.currentLang, 'BI');
-      assert.equal(payload.currentTheme, 'jade');
+      assert.equal(payload.currentTheme, 'emerald');
 
       viewer.applyState(payload);
       assert.equal(G(viewer, 'currentLang'), 'BI');
-      assert.equal(G(viewer, 'currentTheme'), 'jade');
+      assert.equal(G(viewer, 'currentTheme'), 'emerald');
       assert.equal(viewer.document.getElementById('appMainTitle').innerText, G(viewer, 'I18N').BI.brandTitle);
     } finally {
       close(host); close(viewer);
@@ -809,9 +810,33 @@ describe('Reset, sound & themes (regression)', () => {
   it('theme changes propagate to the picker and payload', () => {
     const host = makeHost();
     try {
-      host.window.setTheme('cobalt');
-      assert.equal(G(host, 'currentTheme'), 'cobalt');
-      assert.equal(host.window.getPayload().currentTheme, 'cobalt');
+      host.window.setTheme('blue');
+      assert.equal(G(host, 'currentTheme'), 'blue');
+      assert.equal(host.window.getPayload().currentTheme, 'blue');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('maps a saved pre-redesign theme id onto a current one', () => {
+    const host = makeHost();
+    try {
+      // 'cinnabar' and 'jade' were ids from the old 20 imperial palettes.
+      host.window.setTheme('cinnabar');
+      assert.equal(G(host, 'currentTheme'), 'red', 'cinnabar should resolve to red');
+      host.window.setTheme('jade');
+      assert.equal(G(host, 'currentTheme'), 'emerald', 'jade should resolve to emerald');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('ignores an unknown theme id and keeps the current one', () => {
+    const host = makeHost();
+    try {
+      host.window.setTheme('violet');
+      host.window.setTheme('not-a-theme');
+      assert.equal(G(host, 'currentTheme'), 'violet');
     } finally {
       close(host);
     }
@@ -1742,6 +1767,144 @@ describe('Console VIP display keeps its own number (regression)', () => {
       await sleep(80);
       host.window.stopVip();
       assert.equal(host.document.getElementById('vipDisplay').textContent, G(host, 'winners')[0]);
+    } finally {
+      close(host);
+    }
+  });
+});
+describe('Audience mode is a viewer that cannot claim', () => {
+  it('is read-only but still able to look a winner up', () => {
+    const aud = createApp({ audience: true });
+    try {
+      assert.equal(G(aud, 'isAudienceMode'), true, 'audience flag must be set from the URL');
+      assert.equal(G(aud, 'isViewerMode'), true, 'audience is a viewer');
+
+      S(aud, 'winners', ['1234']);
+      aud.window.updateUI();
+      const idx = G(aud, 'winners').indexOf('1234');
+      aud.window.openSpotlight('1234', idx + 1);
+
+      assert.equal(aud.document.getElementById('spotlightModal').style.display, 'flex',
+        'audience still sees the winner');
+      assert.equal(aud.document.getElementById('spotlightClaimBtn').style.display, 'none',
+        'no claim button for guests');
+    } finally {
+      close(aud);
+    }
+  });
+
+  it('refuses to mark a prize claimed even when the function is called directly', () => {
+    const aud = createApp({ audience: true });
+    try {
+      S(aud, 'winners', ['1234']);
+      S(aud, 'claimedWinners', []);
+      aud.window.updateUI();
+      const idx = G(aud, 'winners').indexOf('1234');
+      aud.window.openSpotlight('1234', idx + 1);
+
+      aud.window.toggleClaimCurrentSpotlight();
+      assert.deepEqual(G(aud, 'claimedWinners'), [], 'guest must not be able to claim');
+
+      aud.window.startClaimTimer();
+      assert.notEqual(aud.document.getElementById('timerOverlay').style.display, 'flex',
+        'guest must not be able to start the claim countdown');
+    } finally {
+      close(aud);
+    }
+  });
+
+  it('still lets staff viewers claim', () => {
+    const staff = makeViewer();
+    try {
+      S(staff, 'winners', ['1234']);
+      S(staff, 'claimedWinners', []);
+      staff.window.updateUI();
+      const idx = G(staff, 'winners').indexOf('1234');
+      staff.window.openSpotlight('1234', idx + 1);
+
+      assert.notEqual(staff.document.getElementById('spotlightClaimBtn').style.display, 'none',
+        'the staff viewer keeps its claim button');
+
+      staff.window.toggleClaimCurrentSpotlight();
+      assert.deepEqual(G(staff, 'claimedWinners'), ['1234'], 'staff claim still works');
+    } finally {
+      close(staff);
+    }
+  });
+
+  it('labels the audience mode distinctly from the staff viewer', () => {
+    const aud = createApp({ audience: true });
+    const staff = makeViewer();
+    try {
+      const audTag = aud.document.getElementById('modeIndicatorTag').textContent;
+      const staffTag = staff.document.getElementById('modeIndicatorTag').textContent;
+      assert.notEqual(audTag, staffTag, 'audience must not be labelled as the staff viewer');
+      assert.match(audTag, /audience|观众|penonton/i, `unexpected audience label: ${audTag}`);
+    } finally {
+      close(aud);
+      close(staff);
+    }
+  });
+});
+
+describe('Sync modal offers two distinct destinations', () => {
+  it('builds a staff viewer link and a separate audience link', () => {
+    const host = makeHost();
+    try {
+      const staffLink = host.document.getElementById('shareLinkInput').value;
+      const audLink = host.document.getElementById('audienceLinkInput').value;
+
+      assert.match(staffLink, /viewer=true/, 'staff link keeps viewer mode');
+      assert.doesNotMatch(staffLink, /audience=true/, 'staff link must not be audience-locked');
+      assert.match(audLink, /audience=true/, 'audience link is audience-locked');
+      assert.notEqual(staffLink, audLink, 'the two links must differ');
+
+      const parsed = new URL(audLink);
+      assert.equal(parsed.searchParams.get('viewer'), 'true');
+      assert.equal(parsed.searchParams.get('audience'), 'true');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('renders a QR container for each link', () => {
+    const host = makeHost();
+    try {
+      assert.ok(host.document.getElementById('qrcode'), 'staff QR container exists');
+      assert.ok(host.document.getElementById('audienceQrcode'), 'audience QR container exists');
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Build stamp is rendered', () => {
+  it('shows a build id so a stale render is self-evident', () => {
+    const host = makeHost();
+    try {
+      const stamp = host.document.getElementById('buildStamp').textContent;
+      assert.match(stamp, /build \S+/, `unexpected build stamp: ${stamp}`);
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Language switching preserves icon buttons', () => {
+  it('keeps the inline SVG when a translated button re-renders its label', () => {
+    const host = makeHost();
+    try {
+      for (const lang of ['BM', 'BI', 'BC']) {
+        host.window.changeLanguage(lang);
+        for (const id of ['manualConfirmBtn', 'btnProjClose', 'spotlightClaimBtn']) {
+          const btn = host.document.getElementById(id);
+          if (!btn) continue;
+          assert.ok(
+            btn.querySelector('svg.icon-glyph'),
+            `${id} lost its icon after switching to ${lang} (data-i18n uses innerHTML, so the label must live in a child span)`
+          );
+        }
+      }
     } finally {
       close(host);
     }
