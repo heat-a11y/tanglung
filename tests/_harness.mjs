@@ -125,9 +125,11 @@ function buildStubScript(opts) {
   return `<script>${rafQueue}\n${rafOverride}\n${innerTextShim}\n${accessors}\n${downloads}\n${dialogs}\n${firebase}\n${qrcode}\n${audio}\n${bcast}\n${html5canvas}\n${mode}</script>`;
 }
 
-export function createApp({ master = false, projection = false, viewer = false, url = 'http://localhost/' } = {}) {
+export function createApp({ master = false, projection = false, viewer = false, audience = false, url = 'http://localhost/' } = {}) {
   if (projection) {
     url = 'http://localhost/?projection=true&viewer=true';
+  } else if (audience) {
+    url = 'http://localhost/?viewer=true&audience=true';
   } else if (viewer) {
     url = 'http://localhost/?viewer=true';
   }
