@@ -10,6 +10,8 @@ const S = (app, k, v) => app.set(k, v);
 function pad(n) { return String(n).padStart(4, '0'); }
 const makeHost = () => createApp({ master: true });
 const makeProjection = () => createApp({ projection: true });
+const makeViewer = () => createApp({ viewer: true });
+const makePipBar = () => createApp({ url: 'http://localhost/?pipbar=true' });
 
 describe('VIP projection slot behaviour', () => {
   it('shows the drawn VIP number on the big projection when the draw finishes', async () => {
@@ -840,6 +842,330 @@ describe('Default pool & prize quota', () => {
       assert.equal(payload.poolStart, 1001);
       assert.equal(payload.poolEnd, 3000);
       assert.equal(payload.maxPrizes, 110);
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Cross-surface sync (master / viewer / projection / PiP)', () => {
+  const surfaces = () => {
+    const apps = { host: makeHost(), viewer: makeViewer(), proj: makeProjection(), pip: makePipBar() };
+    return {
+      ...apps,
+      all: Object.values(apps),
+      closeAll() { Object.values(apps).forEach(close); }
+    };
+  };
+
+  it('every surface starts on the same pool, quota and prize count', () => {
+    const s = surfaces();
+    try {
+      for (const [name, app] of Object.entries({ host: s.host, viewer: s.viewer, proj: s.proj, pip: s.pip })) {
+        assert.equal(G(app, 'poolStart'), 1001, `${name} poolStart`);
+        assert.equal(G(app, 'poolEnd'), 3000, `${name} poolEnd`);
+        assert.equal(G(app, 'maxPrizes'), 110, `${name} maxPrizes`);
+        assert.equal(app.window.getAvailablePool().length, 2000, `${name} pool size`);
+      }
+    } finally {
+      s.closeAll();
+    }
+  });
+
+  it('PiP waiting card advertises the real range, not a hardcoded one', () => {
+    const s = surfaces();
+    try {
+      const track = s.pip.document.getElementById('pipTrack');
+      assert.match(track.innerHTML, /1001\s*-\s*3000/, 'PiP shows 1001 - 3000');
+      assert.doesNotMatch(track.innerHTML, /0001\s*-\s*3000/, 'the old hardcoded 0001 is gone');
+    } finally {
+      s.closeAll();
+    }
+  });
+
+  it('a host VIP draw reaches the viewer, the big projection and the PiP ticker', async () => {
+    const s = surfaces();
+    try {
+      s.host.window.startVip();
+      await sleep(80);
+      s.host.window.stopVip();
+      const payload = s.host.window.getPayload();
+      const winner = G(s.host, 'winners')[0];
+
+      assert.match(winner, /^1[0-9]{3}$|^[12][0-9]{3}$|^3000$/, `winner ${winner} inside 1001-3000`);
+      assert.ok(Number(winner) >= 1001 && Number(winner) <= 3000);
+
+      for (const app of [s.viewer, s.proj, s.pip]) app.applyState(payload);
+
+      assert.equal(s.viewer.document.getElementById('vipDisplay').textContent, winner, 'remote viewer console');
+      assert.equal(s.proj.document.getElementById('projVipNum').textContent, winner, 'big projection card');
+      assert.equal(s.proj.document.getElementById('projVipSlot').style.display, 'flex', 'projection card visible');
+
+      const track = s.pip.document.getElementById('pipTrack');
+      assert.ok(track.innerHTML.includes(winner), `PiP ticker lists the winner (${winner})`);
+
+      for (const app of s.all) {
+        assert.equal(G(app, 'poolStart'), 1001);
+        assert.equal(G(app, 'poolEnd'), 3000);
+        assert.equal(G(app, 'maxPrizes'), 110);
+        assert.deepEqual(G(app, 'winners'), G(s.host, 'winners'), 'identical winner list everywhere');
+      }
+    } finally {
+      s.closeAll();
+    }
+  });
+
+  it('a host batch of 10 propagates to every surface, all within 1001-3000', () => {
+    const s = surfaces();
+    try {
+      s.host.window.drawTen();
+      const payload = s.host.window.getPayload();
+      for (const app of [s.viewer, s.proj, s.pip]) app.applyState(payload);
+
+      const winners = G(s.host, 'winners');
+      assert.equal(winners.length, 10);
+      assert.equal(new Set(winners).size, 10, 'no duplicates');
+      for (const n of winners) assert.ok(Number(n) >= 1001 && Number(n) <= 3000, `${n} in range`);
+
+      for (const app of s.all) assert.deepEqual(G(app, 'winners'), winners, 'same 10 numbers everywhere');
+      assert.equal(s.proj.document.querySelectorAll('.proj-grid-card').length, 10, 'projection grid shows 10');
+
+      const pipHtml = s.pip.document.getElementById('pipTrack').innerHTML;
+      for (const n of winners) assert.ok(pipHtml.includes(n), `PiP ticker lists ${n}`);
+      const pipCards = pipHtml.match(/class="proj-card"/g) || [];
+      assert.equal(pipCards.length % 10, 0, 'PiP repeats the set for seamless scrolling');
+      assert.ok(pipCards.length >= 30, `PiP has at least 3 scroll sets (${pipCards.length})`);
+
+      assert.equal(s.host.document.getElementById('poolCount').textContent, '1990', '1990 of 2000 left');
+      assert.equal(s.host.document.getElementById('maxPrizesLabel').textContent, '110', 'quota still 110');
+    } finally {
+      s.closeAll();
+    }
+  });
+
+  it('closing the VIP card on the projection reaches every other surface', async () => {
+    const s = surfaces();
+    try {
+      s.host.window.startVip();
+      await sleep(60);
+      s.host.window.stopVip();
+      const payload = s.host.window.getPayload();
+      for (const app of [s.viewer, s.proj, s.pip]) app.applyState(payload);
+
+      s.proj.document.getElementById('projVipCloseBtn').click();
+      const closed = { ...s.host.window.getPayload(), vipSlotDismissed: true };
+      for (const app of [s.viewer, s.proj, s.pip]) app.applyState(closed);
+
+      assert.equal(G(s.viewer, 'vipSlotDismissed'), true, 'viewer knows');
+      assert.equal(G(s.pip, 'vipSlotDismissed'), true, 'PiP page knows');
+      assert.equal(s.proj.document.getElementById('projVipSlot').style.display, 'none', 'projection card hidden');
+      assert.equal(s.viewer.document.getElementById('vipDisplay').textContent, G(s.host, 'winners')[0],
+        'winning number itself is never erased');
+      assert.equal(s.pip.document.getElementById('pipTrack').innerHTML.includes(G(s.host, 'winners')[0]), true,
+        'PiP keeps listing the winner');
+    } finally {
+      s.closeAll();
+    }
+  });
+});
+
+describe('No ticket number can ever repeat', () => {
+  it('the default pool is exactly 2000 distinct tickets, 1001-3000', () => {
+    const host = makeHost();
+    try {
+      const pool = host.window.getAvailablePool();
+      assert.equal(pool.length, 2000);
+      assert.equal(new Set(pool).size, 2000, 'pool itself has no duplicates');
+      assert.equal(pool[0], '1001');
+      assert.equal(pool[pool.length - 1], '3000');
+      for (const n of pool) assert.ok(Number(n) >= 1001 && Number(n) <= 3000);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('110 winners drawn by batch + VIP are unique and in range at every step', async () => {
+    const host = makeHost();
+    try {
+      const seen = new Set();
+      const check = (label) => {
+        const w = G(host, 'winners');
+        assert.equal(w.length, new Set(w).size, `${label}: no duplicate in winners`);
+        for (const n of w) {
+          assert.ok(Number(n) >= 1001 && Number(n) <= 3000, `${label}: ${n} in range`);
+          assert.ok(!G(host, 'recycleBin').some(r => r.ticket === n), `${label}: ${n} not also in recycle bin`);
+        }
+        for (const n of w) seen.add(n);
+      };
+
+      for (let i = 0; i < 10; i++) { host.window.drawTen(); check(`batch ${i + 1}`); }
+      assert.equal(G(host, 'winners').length, 100);
+
+      await sleep(60);
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+      check('after VIP');
+      assert.equal(G(host, 'winners').length, 101);
+      assert.equal(seen.size, 101, '101 unique tickets taken');
+
+      // quota respected
+      while (G(host, 'winners').length < 110) { host.window.drawTen(); }
+      check('at quota');
+      assert.equal(G(host, 'winners').length, 110);
+      assert.equal(seen.size, 110, '110 unique tickets, no repeats');
+      assert.equal(G(host, 'maxPrizes'), 110);
+
+      host.clearDialogs();
+      host.window.startVip();
+      assert.ok(host.dialogs().some(([, m]) => String(m).includes('110')), 'no draw past the 110 quota');
+      assert.equal(G(host, 'winners').length, 110, 'still exactly 110');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('in-place redraw never re-draws the voided ticket', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      const before = [...G(host, 'winners')];
+      const voided = before[3];
+
+      host.window.promptRedrawSlot(voided, 3);
+      const after = G(host, 'winners');
+      assert.equal(after.length, 10, 'list length unchanged');
+      assert.notEqual(after[3], voided, 'slot 4 holds a different ticket');
+      assert.equal(new Set(after).size, 10, 'still unique');
+      assert.ok(!after.includes(voided), 'voided ticket is out of the draw');
+      assert.ok(G(host, 'recycleBin').some(r => r.ticket === voided), 'voided ticket is in the recycle bin');
+      assert.ok(!host.window.getAvailablePool().includes(voided), 'voided ticket is not drawable again');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('manual entry refuses a winner, a voided ticket and an out-of-range number', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      const winner = G(host, 'winners')[0];
+      const input = host.document.getElementById('manualTicketInput');
+
+      input.value = winner;
+      host.window.confirmManualEntry();
+      assert.ok(host.dialogs().some(([, m]) => String(m).includes('already won')), 'existing winner refused');
+
+      host.clearDialogs();
+      G(host, 'recycleBin').push({ ticket: '1234', originalSeq: 3, time: 'now' });
+      input.value = '1234';
+      host.window.confirmManualEntry();
+      assert.ok(host.dialogs().some(([, m]) => String(m).includes('void / blacklist')), 'voided ticket refused');
+      assert.equal(G(host, 'winners').includes('1234'), false, 'never became a winner');
+
+      host.clearDialogs();
+      input.value = '0500';
+      host.window.confirmManualEntry();
+      assert.ok(host.dialogs().some(([, m]) => String(m).includes('Range')), 'below 1001 refused');
+
+      input.value = '3001';
+      host.window.confirmManualEntry();
+      assert.ok(host.dialogs().some(([, m]) => String(m).includes('Range')), 'above 3000 refused');
+
+      assert.equal(new Set(G(host, 'winners')).size, G(host, 'winners').length, 'still unique');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('restoring a recycle-bin entry that is already a winner cannot duplicate it', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      const winner = G(host, 'winners')[2];
+      G(host, 'recycleBin').push({ ticket: winner, originalSeq: 3, time: 'now' });
+
+      host.window.restoreAsWinner(winner, 0);
+      assert.equal(G(host, 'winners').filter(n => n === winner).length, 1, 'exactly one copy');
+      assert.equal(G(host, 'winners').length, 10, 'no new winner added');
+      assert.equal(G(host, 'recycleBin').length, 0, 'stale bin entry cleared');
+      assert.equal(G(host, 'maxPrizes'), 110, 'quota untouched');
+
+      G(host, 'recycleBin').push({ ticket: winner, originalSeq: 3, time: 'now' });
+      host.window.restoreToPool(winner, 0);
+      assert.equal(G(host, 'winners').length, 10, 'restore-to-pool refused for a live winner');
+      assert.ok(!host.window.getAvailablePool().includes(winner), 'winner ticket is not drawable again');
+      assert.equal(new Set(G(host, 'winners')).size, 10);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('hostile state cannot inject duplicate winners or resurrect a voided ticket', () => {
+    const host = makeHost();
+    try {
+      host.applyState({
+        winners: ['1500', '1500', '1500', '2000'],
+        recycleBin: ['1234'],
+        poolStart: 1001,
+        poolEnd: 3000,
+        maxPrizes: 110
+      });
+
+      const w = G(host, 'winners');
+      assert.deepEqual(w, ['1500', '2000'], 'duplicates collapsed, first occurrence kept');
+
+      const pool = host.window.getAvailablePool();
+      assert.equal(pool.length, 1997, '2000 - 2 distinct winners - 1 voided');
+      assert.ok(!pool.includes('1500'), 'winner excluded');
+      assert.ok(!pool.includes('2000'), 'winner excluded');
+      assert.ok(!pool.includes('1234'), 'bare-string recycle entry still excludes the ticket');
+      assert.equal(new Set(pool).size, pool.length, 'pool unique');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('exclusion logic holds across the entire 2000-ticket range', () => {
+    const host = makeHost();
+    try {
+      const winners = [];
+      const seen = new Set();
+
+      // walk the real availability API until the pool is empty
+      for (let guard = 0; guard < 400; guard++) {
+        const pool = host.window.getAvailablePool();
+        if (pool.length === 0) break;
+
+        assert.equal(new Set(pool).size, pool.length, 'available pool is always unique');
+        for (const n of pool) {
+          assert.ok(!seen.has(n), `${n} offered twice`);
+          assert.ok(Number(n) >= 1001 && Number(n) <= 3000, `${n} in range`);
+        }
+
+        const take = pool.splice(Math.floor(Math.random() * pool.length), Math.min(10, pool.length));
+        S(host, 'winners', [...winners, ...take]);
+        winners.push(...take);
+        for (const n of take) seen.add(n);
+      }
+
+      assert.equal(winners.length, 2000, 'the whole pool was consumable');
+      assert.equal(seen.size, 2000, '2000 distinct tickets, zero repeats');
+      assert.equal(host.window.getAvailablePool().length, 0, 'pool empty at the end');
+
+      const nums = [...seen].map(Number);
+      assert.equal(Math.min(...nums), 1001, 'lowest ticket is 1001');
+      assert.equal(Math.max(...nums), 3000, 'highest ticket is 3000');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('prize quota is hard-capped, so a runaway loop cannot exceed it', () => {
+    const host = makeHost();
+    try {
+      host.applyState({ maxPrizes: 99999, poolStart: 1001, poolEnd: 3000 });
+      assert.equal(G(host, 'maxPrizes'), 500, 'hostile quota clamped to 500');
     } finally {
       close(host);
     }
