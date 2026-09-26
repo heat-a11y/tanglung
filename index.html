@@ -11,18 +11,11 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style id="mainStyles">
-    :root {
-      /* ---------------------------------------------------------------
-         Modern light design system.
-
-         The whole app is built from one neutral scale plus exactly one
-         accent colour. A theme only overrides the five --accent-* tokens
-         underneath; surfaces, borders and text are shared by all 20 themes
-         so no palette can drift into an unreadable or casino-gold mix.
-         Accent tints are derived with color-mix, so a new theme is one hex
-         value rather than a hand-tuned 25-key colour object.
-         --------------------------------------------------------------- */
-
+    /* Mode-driven neutrals. A theme picks its mode, and the mode picks the
+       neutral scale, so 10 light themes can never drift into a dark theme's
+       contrast behaviour. Every pair below is asserted in tests/themes.test.mjs. */
+    :root,
+    [data-mode="light"] {
       /* Neutral scale */
       --bg: #f4f5f7;
       --bg-2: #ffffff;
@@ -38,51 +31,121 @@
       --text-2: #565c66;
       --text-3: #6b7280;
       --text-disabled: #a6acb5;
-      --strip-font: 1.35rem;
+      --surface-result: #ffffff;
+      --surface-rgb: 255, 255, 255;
+      --on-status: #ffffff;
+      --result-ink: #0b0d10;
+      --success: #0e703d;
+      --success-strong: #0c6236;
+      --success-soft: #d2e2d9;
+      --warning: #9f4a09;
+      --warning-soft: #e9decd;
+      --danger: #ba271b;
+      --danger-strong: #a42218;
+      --danger-soft: #e9dad8;
+      --info: #175acf;
+      --info-soft: #d6ddea;
+      --success-rgb: 14, 112, 61;
+      --success-strong-rgb: 12, 98, 54;
+      --warning-rgb: 159, 74, 9;
+      --danger-rgb: 186, 39, 27;
+      --danger-strong-rgb: 164, 34, 24;
+      --info-rgb: 23, 90, 207;
+    }
 
-      /* Status colours are theme-independent and tuned for a light base. */
-      --success: #107e45;
-      --success-rgb: 18, 138, 76;
-      --success-strong: #0d6b3b;
-      --success-soft: #e4f5eb;
-      --warning: #af5109;
-      --warning-soft: #fdf1de;
-      --danger: #ce2b1e;
-      --danger-rgb: 217, 45, 32;
-      --danger-strong: #b42318;
-      --danger-soft: #fdecea;
-      --info: #175cd3;
-      --info-soft: #e8f0fe;
+    [data-mode="dark"] {
+      --bg: #0d0f13;
+      --bg-2: #14171d;
+      --surface-1: #181c23;
+      --surface-2: #1f242c;
+      --surface-3: #272d36;
+      --surface-input: #111419;
+      --surface-disabled: #20252d;
+      --border: #2c333d;
+      --border-subtle: #232932;
+      --border-strong: #3d4550;
+      --text: #eef1f6;
+      --text-2: #b4bdc9;
+      --text-3: #8d97a3;
+      --text-disabled: #646d79;
+      --surface-result: #111519;
+      --surface-rgb: 24, 28, 35;
+      --on-status: #0b0d10;
+      --result-ink: #f4f7fa;
+      --success: #4ade80;
+      --success-strong: #60e28f;
+      --success-soft: #1d3828;
+      --warning: #fbbf24;
+      --warning-soft: #3b3119;
+      --danger: #f87171;
+      --danger-strong: #f98282;
+      --danger-soft: #492c2c;
+      --info: #60a5fa;
+      --info-soft: #27354c;
+      --success-rgb: 74, 222, 128;
+      --success-strong-rgb: 96, 226, 143;
+      --warning-rgb: 251, 191, 36;
+      --danger-rgb: 248, 113, 113;
+      --danger-strong-rgb: 249, 130, 130;
+      --info-rgb: 96, 165, 250;
+    }
 
-      /* Stage surfaces stay dark on purpose: a big screen in a dim hall and a
-         desktop overlay bar both need a dark ground, but it is a themed neutral
-         now, not a hardcoded #000. */
-      --stage-bg: #101216;
-      --stage-surface: #1a1d23;
-      --stage-surface-2: #24282f;
-      --stage-border: #2f343d;
-      --stage-text: #f7f8fa;
-      --stage-text-2: #a8aeba;
-      --scrim: rgba(16, 18, 24, 0.45);
-
-      /* Accent: the only per-theme colour. */
-      --accent: #4f46e5;
-      --accent-rgb: 79, 70, 229;
-      --accent-contrast: #ffffff;
-      --accent-strong: #4338ca;
-      --accent-strong-rgb: 67, 56, 202;
-      --accent-deep: #3730a3;
-      --accent-bright: #8b85ee;
-      --accent-bright-rgb: 139, 133, 238;
+    /* Accent derivations that only depend on the theme. */
+    :root {
       --accent-soft: color-mix(in srgb, var(--accent) 8%, var(--surface-1));
       --accent-soft-2: color-mix(in srgb, var(--accent) 14%, var(--surface-1));
       --accent-line: color-mix(in srgb, var(--accent) 26%, var(--border));
       --accent-ring: rgba(var(--accent-rgb), 0.28);
       --accent-glow: rgba(var(--accent-rgb), 0.14);
+    }
 
-      /* Result card and translucent-surface helpers. */
-      --surface-result: #ffffff;
-      --surface-rgb: 255, 255, 255;
+    /* Accent defaults. JS overwrites these per theme, but the page must not
+       flash unaccented before the first applyTheme() call. Values match the
+       default theme (indigo). */
+    :root {
+      --accent: #4f46e5;
+      --accent-rgb: 79, 70, 229;
+      --accent-contrast: #ffffff;
+      --accent-strong: #3f38b7;
+      --accent-strong-rgb: 63, 56, 183;
+      --accent-deep: #36309c;
+      --accent-bright: #9e99f1;
+      --accent-bright-rgb: 158, 153, 241;
+    }
+
+    /* Mode-independent: type, spacing, radii, shadow depth -- and the stage.
+       The stage (projector wall and desktop bar) is deliberately dark in BOTH
+       modes: a projector in a dim hall washes out on a light ground, and the
+       desktop bar floats over whatever is on the user's screen. */
+    :root {
+      --stage-bg: #0b0d10;
+      --stage-surface: #151920;
+      --stage-surface-2: #1e232b;
+      --stage-border: #333b46;
+      --stage-text: #f7f9fb;
+      --stage-text-2: #a9b3c0;
+      --scrim: rgba(11, 13, 16, 0.45);
+      --strip-font: 1.35rem;
+    }
+    :root {
+      --stage-bg: #0b0d10;
+      --stage-surface: #151920;
+      --stage-surface-2: #1e232b;
+      --stage-border: #333b46;
+      --stage-text: #f7f9fb;
+      --stage-text-2: #a9b3c0;
+      --scrim: rgba(11, 13, 16, 0.45);
+      --strip-font: 1.35rem;
+    }
+    :root {
+      --stage-bg: #0b0d10;
+      --stage-surface: #151920;
+      --stage-surface-2: #1e232b;
+      --stage-border: #333b46;
+      --stage-text: #f7f9fb;
+      --stage-text-2: #a9b3c0;
+      --scrim: rgba(11, 13, 16, 0.45);
+      --strip-font: 1.35rem;
 
       /* Typography: one sans stack for every script, one tabular stack for
          every number so digits never jitter while the roller is running. */
@@ -111,12 +174,14 @@
       --r-lg: 12px;
       --r-pill: 999px;
 
-      /* Soft, low-contrast shadows: a light base does not need heavy ones. */
+      /* Soft, low-contrast shadows: neither a light nor a dark base needs heavy
+         ones, so these stay subtle in both modes. */
       --sh-1: 0 1px 2px rgba(16, 18, 24, 0.06);
       --sh-2: 0 4px 12px rgba(16, 18, 24, 0.08);
       --sh-3: 0 12px 32px rgba(16, 18, 24, 0.12);
       --focus-ring: 0 0 0 3px var(--accent-ring);
     }
+
 
     *,
     *::before,
@@ -378,7 +443,7 @@
 
     .btn-sync {
       background: var(--info);
-      color: #fff;
+      color: var(--on-status);
       border-color: var(--info);
     }
 
@@ -400,7 +465,7 @@
     }
     .btn-suspense.active {
       background: var(--danger);
-      color: #fff;
+      color: var(--on-status);
     }
 
     .viewport-grid {
@@ -481,7 +546,7 @@
     .pacing-ribbon {
       text-align: center;
       font-weight: 700;
-      color: #fff;
+      color: var(--accent-contrast);
       background: var(--accent);
       border-radius: var(--r-pill);
       margin-bottom: var(--sp-3);
@@ -517,7 +582,7 @@
 
     .tab-btn.active {
       background: var(--accent);
-      color: var(--accent);
+      color: var(--accent-contrast);
       box-shadow: var(--sh-2);
     }
 
@@ -557,7 +622,9 @@
     .action-btn:disabled {
       background: var(--surface-disabled);
       border-color: transparent;
-      color: var(--text-disabled);
+      /* WCAG exempts inactive controls, but 2:1 read as broken rather than
+         disabled, so this uses the muted token rather than the disabled one. */
+      color: var(--text-3);
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -656,7 +723,7 @@
       flex-direction: column;
       align-items: center;
       gap: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+      box-shadow: var(--sh-2);
     }
 
     .manual-input-box {
@@ -691,7 +758,7 @@
     .btn-manual-confirm {
       flex: 1;
       background: var(--accent);
-      color: var(--accent);
+      color: var(--accent-contrast);
       border: none;
       padding: 10px;
       font-size: var(--fs-sm);
@@ -707,7 +774,7 @@
     .btn-manual-redraw {
       flex: 1;
       background: var(--success-strong);
-      color: #fff;
+      color: var(--on-status);
       border: none;
       padding: 10px;
       font-size: var(--fs-sm);
@@ -898,7 +965,7 @@
     }
     .billboard-card.highlight .bb-num,
     .billboard-card.highlight .bb-seq {
-      color: #000 !important;
+      color: var(--accent-contrast) !important;
     }
     .billboard-card.highlight .bb-num {
       font-weight: 800;
@@ -1005,7 +1072,7 @@
       border-color: var(--accent);
     }
     .pool-field input[readonly] {
-      color: var(--accent);
+      color: var(--accent-strong);
       background: var(--surface-3);
       cursor: default;
     }
@@ -1077,9 +1144,9 @@
       font-weight: bold;
       margin-top: 4px;
     }
-    .p2p-status-tag.connected { background: var(--success-strong); color: #fff; }
-    .p2p-status-tag.waiting { background: var(--warning); color: #fff; }
-    .p2p-status-tag.disconnected { background: var(--danger-strong); color: #fff; }
+    .p2p-status-tag.connected { background: var(--success-strong); color: var(--on-status); }
+    .p2p-status-tag.waiting { background: var(--warning); color: var(--on-status); }
+    .p2p-status-tag.disconnected { background: var(--danger-strong); color: var(--on-status); }
 
     /* Sync modal: one status panel and two share panels, so the staff/display
        link and the guest audience link read as two different destinations. */
@@ -1165,7 +1232,7 @@
       border: 2px solid var(--accent);
       border-radius: var(--r-pill);
       padding: 10px 20px;
-      color: #fff;
+      color: var(--on-status);
       font-size: var(--fs-lg);
       font-weight: 700;
       z-index: 10025;
@@ -1179,7 +1246,7 @@
     .btn-timer-redraw {
       background: var(--accent);
       color: var(--accent-contrast);
-      border: 1px solid rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--accent-strong);
       font-weight: 700;
       padding: 6px 14px;
       border-radius: var(--r-pill);
@@ -1342,7 +1409,7 @@
     .proj-vip-close:hover {
       background: var(--danger);
       border-color: var(--danger-strong);
-      color: #fff;
+      color: var(--on-status);
     }
     .proj-vip-slot:not(.rolling) .proj-vip-close {
       display: flex;
@@ -1494,11 +1561,39 @@
     .theme-grid {
       flex: 1;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+      padding: 4px;
+      min-height: 120px;
+    }
+
+    /* Light and dark are separate sections so the split is obvious instead of
+       being a flat list where half the swatches look incompatible. */
+    .theme-group-title {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 10px;
+      border: 1px solid;
+      border-radius: var(--r-sm);
+    }
+    .theme-group-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid;
+      flex: none;
+    }
+    .theme-group-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 10px;
-      padding: 4px;
-      min-height: 120px;
+      margin-top: var(--sp-2);
     }
 
     .theme-swatch {
@@ -1604,10 +1699,10 @@
       <div class="spotlight-num" id="spotlightNum">0000</div>
       <div style="font-size:1.15rem; color:var(--text-2);" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--success); color:#fff; border-color:var(--success);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>领奖核销 (Claim)</span></button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--success); color:var(--on-status); border-color:var(--success);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>领奖核销 (Claim)</span></button>
         <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">现场10秒呼叫</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--border-strong);" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
   </div>
@@ -1617,7 +1712,7 @@
     <span data-i18n="timerCalling">领奖呼叫:</span>
     <span id="timerSeconds" style="font-size:1.8rem; font-family: var(--font-num); color:var(--accent);">10</span> <span data-i18n="secondsUnit">秒</span>
     <button class="btn-timer-redraw" id="timerRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">立即作废重抽</button>
-    <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()">取消</button>
+    <button class="icon-btn" style="background:var(--surface-3); border-color:var(--border-strong); color:var(--text);" onclick="stopClaimTimer()">取消</button>
   </div>
 
   <!-- 1. RECYCLE BIN MODAL -->
@@ -1697,15 +1792,15 @@
         <button class="icon-btn" onclick="toggleCrisisModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; padding:6px 0;">
-        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+        <div style="background:var(--surface-2); padding:10px; border-radius:8px;">
           <strong data-i18n="blacklistLabel">临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--surface-input); border:1px solid var(--accent); color:#fff; border-radius:4px; font-family: var(--font-num);">
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--surface-input); border:1px solid var(--accent); color:var(--text); border-radius:4px; font-family: var(--font-num);">
             <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
 
-        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+        <div style="background:var(--surface-2); padding:10px; border-radius:8px;">
           <strong data-i18n="backupLabel">应急备份与热导入 (防电脑彻底死机):</strong>
           <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
             <button class="icon-btn" onclick="downloadBackupJSON()" data-i18n="btnDownloadJson">下载完整状态 JSON</button>
@@ -1714,7 +1809,7 @@
           </div>
         </div>
 
-        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+        <div style="background:var(--surface-2); padding:10px; border-radius:8px;">
           <strong data-i18n="sponsorLabel">赞助商突击加码:</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
             <button class="icon-btn" onclick="quickAddPrizes(1)">+1</button>
@@ -1836,7 +1931,7 @@
 
       <!-- 3. RIGHT COLUMN: MASTER BILLBOARD WITH RANGE FILTER -->
       <div class="traditional-frame billboard-column">
-        <div class="column-banner" style="background: linear-gradient(90deg, var(--success-strong) 0%, var(--success) 50%, var(--success-strong) 100%); color:#fff;">
+        <div class="column-banner" style="background: linear-gradient(90deg, var(--success-strong) 0%, var(--success) 50%, var(--success-strong) 100%); color:var(--on-status);">
           <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
@@ -2013,6 +2108,10 @@
         navSync: "联机大厅",
         navTheme: "主题 / Theme",
         themeLabel: "主题",
+        themeGroupLight: "淺色主題 · Light",
+        themeGroupDark: "深色主題 · Dark",
+        themeModeLight: "淺色",
+        themeModeDark: "深色",
         themeTitle: "节日主题配色 / Festival Theme",
         themeDesc: "选择一套灯会主题配色，将同步应用到主控台、大屏投影、桌面悬浮条与副机显示端:",
         navSuspenseOn: "隐蔽模式: 开",
@@ -2145,6 +2244,10 @@
         navSync: "Sync Bilik",
         navTheme: "Tema / Theme",
         themeLabel: "Tema",
+        themeGroupLight: "Tema Cerah · Light",
+        themeGroupDark: "Tema Gelap · Dark",
+        themeModeLight: "Cerah",
+        themeModeDark: "Gelap",
         themeTitle: "Tema Festival / Festival Theme",
         themeDesc: "Pilih set tema festival tanglung — diselaraskan ke konsol, projektor, bar terapung & penonton:",
         navSuspenseOn: "Mod Rahsia: On",
@@ -2277,6 +2380,10 @@
         navSync: "Cloud Sync",
         navTheme: "Theme",
         themeLabel: "Theme",
+        themeGroupLight: "Light themes",
+        themeGroupDark: "Dark themes",
+        themeModeLight: "Light",
+        themeModeDark: "Dark",
         themeTitle: "Festival Theme / Festival Theme",
         themeDesc: "Pick a lantern-festival color scheme — synced to console, projection, floating bar & remote viewers:",
         navSuspenseOn: "Conceal Mode: On",
@@ -2394,205 +2501,225 @@
        who already saved one of the old 20 ids on a working theme. */
     const THEMES = {
       indigo: {
+        mode: "light",
         name: "靛藍 · Indigo",
         colors: {
           '--accent': '#4f46e5', '--accent-rgb': '79, 70, 229',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#443cc5', '--accent-strong-rgb': '68, 60, 197',
-          '--accent-deep': '#3a34a9',
-          '--accent-bright': '#8b85ee', '--accent-bright-rgb': '139, 133, 238'
+          '--accent-strong': '#3f38b7', '--accent-strong-rgb': '63, 56, 183',
+          '--accent-deep': '#36309c',
+          '--accent-bright': '#9e99f1', '--accent-bright-rgb': '158, 153, 241'
         }
       },
       blue: {
+        mode: "light",
         name: "寶石藍 · Blue",
         colors: {
           '--accent': '#2563eb', '--accent-rgb': '37, 99, 235',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#2055ca', '--accent-strong-rgb': '32, 85, 202',
-          '--accent-deep': '#1b49ae',
-          '--accent-bright': '#5f8df0', '--accent-bright-rgb': '95, 141, 240'
+          '--accent-strong': '#1e4fbc', '--accent-strong-rgb': '30, 79, 188',
+          '--accent-deep': '#1943a0',
+          '--accent-bright': '#87a9f4', '--accent-bright-rgb': '135, 169, 244'
         }
       },
       sky: {
-        name: "天藍 · Sky",
+        mode: "light",
+        name: "晴空 · Sky",
         colors: {
-          '--accent': '#0275b1', '--accent-rgb': '2, 117, 177',
+          '--accent': '#0275b0', '--accent-rgb': '2, 117, 176',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#026498', '--accent-strong-rgb': '2, 100, 152',
-          '--accent-deep': '#015683',
-          '--accent-bright': '#0398e6', '--accent-bright-rgb': '3, 152, 230'
+          '--accent-strong': '#015d8d', '--accent-strong-rgb': '1, 93, 141',
+          '--accent-deep': '#014f78',
+          '--accent-bright': '#74b3d4', '--accent-bright-rgb': '116, 179, 212'
         }
       },
       cyan: {
-        name: "深青 · Cyan",
+        mode: "light",
+        name: "青藍 · Cyan",
         colors: {
           '--accent': '#0e7490', '--accent-rgb': '14, 116, 144',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#0c647c', '--accent-strong-rgb': '12, 100, 124',
-          '--accent-deep': '#0a566b',
-          '--accent-bright': '#139dc3', '--accent-bright-rgb': '19, 157, 195'
+          '--accent-strong': '#0b5d73', '--accent-strong-rgb': '11, 93, 115',
+          '--accent-deep': '#0a4f62',
+          '--accent-bright': '#7ab3c2', '--accent-bright-rgb': '122, 179, 194'
         }
       },
       teal: {
+        mode: "light",
         name: "松綠 · Teal",
         colors: {
           '--accent': '#0f766e', '--accent-rgb': '15, 118, 110',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#0d655f', '--accent-strong-rgb': '13, 101, 95',
-          '--accent-deep': '#0b5751',
-          '--accent-bright': '#14a196', '--accent-bright-rgb': '20, 161, 150'
+          '--accent-strong': '#0c5e58', '--accent-strong-rgb': '12, 94, 88',
+          '--accent-deep': '#0a504b',
+          '--accent-bright': '#7bb4af', '--accent-bright-rgb': '123, 180, 175'
         }
       },
       emerald: {
+        mode: "light",
         name: "翡翠 · Emerald",
         colors: {
           '--accent': '#047857', '--accent-rgb': '4, 120, 87',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#03674b', '--accent-strong-rgb': '3, 103, 75',
-          '--accent-deep': '#035940',
-          '--accent-bright': '#05a477', '--accent-bright-rgb': '5, 164, 119'
+          '--accent-strong': '#036046', '--accent-strong-rgb': '3, 96, 70',
+          '--accent-deep': '#03523b',
+          '--accent-bright': '#75b5a3', '--accent-bright-rgb': '117, 181, 163'
         }
       },
       green: {
+        mode: "light",
         name: "草綠 · Green",
         colors: {
-          '--accent': '#157f3d', '--accent-rgb': '21, 127, 61',
+          '--accent': '#4d7c0f', '--accent-rgb': '77, 124, 15',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#126e34', '--accent-strong-rgb': '18, 110, 52',
-          '--accent-deep': '#0f5e2d',
-          '--accent-bright': '#1ba74f', '--accent-bright-rgb': '27, 167, 79'
+          '--accent-strong': '#3e630c', '--accent-strong-rgb': '62, 99, 12',
+          '--accent-deep': '#34540a',
+          '--accent-bright': '#9db77b', '--accent-bright-rgb': '157, 183, 123'
         }
       },
       lime: {
-        name: "橄欖 · Olive",
+        mode: "light",
+        name: "橄欖 · Lime",
         colors: {
-          '--accent': '#4d7b0f', '--accent-rgb': '77, 123, 15',
+          '--accent': '#4d7c0a', '--accent-rgb': '77, 124, 10',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#426a0d', '--accent-strong-rgb': '66, 106, 13',
-          '--accent-deep': '#395b0b',
-          '--accent-bright': '#63a013', '--accent-bright-rgb': '99, 160, 19'
+          '--accent-strong': '#3d6308', '--accent-strong-rgb': '61, 99, 8',
+          '--accent-deep': '#345407',
+          '--accent-bright': '#9db778', '--accent-bright-rgb': '157, 183, 120'
         }
       },
       amber: {
+        mode: "light",
         name: "琥珀 · Amber",
         colors: {
           '--accent': '#b45309', '--accent-rgb': '180, 83, 9',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#9b4708', '--accent-strong-rgb': '155, 71, 8',
-          '--accent-deep': '#853d07',
-          '--accent-bright': '#e96c0c', '--accent-bright-rgb': '233, 108, 12'
+          '--accent-strong': '#904207', '--accent-strong-rgb': '144, 66, 7',
+          '--accent-deep': '#7a3806',
+          '--accent-bright': '#d6a078', '--accent-bright-rgb': '214, 160, 120'
         }
       },
       orange: {
-        name: "暖橙 · Orange",
+        mode: "light",
+        name: "橘橙 · Orange",
         colors: {
           '--accent': '#c2410c', '--accent-rgb': '194, 65, 12',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#a7380a', '--accent-strong-rgb': '167, 56, 10',
-          '--accent-deep': '#903009',
-          '--accent-bright': '#f26329', '--accent-bright-rgb': '242, 99, 41'
+          '--accent-strong': '#9b340a', '--accent-strong-rgb': '155, 52, 10',
+          '--accent-deep': '#842c08',
+          '--accent-bright': '#dd9779', '--accent-bright-rgb': '221, 151, 121'
         }
       },
       red: {
+        mode: "dark",
         name: "正紅 · Red",
         colors: {
-          '--accent': '#d72525', '--accent-rgb': '215, 37, 37',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#b82020', '--accent-strong-rgb': '184, 32, 32',
-          '--accent-deep': '#9f1b1b',
-          '--accent-bright': '#e56a6a', '--accent-bright-rgb': '229, 106, 106'
+          '--accent': '#f87171', '--accent-rgb': '248, 113, 113',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#f98282', '--accent-strong-rgb': '249, 130, 130',
+          '--accent-deep': '#e96a6a',
+          '--accent-bright': '#f97c7c', '--accent-bright-rgb': '249, 124, 124'
         }
       },
       rose: {
-        name: "薔薇 · Rose",
+        mode: "dark",
+        name: "玫紅 · Rose",
         colors: {
-          '--accent': '#d81c45', '--accent-rgb': '216, 28, 69',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#ba183b', '--accent-strong-rgb': '186, 24, 59',
-          '--accent-deep': '#a01533',
-          '--accent-bright': '#eb6280', '--accent-bright-rgb': '235, 98, 128'
+          '--accent': '#fb7185', '--accent-rgb': '251, 113, 133',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#fb8294', '--accent-strong-rgb': '251, 130, 148',
+          '--accent-deep': '#ec6a7d',
+          '--accent-bright': '#fb7c8f', '--accent-bright-rgb': '251, 124, 143'
         }
       },
       pink: {
-        name: "桃紅 · Pink",
+        mode: "dark",
+        name: "桃粉 · Pink",
         colors: {
-          '--accent': '#be185d', '--accent-rgb': '190, 24, 93',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#a31550', '--accent-strong-rgb': '163, 21, 80',
-          '--accent-deep': '#8d1245',
-          '--accent-bright': '#eb5e99', '--accent-bright-rgb': '235, 94, 153'
+          '--accent': '#f472b6', '--accent-rgb': '244, 114, 182',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#f583bf', '--accent-strong-rgb': '245, 131, 191',
+          '--accent-deep': '#e56bab',
+          '--accent-bright': '#f57dbc', '--accent-bright-rgb': '245, 125, 188'
         }
       },
       fuchsia: {
-        name: "洋紅 · Fuchsia",
+        mode: "dark",
+        name: "紫紅 · Fuchsia",
         colors: {
-          '--accent': '#a21caf', '--accent-rgb': '162, 28, 175',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#8b1897', '--accent-strong-rgb': '139, 24, 151',
-          '--accent-deep': '#781582',
-          '--accent-bright': '#d95be5', '--accent-bright-rgb': '217, 91, 229'
+          '--accent': '#e879f9', '--accent-rgb': '232, 121, 249',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#eb89fa', '--accent-strong-rgb': '235, 137, 250',
+          '--accent-deep': '#da72ea',
+          '--accent-bright': '#ea84f9', '--accent-bright-rgb': '234, 132, 249'
         }
       },
       purple: {
-        name: "葡萄 · Purple",
+        mode: "dark",
+        name: "葡萄紫 · Purple",
         colors: {
-          '--accent': '#9333ea', '--accent-rgb': '147, 51, 234',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#7e2cc9', '--accent-strong-rgb': '126, 44, 201',
-          '--accent-deep': '#6d26ad',
-          '--accent-bright': '#b471f0', '--accent-bright-rgb': '180, 113, 240'
+          '--accent': '#c084fc', '--accent-rgb': '192, 132, 252',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#c893fc', '--accent-strong-rgb': '200, 147, 252',
+          '--accent-deep': '#b47ced',
+          '--accent-bright': '#c58efc', '--accent-bright-rgb': '197, 142, 252'
         }
       },
       violet: {
-        name: "紫羅蘭 · Violet",
+        mode: "dark",
+        name: "靛紫 · Violet",
         colors: {
-          '--accent': '#6d28d9', '--accent-rgb': '109, 40, 217',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#5e22bb', '--accent-strong-rgb': '94, 34, 187',
-          '--accent-deep': '#511ea1',
-          '--accent-bright': '#a57ae8', '--accent-bright-rgb': '165, 122, 232'
+          '--accent': '#a78bfa', '--accent-rgb': '167, 139, 250',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#b299fb', '--accent-strong-rgb': '178, 153, 251',
+          '--accent-deep': '#9d83eb',
+          '--accent-bright': '#ae94fa', '--accent-bright-rgb': '174, 148, 250'
         }
       },
       slate: {
-        name: "石板 · Slate",
+        mode: "dark",
+        name: "石板藍 · Slate",
         colors: {
-          '--accent': '#475569', '--accent-rgb': '71, 85, 105',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#3d495a', '--accent-strong-rgb': '61, 73, 90',
-          '--accent-deep': '#353f4e',
-          '--accent-bright': '#8192aa', '--accent-bright-rgb': '129, 146, 170'
+          '--accent': '#93c5fd', '--accent-rgb': '147, 197, 253',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#a0ccfd', '--accent-strong-rgb': '160, 204, 253',
+          '--accent-deep': '#8ab9ee',
+          '--accent-bright': '#9ccafd', '--accent-bright-rgb': '156, 202, 253'
         }
       },
       graphite: {
+        mode: "dark",
         name: "石墨 · Graphite",
         colors: {
-          '--accent': '#3f3f46', '--accent-rgb': '63, 63, 70',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#36363c', '--accent-strong-rgb': '54, 54, 60',
-          '--accent-deep': '#2f2f34',
-          '--accent-bright': '#90909b', '--accent-bright-rgb': '144, 144, 155'
+          '--accent': '#cbd5e1', '--accent-rgb': '203, 213, 225',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#d1dae5', '--accent-strong-rgb': '209, 218, 229',
+          '--accent-deep': '#bfc8d4',
+          '--accent-bright': '#cfd8e3', '--accent-bright-rgb': '207, 216, 227'
         }
       },
       steel: {
+        mode: "dark",
         name: "鋼青 · Steel",
         colors: {
-          '--accent': '#617086', '--accent-rgb': '97, 112, 134',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#536073', '--accent-strong-rgb': '83, 96, 115',
-          '--accent-deep': '#475363',
-          '--accent-bright': '#8391a6', '--accent-bright-rgb': '131, 145, 166'
+          '--accent': '#67e8f9', '--accent-rgb': '103, 232, 249',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#79ebfa', '--accent-strong-rgb': '121, 235, 250',
+          '--accent-deep': '#61daea',
+          '--accent-bright': '#73eaf9', '--accent-bright-rgb': '115, 234, 249'
         }
       },
       mocha: {
-        name: "可可 · Mocha",
+        mode: "dark",
+        name: "摩卡 · Mocha",
         colors: {
-          '--accent': '#78350f', '--accent-rgb': '120, 53, 15',
-          '--accent-contrast': '#ffffff',
-          '--accent-strong': '#672e0d', '--accent-strong-rgb': '103, 46, 13',
-          '--accent-deep': '#59270b',
-          '--accent-bright': '#e46d2a', '--accent-bright-rgb': '228, 109, 42'
+          '--accent': '#e3b778', '--accent-rgb': '227, 183, 120',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#e6c088', '--accent-strong-rgb': '230, 192, 136',
+          '--accent-deep': '#d5ac71',
+          '--accent-bright': '#e5bd83', '--accent-bright-rgb': '229, 189, 131'
         }
-      },
+      }
     };
 
     const LEGACY_THEME_ALIAS = {
@@ -2614,6 +2741,9 @@
     function applyThemeToRoot(root, themeId) {
       const theme = THEMES[resolveThemeId(themeId)];
       const css = theme.colors;
+      // The mode attribute is what selects the neutral scale. Setting only the
+      // accent would leave a dark theme sitting on the light neutrals.
+      root.setAttribute('data-mode', theme.mode);
       for (const key in css) {
         root.style.setProperty(key, css[key]);
       }
@@ -2643,7 +2773,13 @@
       }
       applyTheme(id);
       saveAndBroadcast();
-      showToast(`${I18N[currentLang].themeLabel}: ${THEMES[id].name}`);
+      {
+        const t = I18N[currentLang];
+        // The theme name is the hue only; the mode is spelled out in the
+        // operator's own language so BM/BI never see a Chinese suffix.
+        const modeWord = THEMES[id].mode === 'dark' ? t.themeModeDark : t.themeModeLight;
+        showToast(`${t.themeLabel}: ${THEMES[id].name} · ${modeWord}`);
+      }
     }
 
     function toggleThemeModal(show) {
@@ -2651,25 +2787,60 @@
       if (show) updateThemePickerUI();
     }
 
+    /* Reads the neutral scale for a mode straight from the stylesheet, so the
+       picker previews the real thing instead of duplicating the values here. */
+    function readModeNeutrals(mode) {
+      const probe = document.createElement('div');
+      probe.setAttribute('data-mode', mode);
+      probe.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;';
+      document.body.appendChild(probe);
+      const cs = getComputedStyle(probe);
+      const out = {
+        bg: cs.getPropertyValue('--bg').trim(),
+        surface: cs.getPropertyValue('--surface-1').trim(),
+        text: cs.getPropertyValue('--text').trim(),
+        border: cs.getPropertyValue('--border').trim()
+      };
+      probe.remove();
+      return out;
+    }
+
     function updateThemePickerUI() {
       const grid = document.getElementById('themeGrid');
       if (!grid) return;
-      grid.innerHTML = Object.keys(THEMES).map(id => {
-        const th = THEMES[id];
-        const active = id === currentTheme ? ' active' : '';
-        const c = th.colors;
-        return `
-          <div class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}">
+      const t = I18N[currentLang];
+      const html = ['light', 'dark'].map(mode => {
+        const n = readModeNeutrals(mode);
+        const ids = Object.keys(THEMES).filter(id => THEMES[id].mode === mode);
+        if (!ids.length) return '';
+        const heading = mode === 'light' ? t.themeGroupLight : t.themeGroupDark;
+        const cards = ids.map(id => {
+          const th = THEMES[id];
+          const active = id === currentTheme ? ' active' : '';
+          const c = th.colors;
+          // Preview the theme as it will actually look: that mode's neutrals
+          // behind this theme's accent ramp.
+          return `
+          <div class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}"
+               style="background:${n.bg}; border-color:${n.border};">
             <div class="theme-swatch-bars" style="--sw:${c['--accent']}">
               <div style="background:${c['--accent-deep']};"></div>
               <div style="background:${c['--accent']};"></div>
               <div style="background:${c['--accent-strong']};"></div>
               <div style="background:${c['--accent-contrast']};"></div>
-              <div style="background:${c['--accent-ring']};"></div>
             </div>
-            <div class="theme-swatch-name">${th.name}</div>
+            <div class="theme-swatch-name" style="color:${n.text};">${th.name}</div>
+          </div>`;
+        }).join('');
+        return `<div class="theme-group">
+            <div class="theme-group-title" style="color:${n.text}; background:${n.surface}; border-color:${n.border};">
+              <span class="theme-group-dot" style="background:${n.surface}; border-color:${n.border};"></span>
+              ${heading}
+            </div>
+            <div class="theme-group-grid">${cards}</div>
           </div>`;
       }).join('');
+      grid.innerHTML = html;
     }
 
     function changeLanguage(lang) {
@@ -3406,7 +3577,9 @@
       const btn = document.getElementById('vipToggleBtn');
       btn.textContent = I18N[currentLang].btnStopRoll;
       btn.style.background = "linear-gradient(135deg, var(--danger) 0%, var(--danger-strong) 100%)";
-      btn.style.color = "#fff";
+      // Dark mode's danger is a light red, so a literal #fff here would be the
+      // same near-invisible white the other inline chips had.
+      btn.style.color = "var(--on-status)";
       const disp = document.getElementById('vipDisplay');
       disp.classList.add('rolling');
       const slot = document.getElementById('projVipSlot');
@@ -4152,7 +4325,7 @@
 
     /* Bump BUILD_ID whenever the shipped file changes shape, so anyone
        reporting a stale render can be identified at a glance. */
-    const BUILD_ID = '2026.09.27-a';
+    const BUILD_ID = '2026.09.27-b';
 
     function renderBuildStamp() {
       const el = document.getElementById('buildStamp');
