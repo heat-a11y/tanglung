@@ -1496,7 +1496,7 @@
 
       <div class="top-stats">
         <div class="stat-badge" title="点击修改彩池总数" onclick="editPoolSize()" style="cursor:pointer;" id="poolBadgeEl">
-          <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">1500</strong> / <span id="poolMaxLabel" style="text-decoration:underline;">1500</span> ✏️
+          <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">2000</strong> / <span id="poolMaxLabel" style="text-decoration:underline;">3000</span> ✏️
         </div>
         <div class="stat-badge" title="点击修改奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;" id="prizeBadgeEl">
           <span data-i18n="wonLabel">已抽出</span>: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" style="text-decoration:underline;">110</span> ✏️
@@ -1713,8 +1713,8 @@
     let customSubTitle = null;
 
     let maxPrizes = 110;
-    let poolStart = 1;
-    let poolEnd = 1500;
+    let poolStart = 1001;
+    let poolEnd = 3000;
     const STORAGE_KEY = "tanglung_stage_v39_realtime";
     const VIP_ROLL_TTL = 30000;
 
@@ -3597,7 +3597,7 @@
             if (isSuspenseMode) {
               cardsHtml = `<div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>`;
             } else if (unclaimed.length === 0) {
-              cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">0001 - ${String(poolEnd).padStart(4,'0')}</span></div>`;
+              cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">${String(poolStart).padStart(4,'0')} - ${String(poolEnd).padStart(4,'0')}</span></div>`;
             } else {
               cardsHtml = unclaimed.map(item => `
                 <div class="proj-card">
