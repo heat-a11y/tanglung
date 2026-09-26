@@ -1124,9 +1124,36 @@
       background: rgba(0, 0, 0, 0.88);
       border: 4px solid var(--imperial-gold);
       border-radius: 24px;
-      padding: 30px 52px;
+      padding: 44px 60px 30px 52px;
       z-index: 30;
       box-shadow: 0 0 50px rgba(var(--gold-rgb), 0.55);
+    }
+    .proj-vip-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: clamp(34px, 4.5vw, 46px);
+      height: clamp(34px, 4.5vw, 46px);
+      border-radius: 50%;
+      border: 2px solid var(--imperial-gold);
+      background: rgba(0, 0, 0, 0.6);
+      color: var(--imperial-gold);
+      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+    .proj-vip-close:hover {
+      background: var(--danger-red);
+      border-color: var(--danger-bright);
+      color: #fff;
+    }
+    .proj-vip-slot:not(.rolling) .proj-vip-close {
+      display: flex;
     }
     .proj-vip-slot .proj-vip-label {
       color: var(--imperial-gold);
@@ -1659,6 +1686,7 @@
 
     <div class="proj-body" id="projBody">
       <div class="proj-vip-slot" id="projVipSlot" style="display:none;">
+        <button class="proj-vip-close" id="projVipCloseBtn" onclick="closeProjVipSlot()" title="✕" aria-label="Close">✕</button>
         <div class="proj-vip-label">👑 贵宾大奖 · VIP</div>
         <div class="proj-vip-num" id="projVipNum">----</div>
       </div>
@@ -1698,6 +1726,7 @@
     let vipRollStartTs = 0;
     let vipRollEvent = null;
     let appliedVipRollKey = null;
+    let vipSlotDismissed = false;
     let soundOn = true;
     let currentFontSize = 1.35;
 
@@ -2644,6 +2673,7 @@
         filterType,
         isSuspenseMode: Boolean(isSuspenseMode),
         projHideClaimed: Boolean(projHideClaimed),
+        vipSlotDismissed: Boolean(vipSlotDismissed),
         vipRollEvent: vipRollEvent || null,
         currentFontSize: Number(currentFontSize),
         currentLang,
@@ -2710,6 +2740,7 @@
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
       if (typeof d.projHideClaimed === 'boolean') projHideClaimed = d.projHideClaimed;
+      if (typeof d.vipSlotDismissed === 'boolean') vipSlotDismissed = d.vipSlotDismissed;
 
       if (d.currentFontSize) {
         currentFontSize = Math.max(1.0, Math.min(2.2, Number(d.currentFontSize)));
@@ -2756,6 +2787,7 @@
         }
       }
 
+      applyVipSlotDismiss();
       updateUI();
       updateProjHideClaimedBtn();
     }
@@ -2982,6 +3014,7 @@
 
     function startVipRollAnimation(playSfx) {
       if (isRolling) return;
+      vipSlotDismissed = false;
       const opView = document.getElementById('operatorView');
       const opVisible = opView && getComputedStyle(opView).display !== 'none';
       const projVisible = document.getElementById('projectorView').style.display === 'flex';
@@ -3032,10 +3065,29 @@
         if (finalNum) {
           slot.classList.remove('rolling');
           if (slotNum) slotNum.textContent = finalNum;
-          slot.style.display = 'flex';
+          slot.style.display = vipSlotDismissed ? 'none' : 'flex';
         } else {
           slot.style.display = 'none';
         }
+      }
+    }
+
+    function applyVipSlotDismiss() {
+      const slot = document.getElementById('projVipSlot');
+      if (!slot || !vipSlotDismissed) return;
+      clearTimeout(slot._hideT);
+      slot.classList.remove('rolling');
+      slot.style.display = 'none';
+    }
+
+    function closeProjVipSlot() {
+      vipSlotDismissed = true;
+      applyVipSlotDismiss();
+      if (!syncRef) return;
+      if (isViewerMode) {
+        syncRef.child('vipSlotDismissed').set(true).catch((err) => console.warn("Firebase Write Error:", err));
+      } else {
+        saveAndBroadcast();
       }
     }
 
@@ -3950,6 +4002,7 @@
         isSuspenseMode = false;
         vipRollEvent = null;
         appliedVipRollKey = null;
+        vipSlotDismissed = false;
         document.getElementById('batchGrid').innerHTML = `
           <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
