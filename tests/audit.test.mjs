@@ -303,6 +303,92 @@ describe('VIP slot dismiss button (synced)', () => {
       close(host); close(proj);
     }
   });
+
+  it('toolbar toggle brings a mistakenly closed card back, everywhere', async () => {
+    const host = makeHost();
+    const projA = makeProjection();
+    const projB = makeProjection();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+      const payload = host.window.getPayload();
+      projA.applyState(payload);
+      projB.applyState(payload);
+
+      closeBtn(projA).click();
+      assert.equal(projA.document.getElementById('projVipSlot').style.display, 'none');
+      assert.equal(projB.document.getElementById('projVipSlot').style.display, 'flex', 'B still shows it');
+
+      // the host receives the projection's write through the live database
+      host.applyState({ ...host.window.getPayload(), vipSlotDismissed: true });
+      assert.equal(host.document.getElementById('projVipSlot').style.display, 'none', 'host followed the close');
+
+      host.document.getElementById('vipCardBtn').click();
+      assert.equal(G(host, 'vipSlotDismissed'), false);
+      assert.equal(host.window.getPayload().vipSlotDismissed, false, 're-open is published');
+
+      projA.applyState(host.window.getPayload());
+      projB.applyState(host.window.getPayload());
+      for (const p of [projA, projB]) {
+        assert.equal(p.document.getElementById('projVipSlot').style.display, 'flex',
+          'card restored on every screen without a new draw');
+        assert.equal(p.document.getElementById('projVipNum').textContent, G(host, 'winners')[0]);
+      }
+    } finally {
+      close(host); close(projA); close(projB);
+    }
+  });
+
+  it('toolbar toggle never resurrects an empty card', () => {
+    const proj = makeProjection();
+    try {
+      const slot = proj.document.getElementById('projVipSlot');
+      assert.equal(slot.style.display, 'none', 'no draw yet');
+
+      proj.document.getElementById('vipCardBtn').click();
+
+      assert.equal(G(proj, 'vipSlotDismissed'), true);
+      assert.equal(slot.style.display, 'none', 'no number to show, so nothing appears');
+    } finally {
+      close(proj);
+    }
+  });
+
+  it('toolbar button label tracks the shared state', async () => {
+    const proj = makeProjection();
+    try {
+      const btn = proj.document.getElementById('vipCardBtn');
+      const t = () => btn.textContent;
+      assert.equal(t(), '👑 隐藏贵宾卡');
+
+      btn.click();
+      assert.equal(t(), '👑 显示贵宾卡');
+
+      proj.applyState({ vipSlotDismissed: false });
+      assert.equal(t(), '👑 隐藏贵宾卡', 'label follows remote state too');
+    } finally {
+      close(proj);
+    }
+  });
+
+  it('warns on screen when the dismissal cannot reach other devices', async () => {
+    const proj = makeProjection();
+    try {
+      S(proj, 'syncRef', { child: () => ({ set: () => Promise.reject(new Error('permission denied')) }) });
+
+      proj.window.closeProjVipSlot();
+      await sleep(20);
+
+      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'none', 'still hides locally');
+      const toast = proj.document.querySelector('#toastContainer .toast');
+      assert.ok(toast, 'a warning toast must be shown');
+      assert.ok(toast.classList.contains('error'), 'toast is styled as an error');
+      assert.match(toast.textContent, /sync failed/i);
+    } finally {
+      close(proj);
+    }
+  });
 });
 
 describe('Batch 10 draw (regression)', () => {
