@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>🏮 幸运大抽奖 | Cabutan Bertuah | Lucky Draw 🏮</title>
+  <title>幸运大抽奖 | Cabutan Bertuah | Lucky Draw</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%234c1e24'/%3E%3Ctext x='32' y='44' font-size='40' text-anchor='middle'%3E%F0%9F%8F%AE%3C/text%3E%3C/svg%3E">
   <!-- QR Code Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -53,13 +53,90 @@
       --lacquer-rgb: 20, 1, 3;
       --green-rgb: 46, 204, 113;
       --danger-rgb: 231, 76, 60;
+
+      /* Typography: one sans stack for every script, one tabular stack for
+         every number so digits never jitter while the roller is running. */
+      --font-sans: system-ui, -apple-system, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC",
+        "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+      --font-num: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo,
+        Consolas, "Liberation Mono", monospace;
+
+      --fs-xs: clamp(0.7rem, 0.67rem + 0.15vw, 0.78rem);
+      --fs-sm: clamp(0.78rem, 0.75rem + 0.15vw, 0.88rem);
+      --fs-md: clamp(0.88rem, 0.85rem + 0.15vw, 1rem);
+      --fs-lg: clamp(1rem, 0.96rem + 0.2vw, 1.15rem);
+      --fs-xl: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
+      --fs-2xl: clamp(1.35rem, 1.15rem + 1vw, 2rem);
+
+      --sp-1: 4px;
+      --sp-2: 8px;
+      --sp-3: 12px;
+      --sp-4: 16px;
+      --sp-5: 24px;
+      --sp-6: 32px;
+
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --r-pill: 999px;
+
+      --sh-1: 0 1px 2px rgba(0, 0, 0, 0.28);
+      --sh-2: 0 4px 14px rgba(0, 0, 0, 0.36);
+      --sh-3: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+      /* Semantic layer. These reference the theme colours, so all 20 themes
+         stay consistent without every one of them redefining them. */
+      --surface-1: rgba(255, 255, 255, 0.05);
+      --surface-2: rgba(255, 255, 255, 0.09);
+      --surface-3: rgba(0, 0, 0, 0.35);
+      --border-subtle: rgba(var(--gold-rgb), 0.22);
+      --border-strong: rgba(var(--gold-rgb), 0.55);
+      --text-body: var(--text-faint);
+      --text-dim: var(--text-soft);
+      --text-faintest: var(--text-muted);
+      --text-on-paper-dim: #6b6152;
+      --surface-disabled: #e7dfd1;
+      --text-disabled: #5c554a;
+      --divider-on-paper: rgba(0, 0, 0, 0.14);
+      --focus-ring: 0 0 0 3px rgba(var(--gold-rgb), 0.6);
     }
 
-    * {
+    *,
+    *::before,
+    *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: 'PingFang SC', 'Microsoft YaHei', 'SimHei', 'Segoe UI', sans-serif;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--fs-md);
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    :where(button, input, select, textarea) {
+      font: inherit;
+      color: inherit;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--imperial-gold);
+      outline-offset: 2px;
+      border-radius: var(--r-sm);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
     }
 
     body {
@@ -113,13 +190,14 @@
 
     .toast {
       background: rgba(var(--lacquer-rgb), 0.96);
-      border: 2px solid var(--imperial-gold);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--imperial-gold);
       color: #fff;
       padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      font-weight: bold;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      border-radius: var(--r-sm);
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      box-shadow: var(--sh-3);
       animation: toastIn 0.3s ease, toastOut 0.3s ease 3.7s forwards;
       display: flex;
       align-items: center;
@@ -127,7 +205,18 @@
     }
     .toast.error {
       border-color: var(--danger-bright);
-      color: var(--danger-bright);
+      border-left-color: var(--danger-bright);
+      color: var(--danger-soft);
+    }
+    .toast-mark {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--jade-green);
+      flex-shrink: 0;
+    }
+    .toast-mark.err {
+      background: var(--danger-bright);
     }
 
     @keyframes toastIn {
@@ -160,26 +249,16 @@
       gap: 8px;
     }
 
-    .title-lantern {
-      font-size: clamp(1.4rem, 2.5vw, 1.9rem);
-      animation: swing 3s ease-in-out infinite alternate;
-    }
-
-    @keyframes swing {
-      0% { transform: rotate(-5deg); }
-      100% { transform: rotate(5deg); }
-    }
-
     .editable-wrapper {
       display: flex;
       flex-direction: column;
     }
 
     .brand-title {
-      font-size: clamp(1.05rem, 1.8vw, 1.35rem);
-      font-weight: 900;
+      font-size: var(--fs-xl);
+      font-weight: 800;
       color: var(--imperial-gold);
-      letter-spacing: 1.5px;
+      letter-spacing: 0.04em;
       text-shadow: 0 2px 8px rgba(0,0,0,0.8);
       outline: none;
       border-bottom: 1px dashed transparent;
@@ -190,9 +269,9 @@
     }
 
     .brand-subtitle {
-      font-size: clamp(0.7rem, 1.1vw, 0.8rem);
-      color: var(--text-soft);
-      letter-spacing: 1px;
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
       outline: none;
     }
 
@@ -204,19 +283,31 @@
     }
 
     .stat-badge {
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(var(--gold-rgb), 0.6);
-      padding: 4px 9px;
-      border-radius: 20px;
-      font-size: clamp(0.72rem, 1.1vw, 0.8rem);
-      color: var(--text-faint);
+      background: var(--surface-3);
+      border: 1px solid var(--border-subtle);
+      padding: 5px 10px;
+      border-radius: var(--r-pill);
+      font-size: var(--fs-xs);
+      color: var(--text-body);
       user-select: none;
       white-space: nowrap;
+    }
+    .stat-badge:hover {
+      border-color: var(--border-strong);
     }
     .stat-badge strong {
       color: var(--imperial-gold);
       font-size: 1.05em;
-      font-family: monospace;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-edit {
+      border-bottom: 1px dashed rgba(var(--gold-rgb), 0.55);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .stat-badge:hover .stat-edit {
+      color: var(--imperial-gold);
+      border-bottom-color: var(--imperial-gold);
     }
 
     .top-actions {
@@ -239,19 +330,29 @@
     }
 
     .icon-btn {
-      background: rgba(var(--gold-rgb), 0.15);
-      border: 1px solid var(--imperial-gold);
+      background: rgba(var(--gold-rgb), 0.12);
+      border: 1px solid var(--border-strong);
       color: var(--imperial-gold);
-      padding: 5px 8px;
-      border-radius: 6px;
+      padding: 6px 10px;
+      border-radius: var(--r-sm);
       cursor: pointer;
-      font-weight: 800;
-      font-size: clamp(0.72rem, 1.1vw, 0.8rem);
-      transition: all 0.2s;
+      font-weight: 700;
+      font-size: var(--fs-sm);
+      line-height: 1.3;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
       white-space: nowrap;
     }
-    .icon-btn:hover {
-      background: rgba(var(--gold-rgb), 0.25);
+    .icon-btn:hover:not(:disabled) {
+      background: rgba(var(--gold-rgb), 0.24);
+      border-color: var(--imperial-gold);
+    }
+    .icon-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+    .icon-btn:disabled,
+    .icon-btn[aria-disabled="true"] {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     .btn-sync {
@@ -284,7 +385,7 @@
     .viewport-grid {
       flex: 1;
       display: grid;
-      grid-template-columns: minmax(260px, 300px) minmax(360px, 1fr) minmax(310px, 360px);
+      grid-template-columns: minmax(420px, 1fr) minmax(340px, 460px);
       gap: 12px;
       padding: 12px;
       min-height: 0;
@@ -302,102 +403,32 @@
       }
       .main-stage { order: 1; min-height: 480px; }
       .billboard-column { order: 2; min-height: 400px; }
-      .crawl-column { order: 3; min-height: 360px; }
     }
 
     .traditional-frame {
       background: rgba(var(--lacquer-rgb), 0.92);
-      border: 2px solid var(--imperial-gold);
-      border-radius: 12px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.7), inset 0 0 10px rgba(var(--gold-rgb), 0.12);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-lg);
+      box-shadow: var(--sh-3), inset 0 0 10px rgba(var(--gold-rgb), 0.12);
       position: relative;
       display: flex;
       flex-direction: column;
       min-height: 0;
     }
 
-    .crawl-column {
-      overflow: hidden;
-    }
-
     .column-banner {
       background: linear-gradient(90deg, var(--gold-dark) 0%, var(--imperial-gold) 50%, var(--gold-dark) 100%);
       color: var(--text-on-gold);
-      font-weight: 900;
-      padding: 7px 6px;
+      font-weight: 700;
+      padding: 8px;
       text-align: center;
-      letter-spacing: 1.5px;
-      font-size: 0.92rem;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+      letter-spacing: 0.06em;
+      font-size: var(--fs-sm);
+      box-shadow: var(--sh-1);
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .crawl-viewport {
-      flex: 1;
-      overflow: hidden;
-      position: relative;
-      background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.5) 100%);
-      cursor: pointer;
-      min-height: 200px;
-    }
-
-    .crawl-track {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 12px;
-      position: absolute;
-      width: 100%;
-      will-change: transform;
-    }
-
-    .crawl-card {
-      background: linear-gradient(135deg, rgba(var(--red-rgb), 0.45) 0%, rgba(var(--lacquer-rgb), 0.75) 100%);
-      border: 1px solid rgba(var(--gold-rgb), 0.4);
-      border-left: 5px solid var(--imperial-gold);
-      border-radius: 8px;
-      padding: 8px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: var(--strip-font);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      transition: transform 0.15s, background 0.15s;
-    }
-
-    .crawl-card:hover {
-      transform: scale(1.02);
-      background: rgba(var(--gold-rgb), 0.25);
-      border-color: var(--imperial-gold);
-    }
-
-    .crawl-card .crawl-tag {
-      font-size: 0.85rem;
-      color: var(--text-soft);
-      font-weight: bold;
-    }
-
-    .crawl-card .crawl-num {
-      color: var(--imperial-gold);
-      font-weight: 900;
-      font-size: 1.35em;
-      letter-spacing: 2px;
-      font-family: monospace;
-    }
-
-    .crawl-controls {
-      background: var(--bg-filter-panel);
-      border-top: 1px solid rgba(var(--gold-rgb), 0.3);
-      padding: 6px 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      font-size: 0.78rem;
-      color: var(--text-muted);
       flex-shrink: 0;
     }
 
@@ -416,27 +447,26 @@
     .main-stage {
       background: var(--paper-cream);
       color: var(--text-on-paper);
-      border: 3px solid var(--imperial-gold);
-      border-radius: 14px;
+      border: 2px solid var(--imperial-gold);
+      border-radius: var(--r-lg);
       display: flex;
       flex-direction: column;
-      padding: 14px 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      padding: var(--sp-4);
+      box-shadow: var(--sh-3);
       position: relative;
       min-height: 0;
     }
 
     .pacing-ribbon {
       text-align: center;
-      font-weight: 900;
+      font-weight: 700;
       color: #fff;
       background: linear-gradient(90deg, var(--gold-dark) 0%, var(--cinnabar-red) 50%, var(--gold-dark) 100%);
-      border: 2px solid var(--imperial-gold);
-      padding: 5px 12px;
-      border-radius: 20px;
-      margin-bottom: 10px;
-      font-size: clamp(0.85rem, 1.4vw, 0.98rem);
-      letter-spacing: 1px;
+      border-radius: var(--r-pill);
+      margin-bottom: var(--sp-3);
+      padding: 6px 14px;
+      font-size: var(--fs-sm);
+      letter-spacing: 0.04em;
       flex-shrink: 0;
     }
 
@@ -444,27 +474,30 @@
       display: flex;
       gap: 6px;
       justify-content: center;
-      margin-bottom: 10px;
+      margin-bottom: var(--sp-3);
       flex-shrink: 0;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 8px 4px;
-      font-size: clamp(0.78rem, 1.2vw, 0.92rem);
-      font-weight: 900;
-      border: 2px solid var(--cinnabar-red);
+      padding: 9px 6px;
+      font-size: var(--fs-sm);
+      font-weight: 700;
+      border: 1px solid var(--cinnabar-red);
       background: #fff;
       color: var(--cinnabar-red);
-      border-radius: 8px;
+      border-radius: var(--r-sm);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(var(--red-rgb), 0.08);
     }
 
     .tab-btn.active {
       background: var(--cinnabar-red);
       color: var(--imperial-gold);
-      box-shadow: 0 4px 10px rgba(var(--red-rgb), 0.4);
+      box-shadow: var(--sh-2);
     }
 
     .panel {
@@ -482,24 +515,29 @@
     .action-btn {
       background: linear-gradient(135deg, var(--imperial-gold) 0%, var(--gold-dark) 100%);
       color: var(--text-on-gold);
-      font-weight: 900;
-      font-size: clamp(1.1rem, 2.2vw, 1.35rem);
-      border: 2px solid #fff;
-      padding: 10px 32px;
-      border-radius: 30px;
+      font-weight: 800;
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      border: 1px solid rgba(255, 255, 255, 0.85);
+      padding: 12px 32px;
+      border-radius: var(--r-pill);
       cursor: pointer;
       box-shadow: 0 5px 16px rgba(var(--gold-dark-rgb), 0.5);
-      margin-bottom: 10px;
-      letter-spacing: 2px;
-      transition: transform 0.1s;
+      margin-bottom: var(--sp-3);
+      letter-spacing: 0.05em;
+      transition: transform 0.1s, box-shadow 0.15s;
       flex-shrink: 0;
     }
     .action-btn:hover:not(:disabled) {
-      transform: scale(1.02);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 22px rgba(var(--gold-dark-rgb), 0.6);
+    }
+    .action-btn:active:not(:disabled) {
+      transform: translateY(0);
     }
     .action-btn:disabled {
-      background: #bbb;
-      color: #666;
+      background: var(--surface-disabled);
+      border-color: transparent;
+      color: var(--text-disabled);
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -524,39 +562,33 @@
     .number-tag {
       background: var(--paper-cream);
       border: 2px solid var(--gold-dark);
-      border-radius: 10px;
+      border-radius: var(--r-md);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       animation: popIn 0.3s ease;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      box-shadow: var(--sh-1);
       position: relative;
-      padding: 4px;
+      padding: 6px;
       min-height: 60px;
     }
 
-    .number-tag::before {
-      content: "🏮";
-      position: absolute;
-      top: 2px;
-      left: 4px;
-      font-size: 0.7rem;
-    }
-
     .number-tag .sub-seq {
-      font-size: clamp(0.7rem, 1vw, 0.78rem);
+      font-size: var(--fs-xs);
       color: var(--gold-dark);
-      font-weight: 800;
-      margin-bottom: 1px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      text-align: center;
     }
 
     .number-tag .main-num {
       font-size: clamp(1.5rem, 2.8vw, 2.1rem);
-      font-weight: 900;
+      font-weight: 800;
       color: var(--cinnabar-red);
-      letter-spacing: 2px;
-      font-family: monospace;
+      letter-spacing: 0.04em;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
       line-height: 1;
     }
 
@@ -567,20 +599,22 @@
 
     .vip-display {
       font-size: clamp(3.6rem, 8vw, 5.8rem);
-      font-weight: 900;
+      font-weight: 800;
       color: var(--cinnabar-red);
       background: var(--paper-cream);
-      border: 5px solid var(--imperial-gold);
-      border-radius: 20px;
+      border: 4px solid var(--imperial-gold);
+      border-radius: var(--r-lg);
       width: 90%;
       max-width: 360px;
       height: clamp(120px, 20vh, 160px);
       display: flex;
       align-items: center;
       justify-content: center;
-      letter-spacing: clamp(3px, 1vw, 6px);
-      box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.2), 0 6px 20px rgba(0,0,0,0.15);
-      margin-bottom: 14px;
+      letter-spacing: 0.06em;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      box-shadow: inset 0 0 25px rgba(var(--gold-dark-rgb), 0.2), var(--sh-2);
+      margin-bottom: var(--sp-4);
       line-height: 1;
     }
 
@@ -620,12 +654,13 @@
       width: clamp(160px, 50%, 220px);
       padding: 8px 14px;
       font-size: clamp(1.6rem, 3.5vw, 2.1rem);
-      font-family: monospace;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
       text-align: center;
-      letter-spacing: 4px;
-      font-weight: 900;
-      border: 3px solid var(--cinnabar-red);
-      border-radius: 8px;
+      letter-spacing: 0.08em;
+      font-weight: 800;
+      border: 2px solid var(--cinnabar-red);
+      border-radius: var(--r-sm);
       outline: none;
       background: #fff;
       color: var(--cinnabar-red);
@@ -644,7 +679,7 @@
       color: var(--imperial-gold);
       border: none;
       padding: 10px;
-      font-size: 0.95rem;
+      font-size: var(--fs-sm);
       font-weight: 900;
       border-radius: 6px;
       cursor: pointer;
@@ -660,7 +695,7 @@
       color: #fff;
       border: none;
       padding: 10px;
-      font-size: 0.95rem;
+      font-size: var(--fs-sm);
       font-weight: 900;
       border-radius: 6px;
       cursor: pointer;
@@ -692,45 +727,55 @@
     }
 
     .filter-input {
-      width: 55px;
-      padding: 4px 4px;
+      width: 60px;
+      padding: 5px 6px;
       background: var(--bg-input);
-      border: 1px solid var(--imperial-gold);
+      border: 1px solid var(--border-strong);
       color: #fff;
-      border-radius: 4px;
-      font-family: monospace;
-      font-size: 0.8rem;
+      border-radius: var(--r-sm);
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--fs-xs);
       text-align: center;
       outline: none;
+    }
+    .filter-input:hover {
+      border-color: var(--imperial-gold);
     }
 
     .filter-select {
       background: var(--bg-input);
-      border: 1px solid var(--imperial-gold);
+      border: 1px solid var(--border-strong);
       color: var(--imperial-gold);
-      padding: 3px 4px;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      font-weight: bold;
+      padding: 4px 6px;
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      font-weight: 700;
       outline: none;
       cursor: pointer;
       flex: 1;
+      min-width: 120px;
+    }
+    .filter-select:hover {
+      border-color: var(--imperial-gold);
     }
 
     .filter-btn {
-      background: rgba(var(--gold-rgb), 0.25);
-      border: 1px solid var(--imperial-gold);
+      background: rgba(var(--gold-rgb), 0.18);
+      border: 1px solid var(--border-strong);
       color: var(--imperial-gold);
-      padding: 3px 6px;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
     }
     .filter-btn:hover {
-      background: rgba(var(--gold-rgb), 0.25);
-      color: #000;
+      background: var(--imperial-gold);
+      border-color: var(--imperial-gold);
+      color: var(--text-on-gold);
     }
 
     .preset-chips {
@@ -741,20 +786,24 @@
     }
 
     .chip-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(var(--gold-rgb), 0.3);
-      color: var(--text-soft);
-      padding: 2px 5px;
-      border-radius: 10px;
-      font-size: 0.7rem;
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-dim);
+      padding: 3px 8px;
+      border-radius: var(--r-pill);
+      font-size: var(--fs-xs);
       cursor: pointer;
-      transition: all 0.15s;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
-    .chip-btn:hover, .chip-btn.active {
+    .chip-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--imperial-gold);
+    }
+    .chip-btn.active {
       background: var(--imperial-gold);
-      color: #000;
+      color: var(--text-on-gold);
       border-color: var(--imperial-gold);
-      font-weight: bold;
+      font-weight: 700;
     }
 
     .search-container {
@@ -768,14 +817,19 @@
 
     .search-container input {
       flex: 1;
-      padding: 5px 8px;
+      padding: 6px 8px;
       background: var(--bg-input);
-      border: 1px solid var(--imperial-gold);
+      border: 1px solid var(--border-strong);
       color: #fff;
-      border-radius: 4px;
+      border-radius: var(--r-sm);
       outline: none;
-      font-family: monospace;
-      font-size: 0.85rem;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.08em;
+      font-size: var(--fs-sm);
+    }
+    .search-container input:hover {
+      border-color: var(--imperial-gold);
     }
 
     .billboard-grid {
@@ -783,24 +837,27 @@
       overflow-y: auto;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 5px;
-      padding: 8px;
+      gap: 6px;
+      padding: var(--sp-2);
       min-height: 140px;
+      align-content: start;
     }
 
     .billboard-card {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(var(--gold-rgb), 0.35);
-      padding: 5px 7px;
-      border-radius: 5px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 8px;
+      border-radius: var(--r-sm);
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      font-family: monospace;
-      font-size: 0.85rem;
+      align-items: baseline;
+      gap: 6px;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--fs-sm);
       cursor: pointer;
       user-select: none;
-      transition: background 0.2s, border-color 0.2s;
+      transition: background 0.15s, border-color 0.15s;
     }
 
     .billboard-card:hover {
@@ -817,24 +874,25 @@
 
     .billboard-card.highlight {
       background: var(--imperial-gold) !important;
-      color: #000 !important;
-      font-weight: 900;
       border-color: #fff;
-      transform: scale(1.03);
+      box-shadow: var(--sh-2);
     }
 
     .billboard-card .bb-seq {
-      color: var(--text-soft);
-      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-size: var(--fs-xs);
     }
     .billboard-card .bb-num {
       color: var(--imperial-gold);
-      font-weight: 900;
-      font-size: 1.1rem;
+      font-weight: 800;
+      font-size: var(--fs-lg);
     }
     .billboard-card.highlight .bb-num,
     .billboard-card.highlight .bb-seq {
       color: #000 !important;
+    }
+    .billboard-card.highlight .bb-num {
+      font-weight: 800;
     }
 
     .stage-footer {
@@ -843,9 +901,9 @@
       align-items: center;
       padding-top: 8px;
       margin-top: 4px;
-      border-top: 1px solid var(--text-muted);
-      font-size: 0.78rem;
-      color: #777;
+      border-top: 1px solid var(--divider-on-paper);
+      font-size: var(--fs-xs);
+      color: var(--text-on-paper-dim);
       flex-shrink: 0;
     }
 
@@ -862,25 +920,31 @@
 
     .modal-box {
       background: var(--deep-lacquer);
-      border: 2px solid var(--imperial-gold);
-      border-radius: 12px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-lg);
       width: 100%;
       max-width: 600px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      padding: 16px;
+      padding: var(--sp-4);
       color: #fff;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      box-shadow: var(--sh-3);
     }
 
     .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(var(--gold-rgb), 0.4);
-      padding-bottom: 8px;
-      margin-bottom: 10px;
+      gap: var(--sp-3);
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: var(--sp-2);
+      margin-bottom: var(--sp-3);
+    }
+    .modal-header h3 {
+      font-size: var(--fs-lg);
+      font-weight: 700;
+      letter-spacing: 0.03em;
     }
 
     .modal-list {
@@ -891,12 +955,85 @@
       gap: 6px;
     }
 
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--sp-2);
+      margin-top: var(--sp-4);
+      padding-top: var(--sp-3);
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .pool-field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--sp-3);
+    }
+
+    .pool-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-body);
+      text-transform: uppercase;
+    }
+
+    .pool-field input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      color: #fff;
+      border-radius: var(--r-sm);
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: var(--fs-lg);
+      text-align: center;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .pool-field input:hover {
+      border-color: var(--imperial-gold);
+    }
+    .pool-field input[readonly] {
+      color: var(--imperial-gold);
+      background: var(--surface-3);
+      cursor: default;
+    }
+
+    .pool-note {
+      margin: var(--sp-3) 0 0;
+      font-size: var(--fs-sm);
+      color: var(--text-dim);
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pool-error {
+      margin: 5px 0 0;
+      font-size: var(--fs-sm);
+      color: var(--danger-soft);
+      font-weight: 600;
+    }
+    .pool-error[hidden] {
+      display: none;
+    }
+
+    @media (max-width: 520px) {
+      .pool-field-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .modal-item {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface-1);
       border-left: 4px solid var(--imperial-gold);
       padding: 8px 12px;
       border-radius: 6px;
-      font-size: 0.88rem;
+      font-size: var(--fs-sm);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -910,25 +1047,27 @@
     }
 
     .btn-recycle-action {
-      background: rgba(var(--gold-rgb), 0.2);
-      border: 1px solid var(--imperial-gold);
+      background: rgba(var(--gold-rgb), 0.18);
+      border: 1px solid var(--border-strong);
       color: var(--imperial-gold);
-      padding: 3px 7px;
-      border-radius: 4px;
-      font-size: 0.72rem;
-      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: var(--r-sm);
+      font-size: var(--fs-xs);
+      font-weight: 700;
       cursor: pointer;
+      transition: background 0.15s, color 0.15s;
     }
     .btn-recycle-action:hover {
-      background: rgba(var(--gold-rgb), 0.00);
-      color: #000;
+      background: var(--imperial-gold);
+      border-color: var(--imperial-gold);
+      color: var(--text-on-gold);
     }
 
     .p2p-status-tag {
       display: inline-block;
       padding: 3px 8px;
       border-radius: 4px;
-      font-size: 0.8rem;
+      font-size: var(--fs-xs);
       font-weight: bold;
       margin-top: 4px;
     }
@@ -949,12 +1088,12 @@
 
     .spotlight-card {
       background: radial-gradient(circle at center, var(--cinnabar-red) 0%, var(--deep-lacquer) 100%);
-      border: 4px solid var(--imperial-gold);
-      border-radius: 18px;
+      border: 2px solid var(--imperial-gold);
+      border-radius: var(--r-lg);
       padding: clamp(20px, 4vw, 36px);
       text-align: center;
       color: #fff;
-      box-shadow: 0 0 50px rgba(var(--gold-rgb), 0.6);
+      box-shadow: var(--sh-3);
       animation: popIn 0.3s ease;
       max-width: 480px;
       width: 100%;
@@ -962,17 +1101,19 @@
 
     .spotlight-title {
       color: var(--imperial-gold);
-      font-size: clamp(1.2rem, 3vw, 1.5rem);
-      font-weight: bold;
-      margin-bottom: 8px;
+      font-size: var(--fs-2xl);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: var(--sp-2);
     }
 
     .spotlight-num {
       font-size: clamp(3.5rem, 8vw, 5rem);
-      font-weight: 900;
+      font-weight: 800;
       color: #fff;
-      letter-spacing: 5px;
-      font-family: monospace;
+      letter-spacing: 0.06em;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
       text-shadow: 0 0 20px rgba(var(--gold-rgb), 0.8);
       margin: 10px 0;
       line-height: 1;
@@ -981,20 +1122,20 @@
     .timer-overlay {
       display: none;
       position: fixed;
-      bottom: 20px;
+      bottom: var(--sp-5);
       left: 50%;
       transform: translateX(-50%);
       background: rgba(var(--danger-rgb), 0.98);
-      border: 3px solid var(--imperial-gold);
-      border-radius: 35px;
-      padding: 8px 18px;
+      border: 2px solid var(--imperial-gold);
+      border-radius: var(--r-pill);
+      padding: 10px 20px;
       color: #fff;
-      font-size: clamp(1rem, 2.2vw, 1.25rem);
-      font-weight: 900;
+      font-size: var(--fs-lg);
+      font-weight: 700;
       z-index: 10025;
-      box-shadow: 0 6px 25px rgba(0,0,0,0.8);
+      box-shadow: var(--sh-3);
       align-items: center;
-      gap: 10px;
+      gap: var(--sp-3);
       white-space: nowrap;
       max-width: 95vw;
     }
@@ -1002,16 +1143,15 @@
     .btn-timer-redraw {
       background: var(--imperial-gold);
       color: var(--text-on-gold);
-      border: 2px solid #fff;
-      font-weight: 900;
-      padding: 5px 12px;
-      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--r-pill);
       cursor: pointer;
-      font-size: 0.88rem;
-      transition: transform 0.1s;
+      font-size: var(--fs-sm);
+      transition: background 0.15s, color 0.15s;
     }
     .btn-timer-redraw:hover {
-      transform: scale(1.04);
       background: #fff;
       color: var(--cinnabar-red);
     }
@@ -1051,9 +1191,20 @@
 
     .proj-title {
       color: var(--imperial-gold);
-      font-size: 0.95rem;
-      font-weight: 900;
-      letter-spacing: 1px;
+      font-size: var(--fs-sm);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .proj-title::before {
+      content: '';
+      width: 9px;
+      height: 9px;
+      flex-shrink: 0;
+      background: var(--imperial-gold);
+      transform: rotate(45deg);
     }
 
     .proj-btn-group {
@@ -1085,23 +1236,24 @@
 
     .proj-grid-card {
       background: linear-gradient(135deg, rgba(var(--red-rgb), 0.9) 0%, rgba(var(--lacquer-rgb), 0.95) 100%);
-      border: 2px solid var(--imperial-gold);
-      border-radius: 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-md);
       padding: 10px;
       text-align: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      box-shadow: var(--sh-2);
     }
     .proj-grid-card .pg-seq {
-      font-size: 0.8rem;
-      color: var(--text-soft);
+      font-size: var(--fs-sm);
+      color: var(--text-dim);
       margin-bottom: 2px;
     }
     .proj-grid-card .pg-num {
-      font-size: 2rem;
-      font-weight: 900;
+      font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+      font-weight: 800;
       color: var(--imperial-gold);
-      font-family: monospace;
-      letter-spacing: 2px;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
     }
     .proj-grid-card.claimed {
       background: rgba(var(--green-rgb), 0.25) !important;
@@ -1120,32 +1272,34 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
-      background: rgba(0, 0, 0, 0.88);
-      border: 4px solid var(--imperial-gold);
-      border-radius: 24px;
-      padding: 44px 52px;
+      gap: var(--sp-4);
+      background: rgba(0, 0, 0, 0.9);
+      border: 3px solid var(--imperial-gold);
+      border-radius: var(--r-lg);
+      padding: clamp(28px, 4vw, 48px) clamp(32px, 5vw, 60px);
       z-index: 30;
-      box-shadow: 0 0 50px rgba(var(--gold-rgb), 0.55);
+      box-shadow: var(--sh-3);
     }
     .proj-vip-close {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 10px;
+      right: 10px;
       display: none;
       align-items: center;
       justify-content: center;
       width: clamp(34px, 4.5vw, 46px);
       height: clamp(34px, 4.5vw, 46px);
       border-radius: 50%;
-      border: 2px solid var(--imperial-gold);
+      border: 1px solid var(--border-strong);
       background: rgba(0, 0, 0, 0.6);
       color: var(--imperial-gold);
-      font-size: clamp(1.1rem, 2.2vw, 1.7rem);
-      font-weight: 900;
+      font-family: var(--font-sans);
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      font-weight: 700;
       line-height: 1;
       cursor: pointer;
       padding: 0;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     .proj-vip-close:hover {
       background: var(--danger-red);
@@ -1157,19 +1311,21 @@
     }
     .proj-vip-slot .proj-vip-label {
       color: var(--imperial-gold);
-      font-weight: 900;
-      font-size: clamp(1.4rem, 3vw, 2.4rem);
-      letter-spacing: 3px;
+      font-weight: 700;
+      font-size: clamp(1.1rem, 2.4vw, 2rem);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
     }
     .proj-vip-slot .proj-vip-num {
-      font-family: monospace;
-      font-weight: 900;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
       font-size: clamp(4rem, 14vw, 10rem);
       line-height: 1;
       color: var(--cinnabar-red);
       background: var(--paper-cream);
-      border: 4px solid var(--imperial-gold);
-      border-radius: 22px;
+      border: 3px solid var(--imperial-gold);
+      border-radius: var(--r-lg);
       padding: 16px 38px;
       min-width: 320px;
       text-align: center;
@@ -1183,24 +1339,25 @@
     .proj-timer-chip {
       display: none;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: #000;
-      border: 2px solid var(--imperial-gold);
-      border-radius: 28px;
-      padding: 10px 20px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-pill);
+      padding: 8px 16px;
       white-space: nowrap;
     }
     .proj-timer-chip .proj-timer-digits-inline {
       color: var(--imperial-gold);
-      font-weight: 900;
-      font-family: monospace;
+      font-weight: 800;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
       font-size: var(--proj-timer-font, 2.8rem);
-      letter-spacing: 4px;
+      letter-spacing: 0.06em;
       line-height: 1;
     }
     .proj-timer-sep {
       color: rgba(var(--gold-rgb), 0.5);
-      font-weight: 900;
+      font-weight: 700;
       margin: 0 2px;
     }
     .proj-timer-chip .proj-timer-digits-inline.timeout {
@@ -1214,18 +1371,26 @@
     }
 
     .proj-timer-btn-mini {
-      padding: 4px 12px;
-      font-size: 0.95rem;
-      font-weight: 900;
+      padding: 5px 10px;
+      font-size: var(--fs-xs);
+      font-weight: 700;
       background: var(--imperial-gold);
-      color: #000;
-      border: 1px solid #fff;
-      border-radius: 12px;
+      color: var(--text-on-gold);
+      border: 1px solid transparent;
+      border-radius: var(--r-pill);
       cursor: pointer;
+      min-width: 34px;
+      transition: background 0.15s, color 0.15s;
     }
     .proj-timer-btn-mini:hover {
       background: #fff;
       color: #000;
+    }
+    .mini-ico {
+      display: block;
+      width: 10px;
+      height: 10px;
+      margin: 0 auto;
     }
 
     .pip-single-row-body {
@@ -1262,27 +1427,28 @@
 
     .proj-card {
       background: #000;
-      border: 2px solid var(--imperial-gold);
-      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-sm);
       padding: 4px 12px;
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      margin: 0 8px;
+      margin: 0 6px;
       white-space: nowrap;
     }
     .proj-card .p-seq {
       color: var(--imperial-gold);
-      font-size: calc(var(--strip-font, 1.35rem) * 0.7);
-      font-weight: bold;
+      font-size: calc(var(--strip-font, 1.35rem) * 0.62);
+      font-weight: 600;
       white-space: nowrap;
     }
     .proj-card .p-num {
       color: var(--imperial-gold);
-      font-size: calc(var(--strip-font, 1.35rem) * 1.45);
-      font-weight: 900;
-      font-family: monospace;
-      letter-spacing: 2px;
+      font-size: calc(var(--strip-font, 1.35rem) * 1.35);
+      font-weight: 800;
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
       white-space: nowrap;
     }
 
@@ -1308,33 +1474,33 @@
       align-items: stretch;
       gap: 8px;
       background: rgba(var(--lacquer-rgb), 0.55);
-      border: 2px solid rgba(var(--gold-rgb), 0.35);
-      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md);
       padding: 10px;
       cursor: pointer;
       transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
     }
     .theme-swatch:hover {
-      transform: scale(1.03);
-      border-color: var(--imperial-gold);
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
     }
     .theme-swatch.active {
       border-color: var(--imperial-gold);
-      box-shadow: 0 0 12px rgba(var(--gold-rgb), 0.6);
+      box-shadow: 0 0 0 1px var(--imperial-gold), var(--sh-2);
     }
 
     .theme-swatch-bars {
       display: flex;
       flex-direction: column;
       gap: 3px;
-      border-radius: 6px;
+      border-radius: var(--r-sm);
       overflow: hidden;
     }
     .theme-swatch-bars div {
       height: 10px;
     }
     .theme-swatch-name {
-      font-size: 0.78rem;
+      font-size: var(--fs-xs);
       font-weight: 900;
       color: var(--text-soft);
       text-align: center;
@@ -1351,7 +1517,7 @@
   <div class="modal-backdrop" id="syncModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--teal-sync);">📡 <span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
+        <h3 style="color:var(--teal-sync);"><span data-i18n="syncTitle">跨设备多机实时云同步</span></h3>
         <button class="icon-btn" onclick="toggleSyncModal(false)">✕</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; font-size:0.9rem;">
@@ -1359,7 +1525,7 @@
           <div style="font-weight:bold; margin-bottom:6px;" data-i18n="syncStatusLabel">连接状态:</div>
           <div id="p2pStatusTag" class="p2p-status-tag connected">已直连 Firebase 云数据库</div>
           <div id="modeIndicatorTag" style="margin-top:6px; font-weight:bold; color:var(--imperial-gold);"></div>
-          <button class="icon-btn btn-projector" id="goHostBtn" onclick="promptBecomeHost()" data-i18n="btnGoHost" style="display:none; margin-top:10px; width:100%;">🎛️ 进入主控台 (需要主控PIN)</button>
+          <button class="icon-btn btn-projector" id="goHostBtn" onclick="promptBecomeHost()" data-i18n="btnGoHost" style="display:none; margin-top:10px; width:100%;">进入主控台 (需要主控PIN)</button>
         </div>
 
         <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; display:flex; flex-direction:column; align-items:center;">
@@ -1367,7 +1533,7 @@
           <div id="qrcode" style="background:#fff; padding:8px; border-radius:6px;"></div>
           <div style="margin-top:10px; font-size:0.8rem; color:#ccc;" data-i18n="copyLinkText">或复制显示端链接分享给副机:</div>
           <input type="text" id="shareLinkInput" readonly style="width:100%; margin-top:4px; padding:6px; background:var(--deep-lacquer); border:1px solid var(--imperial-gold); color:var(--text-soft); font-size:0.75rem;">
-          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">📋 复制显示端链接</button>
+          <button class="icon-btn" style="margin-top:6px;" onclick="copyShareLink()" data-i18n="btnCopyLink">复制显示端链接</button>
         </div>
       </div>
     </div>
@@ -1377,7 +1543,7 @@
   <div class="modal-backdrop" id="themeModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);">🎨 <span data-i18n="themeTitle">节日主题配色 / Festival Theme</span></h3>
+        <h3 style="color:var(--imperial-gold);"><span data-i18n="themeTitle">节日主题配色 / Festival Theme</span></h3>
         <button class="icon-btn" onclick="toggleThemeModal(false)">✕</button>
       </div>
       <p style="font-size:0.85rem; color:var(--text-soft); margin-bottom:12px;" data-i18n="themeDesc">
@@ -1390,13 +1556,13 @@
   <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP -->
   <div id="spotlightModal" onclick="closeSpotlight()">
     <div class="spotlight-card" onclick="event.stopPropagation()">
-      <div class="spotlight-title" id="spotlightTitle">🎉 恭喜中奖 🎉</div>
+      <div class="spotlight-title" id="spotlightTitle">恭喜中奖</div>
       <div class="spotlight-num" id="spotlightNum">0000</div>
       <div style="font-size:1.15rem; color:var(--text-soft);" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
       <div style="margin-top:20px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--jade-green); color:#fff; border-color:var(--jade-green);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()">✓ 领奖核销 (Claim)</button>
-        <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">⏱️ 现场10秒呼叫</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger-red); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">⚡ 作废重抽</button>
+        <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">现场10秒呼叫</button>
+        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--danger-red); color:var(--danger-soft);" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:#fff;" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
@@ -1404,9 +1570,9 @@
 
   <!-- COUNTDOWN TIMER FLOATING BADGE -->
   <div class="timer-overlay" id="timerOverlay">
-    <span data-i18n="timerCalling">⏱️ 领奖呼叫:</span>
-    <span id="timerSeconds" style="font-size:1.8rem; font-family:monospace; color:var(--imperial-gold);">10</span> <span data-i18n="secondsUnit">秒</span>
-    <button class="btn-timer-redraw" id="timerRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">⚡ 立即作废重抽</button>
+    <span data-i18n="timerCalling">领奖呼叫:</span>
+    <span id="timerSeconds" style="font-size:1.8rem; font-family: var(--font-num); color:var(--imperial-gold);">10</span> <span data-i18n="secondsUnit">秒</span>
+    <button class="btn-timer-redraw" id="timerRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnRedrawNow">立即作废重抽</button>
     <button class="icon-btn" style="background:#000; border-color:#fff; color:#fff;" onclick="stopClaimTimer()">取消</button>
   </div>
 
@@ -1414,7 +1580,7 @@
   <div class="modal-backdrop" id="recycleModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--jade-green);">♻️ <span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
+        <h3 style="color:var(--jade-green);"><span data-i18n="recycleTitle">作废号码回收站</span> (<span id="recycleCount">0</span>)</h3>
         <button class="icon-btn" onclick="toggleRecycleModal(false)">✕</button>
       </div>
       <p style="font-size:0.85rem; color:#ccc; margin-bottom:12px;" data-i18n="recycleDesc">
@@ -1430,7 +1596,7 @@
   <div class="modal-backdrop" id="auditModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);">📜 <span data-i18n="auditTitle">无人认领 / 作废重抽审核记录</span></h3>
+        <h3 style="color:var(--imperial-gold);"><span data-i18n="auditTitle">无人认领 / 作废重抽审核记录</span></h3>
         <button class="icon-btn" onclick="toggleAuditModal(false)">✕</button>
       </div>
       <div class="modal-list" id="auditList">
@@ -1439,33 +1605,73 @@
     </div>
   </div>
 
-  <!-- 3. LIVE CRISIS TOOLS MODAL -->
+  <!-- 3. TICKET POOL SETTINGS MODAL -->
+  <div class="modal-backdrop" id="poolModal">
+    <div class="modal-box" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 style="color:var(--imperial-gold);"><span data-i18n="poolRangeTitle">自定义号池范围</span></h3>
+        <button class="icon-btn" onclick="togglePoolModal(false)">✕</button>
+      </div>
+      <p style="color:var(--text-body); font-size:0.85rem; margin:0 0 14px;" data-i18n="poolRangeDesc">
+        设定参与抽奖的票号区间，系统会自动计算号池总数并防止任何号码重复。
+      </p>
+
+      <div class="pool-field-grid">
+        <label class="pool-field">
+          <span data-i18n="poolStartLabel">起始票号</span>
+          <input type="text" id="poolStartInput" inputmode="numeric" maxlength="4" oninput="onPoolInput(this)" onkeydown="if(event.key==='Enter') applyPoolRange()">
+        </label>
+        <label class="pool-field">
+          <span data-i18n="poolEndLabel">结束票号</span>
+          <input type="text" id="poolEndInput" inputmode="numeric" maxlength="4" oninput="onPoolInput(this)" onkeydown="if(event.key==='Enter') applyPoolRange()">
+        </label>
+        <label class="pool-field">
+          <span data-i18n="poolSizeLabel">号池总数</span>
+          <input type="text" id="poolSizeReadout" readonly tabindex="-1">
+        </label>
+        <label class="pool-field">
+          <span data-i18n="poolPrizeLabel">奖品总份数</span>
+          <input type="text" id="poolPrizeInput" inputmode="numeric" maxlength="4" oninput="onPoolInput(this)" onkeydown="if(event.key==='Enter') applyPoolRange()">
+        </label>
+      </div>
+
+      <p class="pool-note" id="poolRangeNote"></p>
+      <p class="pool-error" id="poolErrorText" hidden></p>
+
+      <div class="modal-footer">
+        <button class="icon-btn" onclick="togglePoolModal(false)" data-i18n="poolCancel">取消</button>
+        <button class="action-btn" id="poolApplyBtn" style="padding:9px 22px; font-size:0.9rem;" onclick="applyPoolRange()" data-i18n="poolApply">应用范围</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. LIVE CRISIS TOOLS MODAL -->
   <div class="modal-backdrop" id="crisisModal">
     <div class="modal-box">
       <div class="modal-header">
-        <h3 style="color:var(--imperial-gold);">🛠️ <span data-i18n="crisisTitle">应急危机处置工具箱</span></h3>
+        <h3 style="color:var(--imperial-gold);"><span data-i18n="crisisTitle">应急危机处置工具箱</span></h3>
         <button class="icon-btn" onclick="toggleCrisisModal(false)">✕</button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; padding:6px 0;">
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong data-i18n="blacklistLabel">🚫 临时剔除黑名单号码 (提前离场/失票):</strong>
+          <strong data-i18n="blacklistLabel">临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--bg-input); border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family:monospace;">
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--bg-input); border:1px solid var(--imperial-gold); color:#fff; border-radius:4px; font-family: var(--font-num);">
             <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
 
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong data-i18n="backupLabel">💾 应急备份与热导入 (防电脑彻底死机):</strong>
+          <strong data-i18n="backupLabel">应急备份与热导入 (防电脑彻底死机):</strong>
           <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <button class="icon-btn" onclick="downloadBackupJSON()" data-i18n="btnDownloadJson">📥 下载完整状态 JSON</button>
+            <button class="icon-btn" onclick="downloadBackupJSON()" data-i18n="btnDownloadJson">下载完整状态 JSON</button>
             <input type="file" id="importJsonInput" accept=".json" style="display:none" onchange="uploadBackupJSON(event)">
-            <button class="icon-btn" onclick="document.getElementById('importJsonInput').click()" data-i18n="btnRestoreJson">📤 导入恢复状态</button>
+            <button class="icon-btn" onclick="document.getElementById('importJsonInput').click()" data-i18n="btnRestoreJson">导入恢复状态</button>
           </div>
         </div>
 
         <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
-          <strong data-i18n="sponsorLabel">⚡ 赞助商突击加码:</strong>
+          <strong data-i18n="sponsorLabel">赞助商突击加码:</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
             <button class="icon-btn" onclick="quickAddPrizes(1)">+1</button>
             <button class="icon-btn" onclick="quickAddPrizes(5)">+5</button>
@@ -1483,7 +1689,6 @@
     <!-- TOP APP BAR -->
     <div class="top-bar">
       <div class="title-group">
-        <div class="title-lantern">🏮</div>
         <div class="editable-wrapper">
           <span class="brand-title" id="appMainTitle" contenteditable="true" spellcheck="false" title="点击直接编辑庆典主题">
             中秋提灯节庆典 · 幸运大抽奖
@@ -1495,11 +1700,11 @@
       </div>
 
       <div class="top-stats">
-        <div class="stat-badge" title="点击修改彩池总数" onclick="editPoolSize()" style="cursor:pointer;" id="poolBadgeEl">
-          <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">2000</strong> / <span id="poolMaxLabel" style="text-decoration:underline;">3000</span> ✏️
+        <div class="stat-badge" id="poolBadgeEl" data-i18n-title="poolRangeTitle" title="自定义号池范围" onclick="editPoolSize()" style="cursor:pointer;">
+          <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">2000</strong> / <span id="poolMaxLabel" class="stat-edit">3000</span>
         </div>
-        <div class="stat-badge" title="点击修改奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;" id="prizeBadgeEl">
-          <span data-i18n="wonLabel">已抽出</span>: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" style="text-decoration:underline;">110</span> ✏️
+        <div class="stat-badge" id="prizeBadgeEl" data-i18n-title="poolPrizeLabel" title="奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;">
+          <span data-i18n="wonLabel">已抽出</span>: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" class="stat-edit">110</span>
         </div>
         <div class="stat-badge">
           <span data-i18n="leftLabel">剩余名额</span>: <strong id="leftCount">110</strong>
@@ -1513,66 +1718,39 @@
           <option value="BI">English (BI)</option>
         </select>
 
-        <button class="icon-btn" onclick="toggleThemeModal(true)" id="themeBtn" data-i18n="navTheme">🎨 主题 / Theme</button>
-        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn" data-i18n="navSync">📡 联机大厅</button>
-        <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" data-i18n="navSuspenseOff">🔒 隐蔽模式: 关</button>
-        <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)">♻️ <span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)</button>
-        <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">📽️ 大屏投影</button>
-        <button class="icon-btn" onclick="openPiPOverlay()" data-i18n="navPip">📌 桌面悬浮条</button>
-        <button class="icon-btn" onclick="copyEmceeScript()" data-i18n="navScript">📋 司仪口播稿</button>
-        <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis" id="crisisBtn">🛠️ 应急</button>
-        <button class="icon-btn" onclick="testSound()" data-i18n="navTestSound">🔔 试音</button>
-        <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">🔊 音效: 开</button>
+        <button class="icon-btn" onclick="toggleThemeModal(true)" id="themeBtn" data-i18n="navTheme">主题 / Theme</button>
+        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn" data-i18n="navSync">联机大厅</button>
+        <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" data-i18n="navSuspenseOff">隐蔽模式: 关</button>
+        <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)"><span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)</button>
+        <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">大屏投影</button>
+        <button class="icon-btn" onclick="openPiPOverlay()" data-i18n="navPip">桌面悬浮条</button>
+        <button class="icon-btn" onclick="copyEmceeScript()" data-i18n="navScript">司仪口播稿</button>
+        <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis" id="crisisBtn">应急</button>
+        <button class="icon-btn" onclick="testSound()" data-i18n="navTestSound">试音</button>
+        <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">音效: 开</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
-        <button class="icon-btn" onclick="exportCSV()">💾 CSV</button>
+        <button class="icon-btn" onclick="exportCSV()">CSV</button>
         <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
       </div>
     </div>
 
-    <!-- 3-COLUMN BROADCAST VIEWPORT -->
+    <!-- 2-COLUMN BROADCAST VIEWPORT -->
     <div class="viewport-grid">
-      <!-- 1. LEFT COLUMN: VERTICAL RUNNING STRIP -->
-      <div class="traditional-frame crawl-column">
-        <div class="column-banner" id="leftBannerText">
-          <span>🏮</span> <span data-i18n="leftBanner">荣誉榜 · 点击号码核销领奖</span> <span>🏮</span>
-        </div>
-        <div class="crawl-viewport" id="opCrawlViewport">
-          <div class="crawl-track" id="opCrawlTrack">
-            <div style="text-align:center; color:var(--text-soft); padding:40px 10px; font-size:1rem;" data-i18n="crawlWaiting">
-              抽奖尚未开始<br>祝各位佳节好运吉祥！
-            </div>
-          </div>
-        </div>
-        <div class="crawl-controls">
-          <div class="control-row">
-            <span data-i18n="speedLabel">滚动速度:</span>
-            <input type="range" id="speedSlider" min="20" max="150" value="50" oninput="adjustOpSpeed(this.value)">
-          </div>
-          <div class="control-row">
-            <span data-i18n="fontLabel">字体大小:</span>
-            <div>
-              <button class="icon-btn" style="padding:1px 6px;" onclick="adjustFont(-0.1)">A-</button>
-              <button class="icon-btn" style="padding:1px 6px;" onclick="adjustFont(0.1)">A+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. CENTER COLUMN: MAIN STAGE -->
+      <!-- 1. CENTER COLUMN: MAIN STAGE -->
       <div class="main-stage">
         <div class="pacing-ribbon" id="pacingRibbon">
-          🏮 当前环节：幸运安慰奖抽取 🏮
+          当前环节：幸运安慰奖抽取
         </div>
 
         <div class="tab-group" id="tabGroupEl">
-          <button class="tab-btn active" id="tabBatchBtn" onclick="switchTab('batch')" data-i18n="tabBatch">⚡ 十连抽模式 (10 Slots)</button>
-          <button class="tab-btn" id="tabVipBtn" onclick="switchTab('vip')" data-i18n="tabVip">👑 贵宾大奖台 (VIP Slot)</button>
-          <button class="tab-btn" id="tabManualBtn" onclick="switchTab('manual')" data-i18n="tabManual">✍️ 手动录入 / 补抽 (Manual)</button>
+          <button class="tab-btn active" id="tabBatchBtn" onclick="switchTab('batch')" data-i18n="tabBatch">十连抽模式 (10 Slots)</button>
+          <button class="tab-btn" id="tabVipBtn" onclick="switchTab('vip')" data-i18n="tabVip">贵宾大奖台 (VIP Slot)</button>
+          <button class="tab-btn" id="tabManualBtn" onclick="switchTab('manual')" data-i18n="tabManual">手动录入 / 补抽 (Manual)</button>
         </div>
 
         <!-- Mode 1: Batch 10 -->
         <div id="batchPanel" class="panel active">
-          <button class="action-btn" id="batchDrawBtn" onclick="drawTen()" data-i18n="btnDraw10">🎲 摇出 10 位幸运儿</button>
+          <button class="action-btn" id="batchDrawBtn" onclick="drawTen()" data-i18n="btnDraw10">摇出 10 位幸运儿</button>
           <div class="batch-grid" id="batchGrid">
             <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;" data-i18n="batchEmptyHint">
               点击上方按钮同时抽出 10 个幸运号码
@@ -1584,13 +1762,13 @@
         <div id="vipPanel" class="panel">
           <div class="vip-display" id="vipDisplay">----</div>
           <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()" data-i18n="btnStartRoll">开 始 滚 动</button>
-          <div style="font-size:0.85rem; color:var(--gold-dark); font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
+          <div style="font-size:0.85rem; color:var(--gold-dark); font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
         </div>
 
         <!-- Mode 3: Manual Insertion -->
         <div id="manualPanel" class="panel">
           <div class="manual-card">
-            <h3 style="color:var(--cinnabar-red); letter-spacing:1px; font-size:1.15rem;" data-i18n="manualTitle">✍️ 无人认领现场录入 / 单号补抽</h3>
+            <h3 style="color:var(--cinnabar-red); letter-spacing:1px; font-size:1.15rem;" data-i18n="manualTitle">无人认领现场录入 / 单号补抽</h3>
             <p style="font-size:0.85rem; color:#666; text-align:center;" data-i18n="manualDesc">
               严格防重校验：自动剔除已出号码，绝不与任何环节重复
             </p>
@@ -1600,7 +1778,7 @@
             </div>
             <div class="manual-actions">
               <button class="btn-manual-confirm" id="manualConfirmBtn" onclick="confirmManualEntry()" data-i18n="btnConfirmManual">✓ 确认手动录入</button>
-              <button class="btn-manual-redraw" id="manualRedrawBtn" onclick="drawSingleManual()" data-i18n="btnDrawSingleManual">🎲 现场补抽 1 个</button>
+              <button class="btn-manual-redraw" id="manualRedrawBtn" onclick="drawSingleManual()" data-i18n="btnDrawSingleManual">现场补抽 1 个</button>
             </div>
           </div>
         </div>
@@ -1614,7 +1792,7 @@
       <!-- 3. RIGHT COLUMN: MASTER BILLBOARD WITH RANGE FILTER -->
       <div class="traditional-frame billboard-column">
         <div class="column-banner" style="background: linear-gradient(90deg, var(--success-green-dark) 0%, var(--jade-green) 50%, var(--success-green-dark) 100%); color:#fff;">
-          <span>📋</span> <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
+          <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
         <div class="filter-panel">
@@ -1627,7 +1805,7 @@
             <span style="color:var(--text-soft); font-size:0.8rem;" data-i18n="rangeTo">至</span>
             <input type="number" class="filter-input" id="rangeEnd" placeholder="70" oninput="applyRangeFilter()">
             <button class="filter-btn" onclick="clearRangeFilter()" data-i18n="btnFilterAll">全部</button>
-            <button class="filter-btn" onclick="exportRangeCSV()" data-i18n="btnExportSegment">💾 导出</button>
+            <button class="filter-btn" onclick="exportRangeCSV()" data-i18n="btnExportSegment">导出</button>
           </div>
 
           <div class="preset-chips">
@@ -1662,24 +1840,24 @@
 
   <div id="projectorView">
     <div class="proj-toolbar">
-      <div class="proj-title" id="projHeaderTitle">🏮 实时中奖大屏幕投影</div>
+      <div class="proj-title" id="projHeaderTitle">实时中奖大屏幕投影</div>
       <div class="proj-btn-group">
-        <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">🌓 背景: 全彩纯黑</button>
-        <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">⏱️ 领奖倒计时</button>
+        <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">背景: 全彩纯黑</button>
+        <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">领奖倒计时</button>
         <span class="proj-timer-chip" id="projTimerChip">
           <span class="proj-timer-digits-inline" id="projTimerDigits">05:00</span>
-          <button class="proj-timer-btn-mini" id="projTimerPlayPauseBtn" onclick="projTimerToggle()" title="Play / Pause">▶</button>
-          <button class="proj-timer-btn-mini" onclick="projTimerStop(true)" title="Stop">⏹</button>
+          <button class="proj-timer-btn-mini" id="projTimerPlayPauseBtn" onclick="projTimerToggle()" data-i18n-title="projTimerPlay" title="Play / Pause"><svg class="mini-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg></button>
+          <button class="proj-timer-btn-mini" onclick="projTimerStop(true)" data-i18n-title="projTimerStop" title="Stop"><svg class="mini-ico" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="2" width="8" height="8" fill="currentColor"/></svg></button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(1)">+1</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(5)">+5</button>
           <button class="proj-timer-btn-mini" onclick="projTimerAdd(10)">+10</button>
-          <button class="proj-timer-btn-mini" onclick="projTimerReset()">↺</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerReset()" data-i18n-title="projTimerReset" title="Reset">↺</button>
           <span class="proj-timer-sep">|</span>
-          <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(-0.3)" title="Font −">A−</button>
-          <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(0.3)" title="Font +">A+</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(-0.3)" data-i18n-title="projTimerFontDown" title="Font −">A−</button>
+          <button class="proj-timer-btn-mini" onclick="projTimerFontAdj(0.3)" data-i18n-title="projTimerFontUp" title="Font +">A+</button>
         </span>
-        <button class="icon-btn" id="vipCardBtn" onclick="toggleVipCard()" data-i18n="btnVipCardHide">👑 隐藏贵宾卡</button>
-        <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">🚫 隐藏已领奖</button>
+        <button class="icon-btn" id="vipCardBtn" onclick="toggleVipCard()" data-i18n="btnVipCardHide">隐藏贵宾卡</button>
+        <button class="icon-btn" id="projHideClaimedBtn" onclick="toggleProjHideClaimed()" data-i18n="btnProjHideClaimed">隐藏已领奖</button>
         <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="btnProjFs">⛶ 全屏</button>
         <button class="icon-btn" style="border-color:var(--danger-bright); color:var(--danger-soft);" onclick="closeProjectionMode()" data-i18n="btnProjClose">✕ 返回</button>
       </div>
@@ -1688,7 +1866,7 @@
     <div class="proj-body" id="projBody">
       <div class="proj-vip-slot" id="projVipSlot" style="display:none;">
         <button class="proj-vip-close" id="projVipCloseBtn" onclick="closeProjVipSlot()" title="✕" aria-label="Close">✕</button>
-        <div class="proj-vip-label">👑 贵宾大奖 · VIP</div>
+        <div class="proj-vip-label" data-i18n="projVipLabel">贵宾大奖 · VIP</div>
         <div class="proj-vip-num" id="projVipNum">----</div>
       </div>
       <div class="proj-static-grid" id="projStaticGrid"></div>
@@ -1727,6 +1905,8 @@
     let vipRollStartTs = 0;
     let vipRollEvent = null;
     let appliedVipRollKey = null;
+    // Projection-local only: never synced, never persisted. A VIP number stays on
+    // the big screen until an operator closes it here, and the next draw reopens it.
     let vipSlotDismissed = false;
     let soundOn = true;
     let currentFontSize = 1.35;
@@ -1749,10 +1929,6 @@
     let pipBarMode = false;
     let projSpeedPx = 1.2;
 
-    let opScrollPos = 0;
-    let opSpeedPx = 0.8;
-    let isOpPaused = false;
-
     let syncRef = null;
     let isPushingFirebase = false;
     let lastPushedSig = null;
@@ -1765,50 +1941,61 @@
         brandTitle: "中秋提灯节庆典 · 幸运大抽奖",
         brandSub: "现场大屏幕同步抽奖系统",
         poolLabel: "号池",
+        poolRangeTitle: "自定义号池范围",
+        poolRangeDesc: "设定参与抽奖的票号区间，系统会自动计算号池总数并防止任何号码重复。",
+        poolStartLabel: "起始票号",
+        poolEndLabel: "结束票号",
+        poolSizeLabel: "号池总数",
+        poolPrizeLabel: "奖品总份数",
+        poolApply: "应用范围",
+        poolCancel: "取消",
+        poolSizeNote: "共 {size} 个号码（{start} - {end}）",
+        poolErrRange: "票号无效：请输入 1 至 9999 之间，且起始号必须小于结束号。",
+        poolErrOutOfRange: "票号 #{num} 不在当前范围 {start}-{end} 内，无需操作。",
+        restoreErrOutOfRange: "票号 #{num} 不在当前范围 {start}-{end} 内，已保持原状。",
+        blacklistErrWinner: "票号 #{num} 已是中奖号码，请改用「作废重抽」。",
+        poolPrizeClamped: "奖品总份数已自动调整为 {max}，以匹配号池容量。",
+        poolVoided: "{count} 个已抽出号码落在新范围之外，已转入回收站备查。",
         wonLabel: "已抽出",
         leftLabel: "剩余名额",
-        navSync: "📡 联机大厅",
-        navTheme: "🎨 主题 / Theme",
+        navSync: "联机大厅",
+        navTheme: "主题 / Theme",
         themeTitle: "节日主题配色 / Festival Theme",
         themeDesc: "选择一套灯会主题配色，将同步应用到主控台、大屏投影、桌面悬浮条与副机显示端:",
-        navSuspenseOn: "🔒 隐蔽模式: 开",
-        navSuspenseOff: "🔒 隐蔽模式: 关",
+        navSuspenseOn: "隐蔽模式: 开",
+        navSuspenseOff: "隐蔽模式: 关",
         navRecycle: "回收站",
-        navProj: "📽️ 大屏投影",
-        navPip: "📌 桌面悬浮条",
-        navScript: "📋 司仪口播稿",
-        navCrisis: "🛠️ 应急",
-        navTestSound: "🔔 试音",
-        navSoundOn: "🔊 音效: 开",
-        navSoundOff: "🔇 音效: 关",
-        navFullscreen: "⛶ 全屏",
-        navReset: "↺ 重置",
-        leftBanner: "荣誉榜 · 点击号码核销领奖",
-        crawlWaiting: "抽奖尚未开始<br>祝各位佳节好运吉祥！",
-        speedLabel: "滚动速度:",
-        fontLabel: "字体大小:",
-        tabBatch: "⚡ 十连抽模式 (10 Slots)",
-        tabVip: "👑 贵宾大奖台 (VIP Slot)",
-        tabManual: "✍️ 手动录入 / 补抽 (Manual)",
-        btnDraw10: "🎲 摇出 10 位幸运儿",
+        navProj: "大屏投影",
+        navPip: "桌面悬浮条",
+        navScript: "司仪口播稿",
+        navCrisis: "应急",
+        navTestSound: "试音",
+        navSoundOn: "音效: 开",
+        navSoundOff: "音效: 关",
+        navFullscreen: "全屏",
+        navReset: "重置",
+        tabBatch: "十连抽模式 (10 Slots)",
+        tabVip: "贵宾大奖台 (VIP Slot)",
+        tabManual: "手动录入 / 补抽 (Manual)",
+        btnDraw10: "摇出 10 位幸运儿",
         batchEmptyHint: "点击上方按钮同时抽出 10 个幸运号码",
         btnStartRoll: "开 始 滚 动",
         btnStopRoll: "停！(STOP)",
-        vipSpaceHint: "💡 舞台提示：可轻按 [空格键 SPACEBAR] 启停",
-        vipSpaceHintViewer: "💡 观众端：实时观看主控台摇号中",
-        manualTitle: "✍️ 无人认领现场录入 / 单号补抽",
+        vipSpaceHint: "舞台提示：可轻按 [空格键 SPACEBAR] 启停",
+        vipSpaceHintViewer: "观众端：实时观看主控台摇号中",
+        manualTitle: "无人认领现场录入 / 单号补抽",
         manualDesc: "严格防重校验：自动剔除已出号码，绝不与任何环节重复",
         manualInputHint: "输入 1 至 4 位数字按回车或点确认",
-        btnConfirmManual: "✓ 确认手动录入",
-        btnDrawSingleManual: "🎲 现场补抽 1 个",
-        stageFooterLeft: "中秋提灯晚会 • 全屏/左榜/PIP/跨机实时联动已就绪",
+        btnConfirmManual: "确认手动录入",
+        btnDrawSingleManual: "现场补抽 1 个",
+        stageFooterLeft: "中秋提灯晚会 • 全屏 / 悬浮条 / 跨机实时联动已就绪",
         stageFooterRight: "现场专委会监制",
         bbBanner: "中奖公布栏",
         optBySeq: "按奖品位次 (Prize #)",
         optByTicket: "按中奖票号 (Ticket #)",
         rangeTo: "至",
         btnFilterAll: "全部",
-        btnExportSegment: "💾 导出",
+        btnExportSegment: "导出",
         chipAll: "显示全部",
         chipCustom: "自定义...",
         btnFocusVerify: "核验定位",
@@ -1819,97 +2006,119 @@
         syncConnected: "已连接 Firebase 云数据库",
         scanQr: "副机 / 显示端扫码一键加入:",
         copyLinkText: "或复制显示端链接分享给副机:",
-        btnCopyLink: "📋 复制显示端链接",
-        spotlightCongrats: "🎉 恭喜中奖 🎉",
-        btnCall10: "⏱️ 现场10秒呼叫",
-        btnVoidRedraw: "⚡ 作废重抽",
+        btnCopyLink: "复制显示端链接",
+        spotlightCongrats: "恭喜中奖",
+        btnCall10: "现场10秒呼叫",
+        btnVoidRedraw: "作废重抽",
         btnClose: "关 闭",
-        timerCalling: "⏱️ 领奖呼叫:",
+        timerCalling: "领奖呼叫:",
         secondsUnit: "秒",
-        btnRedrawNow: "⚡ 立即作废重抽",
+        btnRedrawNow: "立即作废重抽",
         btnCancel: "取消",
         recycleTitle: "作废号码回收站",
         recycleDesc: "所有作废、无人在场或误删的号码均在此存放。如获胜者迟到赶回，可随时恢复至号池或直接归位：",
         recycleEmpty: "回收站空空如也",
+        btnRestorePool: "退回号池",
+        btnRestoreWinner: "恢复为中奖",
         auditTitle: "无人认领 / 作废重抽审核记录",
         auditEmpty: "暂无作废或重抽记录",
         crisisTitle: "应急危机处置工具箱",
-        blacklistLabel: "🚫 临时剔除黑名单号码 (提前离场/失票):",
+        blacklistLabel: "临时剔除黑名单号码 (提前离场/失票):",
         btnExclude: "剔除出池",
-        backupLabel: "💾 应急备份与热导入 (防电脑彻底死机):",
-        btnDownloadJson: "📥 下载完整状态 JSON",
-        btnRestoreJson: "📤 导入恢复状态",
-        sponsorLabel: "⚡ 赞助商突击加码:",
-        pacingConsolation: "🏮 当前环节：幸运安慰奖抽取 (第 1 - {quota} 份) 🏮",
-        pacingGrand: "🌟 盛大环节：压轴特奖逐一揭晓 🌟",
-        pacingDone: "🎉 圆满礼成：全部 {quota} 份大奖已全部抽出！ 🎉",
+        backupLabel: "应急备份与热导入 (防电脑彻底死机):",
+        btnDownloadJson: "下载完整状态 JSON",
+        btnRestoreJson: "导入恢复状态",
+        sponsorLabel: "赞助商突击加码:",
+        pacingConsolation: "当前环节：幸运安慰奖抽取 (第 1 - {quota} 份)",
+        pacingGrand: "盛大环节：压轴特奖逐一揭晓",
+        pacingDone: "圆满礼成：全部 {quota} 份大奖已全部抽出！",
         prizeItemPrefix: "第 {seq} 份奖品",
         projWaiting: "准备就绪",
-        projSuspense: "★★★ 精彩即将揭晓 ★★★",
-        btnToggleBgSolid: "🌓 背景: 全彩纯黑",
-        btnToggleBgTrans: "🌓 背景: 透明通道",
-        btnProjFs: "⛶ 全屏",
-        btnProjClose: "✕ 返回",
-        projTimerBtn: "⏱️ 领奖倒计时",
-        btnProjHideClaimed: "🚫 隐藏已领奖",
-        btnProjShowClaimed: "👁 显示已领奖",
-        btnVipCardHide: "👑 隐藏贵宾卡",
-        btnVipCardShow: "👑 显示贵宾卡",
-        btnClaimVerify: "✓ 领奖核销 (Claim)",
-        btnClaimVerified: "✓ 已领奖 (Claimed)",
-        claimedTag: " ✓已领",
-        btnGoHost: "🎛️ 进入主控台 (需要主控PIN)",
+        projSuspense: "精彩即将揭晓",
+        projVipLabel: "贵宾大奖 · VIP",
+        btnToggleBgSolid: "背景: 全彩纯黑",
+        btnToggleBgTrans: "背景: 透明通道",
+        btnProjFs: "全屏",
+        btnProjClose: "返回",
+        projTimerBtn: "领奖倒计时",
+        projTimerPlay: "开始",
+        projTimerPause: "暂停",
+        projTimerStop: "停止",
+        projTimerReset: "归零",
+        projTimerFontDown: "A-",
+        projTimerFontUp: "A+",
+        btnProjHideClaimed: "隐藏已领奖",
+        btnProjShowClaimed: "显示已领奖",
+        btnVipCardHide: "隐藏贵宾卡",
+        btnVipCardShow: "显示贵宾卡",
+        btnClaimVerify: "领奖核销 (Claim)",
+        btnClaimVerified: "已领奖 (Claimed)",
+        claimedTag: " 已领",
+        btnGoHost: "进入主控台 (需要主控PIN)",
         hostPrompt: "请输入主控台访问 PIN（主控电脑专用）",
-        hostWrong: "主控 PIN 不正确"
+        hostWrong: "主控 PIN 不正确",
+        modeHost: "主控模式 (Master Host - 控制端)",
+        modeViewer: "观众/显示端 (只读显示，支持领奖核销)"
       },
       BM: {
         brandTitle: "Pesta Tanglung · Cabutan Bertuah",
         brandSub: "Sistem Cabutan Bertuah Langsung",
         poolLabel: "Kolam Tiket",
+        poolRangeTitle: "Julat Kolam Tiket",
+        poolRangeDesc: "Tentukan julat nombor tiket yang layak bertuah. Saiz kolam dikira secara automatik dan setiap nombor hanya boleh muncul sekali.",
+        poolStartLabel: "Nombor Mula",
+        poolEndLabel: "Nombor Tamat",
+        poolSizeLabel: "Saiz Kolam",
+        poolPrizeLabel: "Jumlah Hadiah",
+        poolApply: "Guna Julat",
+        poolCancel: "Batal",
+        poolSizeNote: "{size} nombor ({start} - {end})",
+        poolErrRange: "Nombor tidak sah: masukkan 1 hingga 9999 dan mula mesti lebih kecil dari tamat.",
+        poolErrOutOfRange: "Tiket #{num} berada di luar julat {start}-{end}, tiada apa untuk dikecualikan.",
+        restoreErrOutOfRange: "Tiket #{num} berada di luar julat semasa {start}-{end}, tiada perubahan.",
+        blacklistErrWinner: "Tiket #{num} sudah menjadi pemenang, sila gunakan Batal & Cabut Semula.",
+        poolPrizeClamped: "Jumlah hadiah dikurangkan kepada {max} mengikut kapasiti kolam.",
+        poolVoided: "{count} nombor yang sudah dimenang berada di luar julat baharu dan dipindahkan ke Tong Kitar.",
         wonLabel: "Telah Dicabut",
         leftLabel: "Baki Hadiah",
-        navSync: "📡 Sync Bilik",
-        navTheme: "🎨 Tema / Theme",
+        navSync: "Sync Bilik",
+        navTheme: "Tema / Theme",
         themeTitle: "Tema Festival / Festival Theme",
         themeDesc: "Pilih set tema festival tanglung — diselaraskan ke konsol, projektor, bar terapung & penonton:",
-        navSuspenseOn: "🔒 Mod Rahsia: On",
-        navSuspenseOff: "🔒 Mod Rahsia: Off",
+        navSuspenseOn: "Mod Rahsia: On",
+        navSuspenseOff: "Mod Rahsia: Off",
         navRecycle: "Tong Kitar",
-        navProj: "📽️ Projektor",
-        navPip: "📌 Bar Terapung",
-        navScript: "📋 Skrip Juruacara",
-        navCrisis: "🛠️ Kecemasan",
-        navTestSound: "🔔 Uji Bunyi",
-        navSoundOn: "🔊 Bunyi: Hidup",
-        navSoundOff: "🔇 Bunyi: Bisu",
-        navFullscreen: "⛶ Skrin Penuh",
-        navReset: "↺ Tetap Semula",
-        leftBanner: "Senarai Pemenang · Klik untuk Pengesahan",
-        crawlWaiting: "Cabutan belum bermula.<br>Semoga berjaya kepada semua!",
-        speedLabel: "Kelajuan:",
-        fontLabel: "Saiz Fon:",
-        tabBatch: "⚡ Cabut 10 Tiket",
-        tabVip: "👑 Pentas VIP",
-        tabManual: "✍️ Masuk Manual / Ganti",
-        btnDraw10: "🎲 Cabut 10 Pemenang",
+        navProj: "Projektor",
+        navPip: "Bar Terapung",
+        navScript: "Skrip Juruacara",
+        navCrisis: "Kecemasan",
+        navTestSound: "Uji Bunyi",
+        navSoundOn: "Bunyi: Hidup",
+        navSoundOff: "Bunyi: Bisu",
+        navFullscreen: "Skrin Penuh",
+        navReset: "Tetapkan Semula",
+        tabBatch: "Cabut 10 Tiket",
+        tabVip: "Pentas VIP",
+        tabManual: "Masuk Manual / Ganti",
+        btnDraw10: "Cabut 10 Pemenang",
         batchEmptyHint: "Tekan butang di atas untuk mencabut 10 nombor bertuah",
         btnStartRoll: "Mula Putar",
         btnStopRoll: "BERHENTI! (STOP)",
-        vipSpaceHint: "💡 Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
-        vipSpaceHintViewer: "💡 Mod Penonton: Menonton cabutan secara langsung",
-        manualTitle: "✍️ Masukan Tiket Manual / Ganti Hadiah",
+        vipSpaceHint: "Tip Pentas: Tekan [SPACEBAR] untuk Mula / Berhenti",
+        vipSpaceHintViewer: "Mod Penonton: Menonton cabutan secara langsung",
+        manualTitle: "Masukan Tiket Manual / Ganti Hadiah",
         manualDesc: "Pemeriksaan ketat: Mengelakkan nombor berulang secara automatik",
         manualInputHint: "Masukkan 1-4 digit nombor tiket",
-        btnConfirmManual: "✓ Sahkan Masukan",
-        btnDrawSingleManual: "🎲 Cabut Ganti 1 Tiket",
-        stageFooterLeft: "Malam Festival Tanglung • Sinkronisasi Segera Aktif",
+        btnConfirmManual: "Sahkan Masukan",
+        btnDrawSingleManual: "Cabut Ganti 1 Tiket",
+        stageFooterLeft: "Malam Festival Tanglung • Skrin Penuh / Bar Terapung / Sinkronisasi Antara Peranti Aktif",
         stageFooterRight: "Jawatankuasa Pengelola",
         bbBanner: "Papan Kenyataan Pemenang",
         optBySeq: "Ikut Kedudukan Hadiah (#)",
         optByTicket: "Ikut Nombor Tiket (#)",
         rangeTo: "hingga",
         btnFilterAll: "Semua",
-        btnExportSegment: "💾 Eksport",
+        btnExportSegment: "Eksport",
         chipAll: "Tunjuk Semua",
         chipCustom: "Tersuai...",
         btnFocusVerify: "Cari Tiket",
@@ -1920,97 +2129,119 @@
         syncConnected: "Tersambung Google RTDB",
         scanQr: "Imbas QR untuk Sambung Pantas:",
         copyLinkText: "Atau kongsi pautan ini:",
-        btnCopyLink: "📋 Salin Pautan",
-        spotlightCongrats: "🎉 TAHNIAH MENANG! 🎉",
-        btnCall10: "⏱️ Panggilan 10 Saat",
-        btnVoidRedraw: "⚡ Batal & Cabut Semula",
+        btnCopyLink: "Salin Pautan",
+        spotlightCongrats: "TAHNIAH MENANG!",
+        btnCall10: "Panggilan 10 Saat",
+        btnVoidRedraw: "Batal & Cabut Semula",
         btnClose: "Tutup",
-        timerCalling: "⏱️ Panggilan:",
+        timerCalling: "Panggilan:",
         secondsUnit: "saat",
-        btnRedrawNow: "⚡ Ganti Sekarang",
+        btnRedrawNow: "Ganti Sekarang",
         btnCancel: "Batal",
         recycleTitle: "Tong Kitar Semula Nombor Batal",
         recycleDesc: "Semua nombor yang dibatalkan atau pemilik tiada disimpan di sini:",
         recycleEmpty: "Tong kitar kosong",
+        btnRestorePool: "Kembalikan ke Kolam",
+        btnRestoreWinner: "Pulihkan Pemenang",
         auditTitle: "Log Audit Pembatalan & Cabutan Semula",
         auditEmpty: "Tiada rekod pembatalan",
         crisisTitle: "Kotak Alat Kecemasan",
-        blacklistLabel: "🚫 Keluarkan Tiket Hilang/Awal Balik:",
+        blacklistLabel: "Keluarkan Tiket Hilang/Awal Balik:",
         btnExclude: "Keluarkan",
-        backupLabel: "💾 Simpanan Sandaran JSON:",
-        btnDownloadJson: "📥 Muat Turun JSON",
-        btnRestoreJson: "📤 Pulihkan JSON",
-        sponsorLabel: "⚡ Tambah Hadiah Penaja:",
-        pacingConsolation: "🏮 Peringkat Semasa: Hadiah Saguhati (1 - {quota}) 🏮",
-        pacingGrand: "🌟 Peringkat Kemuncak: Hadiah Utama VIP 🌟",
-        pacingDone: "🎉 Tahniah: Kesemua {quota} Hadiah Telah Selesai Dicabut! 🎉",
+        backupLabel: "Simpanan Sandaran JSON:",
+        btnDownloadJson: "Muat Turun JSON",
+        btnRestoreJson: "Pulihkan JSON",
+        sponsorLabel: "Tambah Hadiah Penaja:",
+        pacingConsolation: "Peringkat Semasa: Hadiah Saguhati (1 - {quota})",
+        pacingGrand: "Peringkat Kemuncak: Hadiah Utama VIP",
+        pacingDone: "Tahniah: Kesemua {quota} Hadiah Telah Selesai Dicabut!",
         prizeItemPrefix: "Hadiah #{seq}",
         projWaiting: "Sedia Bermula",
-        projSuspense: "★★★ Nantikan Keputusan! ★★★",
-        btnToggleBgSolid: "🌓 Latar: Warna Penuh",
-        btnToggleBgTrans: "🌓 Latar: Saluran Telus",
-        btnProjFs: "⛶ Skrin Penuh",
-        btnProjClose: "✕ Kembali",
-        projTimerBtn: "⏱️ Kiraan Masa Menang",
-        btnProjHideClaimed: "🚫 Sembunyi Dituntut",
-        btnProjShowClaimed: "👁 Tunjuk Dituntut",
-        btnVipCardHide: "👑 Sembunyi Kad VIP",
-        btnVipCardShow: "👑 Tunjuk Kad VIP",
-        btnClaimVerify: "✓ Sahkan Tuntutan",
-        btnClaimVerified: "✓ Telah Dituntut",
-        claimedTag: " ✓Dituntut",
-        btnGoHost: "🎛️ Masuk Konsol Utama (perlu PIN)",
+        projSuspense: "Nantikan Keputusan!",
+        projVipLabel: "Hadiah Utama · VIP",
+        btnToggleBgSolid: "Latar: Warna Penuh",
+        btnToggleBgTrans: "Latar: Saluran Telus",
+        btnProjFs: "Skrin Penuh",
+        btnProjClose: "Kembali",
+        projTimerBtn: "Kiraan Masa Menang",
+        projTimerPlay: "Mula",
+        projTimerPause: "Jeda",
+        projTimerStop: "Henti",
+        projTimerReset: "Set Semula",
+        projTimerFontDown: "A-",
+        projTimerFontUp: "A+",
+        btnProjHideClaimed: "Sembunyi Dituntut",
+        btnProjShowClaimed: "Tunjuk Dituntut",
+        btnVipCardHide: "Sembunyi Kad VIP",
+        btnVipCardShow: "Tunjuk Kad VIP",
+        btnClaimVerify: "Sahkan Tuntutan",
+        btnClaimVerified: "Telah Dituntut",
+        claimedTag: " Dituntut",
+        btnGoHost: "Masuk Konsol Utama (perlu PIN)",
         hostPrompt: "Masukkan PIN akses konsol utama (khas komputer utama)",
-        hostWrong: "PIN konsol utama tidak sah"
+        hostWrong: "PIN konsol utama tidak sah",
+        modeHost: "Mod Hos (Konsol Utama)",
+        modeViewer: "Mod Penonton / Papar (baca sahaja, boleh sahkan tuntutan)"
       },
       BI: {
         brandTitle: "Lantern Festival · Lucky Draw",
         brandSub: "Live Synchronized Lucky Draw System",
         poolLabel: "Ticket Pool",
+        poolRangeTitle: "Custom Ticket Range",
+        poolRangeDesc: "Set the ticket numbers eligible for the draw. Pool size is calculated automatically and no number can ever be drawn twice.",
+        poolStartLabel: "First Ticket",
+        poolEndLabel: "Last Ticket",
+        poolSizeLabel: "Pool Size",
+        poolPrizeLabel: "Total Prizes",
+        poolApply: "Apply Range",
+        poolCancel: "Cancel",
+        poolSizeNote: "{size} tickets ({start} - {end})",
+        poolErrRange: "Invalid range: enter 1 to 9999, and the first number must be lower than the last.",
+        poolErrOutOfRange: "Ticket #{num} is outside {start}-{end}, nothing to exclude.",
+        restoreErrOutOfRange: "Ticket #{num} is outside the current range {start}-{end}, left untouched.",
+        blacklistErrWinner: "Ticket #{num} is already a winner — use void & redraw instead.",
+        poolPrizeClamped: "Prize quota reduced to {max} to match the pool size.",
+        poolVoided: "{count} already-drawn numbers fell outside the new range and were moved to the recycle bin.",
         wonLabel: "Drawn",
         leftLabel: "Prizes Left",
-        navSync: "📡 Cloud Sync",
-        navTheme: "🎨 Theme",
+        navSync: "Cloud Sync",
+        navTheme: "Theme",
         themeTitle: "Festival Theme / Festival Theme",
         themeDesc: "Pick a lantern-festival color scheme — synced to console, projection, floating bar & remote viewers:",
-        navSuspenseOn: "🔒 Conceal Mode: On",
-        navSuspenseOff: "🔒 Conceal Mode: Off",
+        navSuspenseOn: "Conceal Mode: On",
+        navSuspenseOff: "Conceal Mode: Off",
         navRecycle: "Recycle Bin",
-        navProj: "📽️ Projection",
-        navPip: "📌 Desktop PiP",
-        navScript: "📋 Emcee Script",
-        navCrisis: "🛠️ Emergency",
-        navTestSound: "🔔 Test Sound",
-        navSoundOn: "🔊 Audio: On",
-        navSoundOff: "🔇 Audio: Muted",
-        navFullscreen: "⛶ Fullscreen",
-        navReset: "↺ Reset All",
-        leftBanner: "Winners Board · Click to Verify Claim",
-        crawlWaiting: "Lucky draw has not started yet.<br>Best of luck to everyone!",
-        speedLabel: "Scroll Speed:",
-        fontLabel: "Font Size:",
-        tabBatch: "⚡ Batch 10 Draw",
-        tabVip: "👑 VIP Single Stage",
-        tabManual: "✍️ Manual Entry / Redraw",
-        btnDraw10: "🎲 Draw 10 Winners",
+        navProj: "Projection",
+        navPip: "Desktop PiP",
+        navScript: "Emcee Script",
+        navCrisis: "Emergency",
+        navTestSound: "Test Sound",
+        navSoundOn: "Audio: On",
+        navSoundOff: "Audio: Muted",
+        navFullscreen: "Fullscreen",
+        navReset: "Reset All",
+        tabBatch: "Batch 10 Draw",
+        tabVip: "VIP Single Stage",
+        tabManual: "Manual Entry / Redraw",
+        btnDraw10: "Draw 10 Winners",
         batchEmptyHint: "Click button above to draw 10 lucky winners",
         btnStartRoll: "Start Rolling",
         btnStopRoll: "STOP!",
-        vipSpaceHint: "💡 Stage Tip: Press [SPACEBAR] to Start / Stop",
-        vipSpaceHintViewer: "💡 Viewer Mode: Watching live draws from Host",
-        manualTitle: "✍️ Unclaimed Replacement / Manual Draw",
+        vipSpaceHint: "Stage Tip: Press [SPACEBAR] to Start / Stop",
+        vipSpaceHintViewer: "Viewer Mode: Watching live draws from Host",
+        manualTitle: "Unclaimed Replacement / Manual Draw",
         manualDesc: "Strict duplicate check: automatically excludes already won numbers",
         manualInputHint: "Type 1 to 4 digit ticket number",
-        btnConfirmManual: "✓ Confirm Manual Entry",
-        btnDrawSingleManual: "🎲 Draw 1 Replacement",
-        stageFooterLeft: "Lantern Gala • Multi-Device Realtime Cloud Sync Active",
+        btnConfirmManual: "Confirm Manual Entry",
+        btnDrawSingleManual: "Draw 1 Replacement",
+        stageFooterLeft: "Lantern Gala • Fullscreen / Desktop PiP / Multi-Device Realtime Sync Active",
         stageFooterRight: "Organizing Committee",
         bbBanner: "Winners Billboard",
         optBySeq: "By Prize Sequence (#)",
         optByTicket: "By Ticket Number (#)",
         rangeTo: "to",
         btnFilterAll: "All",
-        btnExportSegment: "💾 Segment",
+        btnExportSegment: "Segment",
         chipAll: "Show All",
         chipCustom: "Custom...",
         btnFocusVerify: "Locate Ticket",
@@ -2021,48 +2252,59 @@
         syncConnected: "Connected to Firebase RTDB",
         scanQr: "Scan QR code to join instantly:",
         copyLinkText: "Or copy room share link:",
-        btnCopyLink: "📋 Copy Link",
-        spotlightCongrats: "🎉 CONGRATULATIONS! 🎉",
-        btnCall10: "⏱️ 10s Call Countdown",
-        btnVoidRedraw: "⚡ Void & Redraw",
+        btnCopyLink: "Copy Link",
+        spotlightCongrats: "CONGRATULATIONS!",
+        btnCall10: "10s Call Countdown",
+        btnVoidRedraw: "Void & Redraw",
         btnClose: "Close",
-        timerCalling: "⏱️ Calling:",
+        timerCalling: "Calling:",
         secondsUnit: "sec",
-        btnRedrawNow: "⚡ Redraw Now",
+        btnRedrawNow: "Redraw Now",
         btnCancel: "Cancel",
         recycleTitle: "Voided Tickets Recycle Bin",
         recycleDesc: "All forfeited or absent tickets are archived here. Restore anytime if claimant returns:",
         recycleEmpty: "Recycle bin is empty",
+        btnRestorePool: "Return to Pool",
+        btnRestoreWinner: "Restore Winner",
         auditTitle: "Void & Redraw Audit Log",
         auditEmpty: "No redraw history recorded",
         crisisTitle: "Crisis Emergency Toolkit",
-        blacklistLabel: "🚫 Exclude Lost / Early Departure Tickets:",
+        blacklistLabel: "Exclude Lost / Early Departure Tickets:",
         btnExclude: "Exclude",
-        backupLabel: "💾 Backup & Hot Restore JSON:",
-        btnDownloadJson: "📥 Download JSON",
-        btnRestoreJson: "📤 Restore JSON",
-        sponsorLabel: "⚡ Sponsor Quick Add Prizes:",
-        pacingConsolation: "🏮 Current Stage: Consolation Prizes (1 - {quota}) 🏮",
-        pacingGrand: "🌟 Grand Stage: VIP Top Prizes 🌟",
-        pacingDone: "🎉 Celebration: All {quota} Prizes Successfully Drawn! 🎉",
+        backupLabel: "Backup & Hot Restore JSON:",
+        btnDownloadJson: "Download JSON",
+        btnRestoreJson: "Restore JSON",
+        sponsorLabel: "Sponsor Quick Add Prizes:",
+        pacingConsolation: "Current Stage: Consolation Prizes (1 - {quota})",
+        pacingGrand: "Grand Stage: VIP Top Prizes",
+        pacingDone: "Celebration: All {quota} Prizes Successfully Drawn!",
         prizeItemPrefix: "Prize #{seq}",
         projWaiting: "Ready to Draw",
-        projSuspense: "★★★ Drawing in Progress... ★★★",
-        btnToggleBgSolid: "🌓 Background: Solid Black",
-        btnToggleBgTrans: "🌓 Background: Transparent",
-        btnProjFs: "⛶ Fullscreen",
-        btnProjClose: "✕ Return",
-        projTimerBtn: "⏱️ Claim Countdown",
-        btnProjHideClaimed: "🚫 Hide Claimed",
-        btnProjShowClaimed: "👁 Show Claimed",
-        btnVipCardHide: "👑 Hide VIP Card",
-        btnVipCardShow: "👑 Show VIP Card",
-        btnClaimVerify: "✓ Verify Claim",
-        btnClaimVerified: "✓ Claimed",
-        claimedTag: " ✓Claimed",
-        btnGoHost: "🎛️ Enter Host Console (needs PIN)",
+        projSuspense: "Drawing in Progress...",
+        projVipLabel: "Top Prize · VIP",
+        btnToggleBgSolid: "Background: Solid Black",
+        btnToggleBgTrans: "Background: Transparent",
+        btnProjFs: "Fullscreen",
+        btnProjClose: "Return",
+        projTimerBtn: "Claim Countdown",
+        projTimerPlay: "Start",
+        projTimerPause: "Pause",
+        projTimerStop: "Stop",
+        projTimerReset: "Reset",
+        projTimerFontDown: "A-",
+        projTimerFontUp: "A+",
+        btnProjHideClaimed: "Hide Claimed",
+        btnProjShowClaimed: "Show Claimed",
+        btnVipCardHide: "Hide VIP Card",
+        btnVipCardShow: "Show VIP Card",
+        btnClaimVerify: "Verify Claim",
+        btnClaimVerified: "Claimed",
+        claimedTag: " Claimed",
+        btnGoHost: "Enter Host Console (needs PIN)",
         hostPrompt: "Enter host console access PIN (main computer only)",
-        hostWrong: "Invalid host console PIN"
+        hostWrong: "Invalid host console PIN",
+        modeHost: "Master Host (control console)",
+        modeViewer: "Viewer / Display (read-only, claim verification enabled)"
       }
     };
 
@@ -2466,6 +2708,7 @@
 
     function changeLanguage(lang) {
       currentLang = lang;
+      document.documentElement.lang = { BC: 'zh-Hans', BM: 'ms', BI: 'en' }[lang] || 'zh-Hans';
       document.getElementById('langSelect').value = lang;
       applyLanguageUI();
       if (!isViewerMode) saveAndBroadcast();
@@ -2476,6 +2719,10 @@
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (t[key]) el.innerHTML = t[key];
+      });
+      document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (t[key]) el.title = t[key];
       });
 
       const allBrandTitles = new Set(Object.values(I18N).map(i => i.brandTitle.trim()));
@@ -2490,10 +2737,10 @@
 
       if (customMainTitle === null) {
         mainTitleEl.innerText = t.brandTitle;
-        document.getElementById('projHeaderTitle').innerText = `🏮 ${t.brandTitle}`;
+        document.getElementById('projHeaderTitle').innerText = `${t.brandTitle}`;
       } else {
         mainTitleEl.innerText = customMainTitle;
-        document.getElementById('projHeaderTitle').innerText = `🏮 ${customMainTitle}`;
+        document.getElementById('projHeaderTitle').innerText = `${customMainTitle}`;
       }
       if (customSubTitle === null) subTitleEl.innerText = t.brandSub;
       else subTitleEl.innerText = customSubTitle;
@@ -2524,7 +2771,7 @@
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast ${isError ? 'error' : ''}`;
-      toast.innerHTML = `<span>${isError ? '⚠️' : '🎉'}</span> <span>${esc(msg)}</span>`;
+      toast.innerHTML = `<span class="toast-mark${isError ? ' err' : ''}"></span><span>${esc(msg)}</span>`;
       container.appendChild(toast);
       setTimeout(() => {
         if (toast.parentNode) toast.parentNode.removeChild(toast);
@@ -2653,27 +2900,143 @@
       return available;
     }
 
-    function editPoolSize() {
-      if (isViewerMode) return alert("Viewer Mode: Only Host can edit pool!");
-      const input = prompt(`当前彩池范围 (Pool Range): ${poolStart} - ${poolEnd}。\n请输入新最大号码 (New Max):`, poolEnd);
-      if (!input) return;
-      const parsed = parseInt(input, 10);
-      if (isNaN(parsed) || parsed <= poolStart) return alert("Invalid Number!");
-      poolEnd = parsed;
+    function getPoolSize() {
+      return Math.max(0, poolEnd - poolStart + 1);
+    }
 
+    // Single gate for every range that enters the app (dialog, saved state, remote
+    // state). Guarantees a non-empty 1..9999 range so the pool can never collapse
+    // to zero tickets or run past the four-digit ticket width.
+    function normalizePoolRange(start, end) {
+      let s = Math.floor(Number(start));
+      let e = Math.floor(Number(end));
+      if (!Number.isFinite(s)) s = poolStart;
+      if (!Number.isFinite(e)) e = poolEnd;
+      s = Math.max(1, Math.min(9998, s));
+      e = Math.max(s + 1, Math.min(9999, e));
+      return { start: s, end: e };
+    }
+
+    // Reads the dialog into a candidate range. Returns null when the numbers are
+    // unusable, so the caller can keep the live range untouched.
+    function readPoolDraft() {
+      const rawStart = document.getElementById('poolStartInput').value.replace(/\D/g, '');
+      const rawEnd = document.getElementById('poolEndInput').value.replace(/\D/g, '');
+      const rawPrize = document.getElementById('poolPrizeInput').value.replace(/\D/g, '');
+      if (!rawStart || !rawEnd) return null;
+      const start = Number(rawStart);
+      const end = Number(rawEnd);
+      if (start < 1 || end > 9999 || start >= end) return null;
+      return {
+        start,
+        end,
+        size: end - start + 1,
+        maxPrizes: rawPrize ? Number(rawPrize) : maxPrizes
+      };
+    }
+
+    function onPoolInput(el) {
+      el.value = el.value.replace(/\D/g, '').slice(0, 4);
+      refreshPoolDraft();
+    }
+
+    function refreshPoolDraft() {
+      const draft = readPoolDraft();
+      const sizeOut = document.getElementById('poolSizeReadout');
+      const noteOut = document.getElementById('poolRangeNote');
+      const errOut = document.getElementById('poolErrorText');
+      const applyBtn = document.getElementById('poolApplyBtn');
+      const t = I18N[currentLang];
+
+      if (!draft) {
+        sizeOut.value = '--';
+        noteOut.textContent = '';
+        errOut.textContent = t.poolErrRange;
+        errOut.hidden = false;
+        applyBtn.disabled = true;
+        return;
+      }
+      errOut.hidden = true;
+      applyBtn.disabled = false;
+      sizeOut.value = String(draft.size);
+      noteOut.textContent = t.poolSizeNote
+        .replace('{size}', String(draft.size))
+        .replace('{start}', String(draft.start))
+        .replace('{end}', String(draft.end));
+      if (draft.maxPrizes > draft.size) {
+        errOut.textContent = t.poolPrizeClamped.replace('{max}', String(draft.size));
+        errOut.hidden = false;
+      }
+    }
+
+    function togglePoolModal(show) {
+      if (isViewerMode && show) return;
+      const modal = document.getElementById('poolModal');
+      if (show) {
+        document.getElementById('poolStartInput').value = poolStart;
+        document.getElementById('poolEndInput').value = poolEnd;
+        document.getElementById('poolPrizeInput').value = maxPrizes;
+        refreshPoolDraft();
+      }
+      modal.style.display = show ? 'flex' : 'none';
+    }
+
+    function applyPoolRange() {
+      if (isViewerMode) return;
+      const draft = readPoolDraft();
+      const t = I18N[currentLang];
+      if (!draft) {
+        showToast(t.poolErrRange, true);
+        return;
+      }
+
+      const previousStart = poolStart;
+      const previousEnd = poolEnd;
+      const range = normalizePoolRange(draft.start, draft.end);
+      poolStart = range.start;
+      poolEnd = range.end;
+      maxPrizes = Math.max(winners.length, Math.min(draft.maxPrizes, getPoolSize()));
+
+      // A number that was already drawn but now sits outside the range can never
+      // be re-issued, so it is retired into the recycle bin for the audit trail
+      // instead of being left behind as an orphan.
+      const stranded = [];
+      winners = sanitizeList(winners).filter(w => {
+        const num = Number(w);
+        if (num >= poolStart && num <= poolEnd) return true;
+        stranded.push(w);
+        recycleBin.push({
+          ticket: w,
+          time: new Date().toLocaleString(),
+          originalSeq: 'pool-range-' + previousStart + '-' + previousEnd,
+          reason: 'out-of-range'
+        });
+        return false;
+      });
+      if (stranded.length) {
+        voidAuditLogs.unshift({
+          time: new Date().toLocaleString(),
+          msg: t.poolVoided.replace('{count}', String(stranded.length))
+        });
+        voidAuditLogs = voidAuditLogs.slice(0, 100);
+      }
+
+      togglePoolModal(false);
       updateUI();
       saveAndBroadcast();
+      if (stranded.length) {
+        showToast(t.poolVoided.replace('{count}', String(stranded.length)));
+      } else if (maxPrizes !== draft.maxPrizes) {
+        showToast(t.poolPrizeClamped.replace('{max}', String(maxPrizes)));
+      }
+    }
+    function editPoolSize() {
+      if (isViewerMode) return;
+      togglePoolModal(true);
     }
 
     function editMaxPrizes() {
-      if (isViewerMode) return alert("Viewer Mode: Only Host can edit prizes!");
-      const input = prompt(`当前奖品总份数: ${maxPrizes}。\n请输入新总额:`, maxPrizes);
-      if (!input) return;
-      const parsed = parseInt(input, 10);
-      if (isNaN(parsed) || parsed < winners.length) return alert("Cannot be less than drawn count!");
-      maxPrizes = parsed;
-      updateUI();
-      saveAndBroadcast();
+      togglePoolModal(true);
     }
 
     function quickAddPrizes(qty) {
@@ -2699,7 +3062,6 @@
         filterType,
         isSuspenseMode: Boolean(isSuspenseMode),
         projHideClaimed: Boolean(projHideClaimed),
-        vipSlotDismissed: Boolean(vipSlotDismissed),
         vipRollEvent: vipRollEvent || null,
         currentFontSize: Number(currentFontSize),
         currentLang,
@@ -2757,16 +3119,24 @@
       recycleBin = sanitizeList(d.recycleBin);
       voidAuditLogs = sanitizeList(d.voidAuditLogs);
 
-      if (d.maxPrizes) maxPrizes = Math.max(1, Math.min(500, Number(d.maxPrizes) || maxPrizes));
-      if (d.poolStart) poolStart = Math.max(1, Math.min(9999, Number(d.poolStart) || poolStart));
-      if (d.poolEnd) poolEnd = Math.max(Number(d.poolStart) || poolStart, Math.min(9999, Number(d.poolEnd) || poolEnd));
+      if (d.poolStart !== undefined || d.poolEnd !== undefined) {
+        const range = normalizePoolRange(
+          d.poolStart !== undefined && d.poolStart !== null ? d.poolStart : poolStart,
+          d.poolEnd !== undefined && d.poolEnd !== null ? d.poolEnd : poolEnd
+        );
+        poolStart = range.start;
+        poolEnd = range.end;
+      }
+      if (d.maxPrizes) {
+        const poolSize = getPoolSize();
+        maxPrizes = Math.max(winners.length, Math.min(Number(d.maxPrizes) || maxPrizes, poolSize));
+      }
       if (typeof d.filterActive === 'boolean') filterActive = d.filterActive;
       if (d.filterStartVal !== undefined && d.filterStartVal !== null) filterStartVal = Math.max(1, Math.min(9999, Number(d.filterStartVal) || filterStartVal));
       if (d.filterEndVal !== undefined && d.filterEndVal !== null) filterEndVal = Math.max(1, Math.min(9999, Number(d.filterEndVal) || filterEndVal));
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
       if (typeof d.projHideClaimed === 'boolean') projHideClaimed = d.projHideClaimed;
-      if (typeof d.vipSlotDismissed === 'boolean') vipSlotDismissed = d.vipSlotDismissed;
 
       if (d.currentFontSize) {
         currentFontSize = Math.max(1.0, Math.min(2.2, Number(d.currentFontSize)));
@@ -2781,6 +3151,7 @@
       
       if (d.currentLang && d.currentLang !== currentLang) {
         currentLang = d.currentLang;
+        document.documentElement.lang = { BC: 'zh-Hans', BM: 'ms', BI: 'en' }[currentLang] || 'zh-Hans';
         document.getElementById('langSelect').value = currentLang;
         applyLanguageUI();
       }
@@ -2791,7 +3162,7 @@
 
       if (d.mainTitle) {
         document.getElementById('appMainTitle').innerText = d.mainTitle;
-        document.getElementById('projHeaderTitle').innerText = `🏮 ${d.mainTitle}`;
+        document.getElementById('projHeaderTitle').innerText = `${d.mainTitle}`;
         if (d.mainTitle !== I18N[currentLang].brandTitle) customMainTitle = d.mainTitle;
       }
       if (d.subTitle) {
@@ -2837,7 +3208,7 @@
           const v = document.getElementById(id).innerText;
           const isDefault = Object.values(I18N).some(i => i.brandTitle.trim() === v.trim());
           customMainTitle = isDefault ? null : v;
-          document.getElementById('projHeaderTitle').innerText = `🏮 ${document.getElementById(id).innerText}`;
+          document.getElementById('projHeaderTitle').innerText = `${document.getElementById(id).innerText}`;
         } else {
           const v = document.getElementById(id).innerText;
           const isDefault = Object.values(I18N).some(i => i.brandSub.trim() === v.trim());
@@ -2862,7 +3233,7 @@
           isViewerMode = true;
           enableViewerModeUI();
         } else {
-          document.getElementById('modeIndicatorTag').textContent = "👑 主控模式 (Master Host - 控制端)";
+          document.getElementById('modeIndicatorTag').textContent = I18N[currentLang].modeHost;
           document.getElementById('goHostBtn').style.display = 'none';
         }
 
@@ -2909,8 +3280,8 @@
     }
 
     function enableViewerModeUI() {
-      document.getElementById('p2pStatusTag').textContent = "在线同步 (Viewer Mode)";
-      document.getElementById('modeIndicatorTag').textContent = "👀 观众/显示端 (只读显示，支持领奖核销)";
+      document.getElementById('p2pStatusTag').textContent = I18N[currentLang].syncConnected;
+      document.getElementById('modeIndicatorTag').textContent = I18N[currentLang].modeViewer;
       document.getElementById('appMainTitle').removeAttribute('contenteditable');
       document.getElementById('appSubTitle').removeAttribute('contenteditable');
       
@@ -3035,13 +3406,13 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`🏆 ${picked}`);
+      showToast(picked);
       stopVipRollAnimation(picked);
     }
 
     function startVipRollAnimation(playSfx) {
       if (isRolling) return;
-      vipSlotDismissed = false;
+      clearVipSlotDismissed();
       const opView = document.getElementById('operatorView');
       const opVisible = opView && getComputedStyle(opView).display !== 'none';
       const projVisible = document.getElementById('projectorView').style.display === 'flex';
@@ -3114,34 +3485,24 @@
       }
     }
 
-    function pushVipSlotDismiss() {
-      if (!syncRef) {
-        showToast('VIP card hidden on this screen only (no live sync)', true);
-        return;
-      }
-      if (isViewerMode) {
-        syncRef.child('vipSlotDismissed').set(Boolean(vipSlotDismissed))
-          .catch((err) => {
-            console.warn("Firebase Write Error:", err);
-            showToast('VIP card hidden on this screen only (sync failed)', true);
-          });
-      } else {
-        saveAndBroadcast();
-      }
-    }
-
     function closeProjVipSlot() {
-      vipSlotDismissed = true;
-      applyVipSlotDismiss();
-      updateVipCardBtn();
-      pushVipSlotDismiss();
+      setVipSlotDismissed(true);
     }
 
     function toggleVipCard() {
-      vipSlotDismissed = !vipSlotDismissed;
+      setVipSlotDismissed(!vipSlotDismissed);
+    }
+
+    function setVipSlotDismissed(value) {
+      vipSlotDismissed = Boolean(value);
       applyVipSlotDismiss();
       updateVipCardBtn();
-      pushVipSlotDismiss();
+    }
+
+    function clearVipSlotDismissed() {
+      vipSlotDismissed = false;
+      applyVipSlotDismiss();
+      updateVipCardBtn();
     }
 
     // MODE 3: MANUAL ENTRY
@@ -3497,13 +3858,13 @@
       container.innerHTML = recycleBin.map((item, idx) => `
         <div class="modal-item">
           <div>
-            <strong style="color:var(--imperial-gold); font-size:1.15rem; font-family:monospace;">${esc(item.ticket)}</strong>
+            <strong style="color:var(--imperial-gold); font-size:1.15rem; font-family: var(--font-num);">${esc(item.ticket)}</strong>
             <span style="font-size:0.8rem; color:#bbb; margin-left:8px;">(#${esc(item.originalSeq)} • ${esc(item.time)})</span>
           </div>
           <div class="recycle-actions">
             ${!isViewerMode ? `
-              <button class="btn-recycle-action" onclick="restoreToPool('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">♻️ Return to Pool</button>
-              <button class="btn-recycle-action" style="border-color:var(--jade-green); color:var(--jade-green);" onclick="restoreAsWinner('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">🏆 Restore Winner</button>
+              <button class="btn-recycle-action" onclick="restoreToPool('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">${I18N[currentLang].btnRestorePool}</button>
+              <button class="btn-recycle-action" style="border-color:var(--jade-green); color:var(--jade-green);" onclick="restoreAsWinner('${String(item.ticket).replace(/[^0-9]/g,'').slice(0,4)}', ${idx})">${I18N[currentLang].btnRestoreWinner}</button>
             ` : ''}
           </div>
         </div>
@@ -3518,6 +3879,12 @@
         renderRecycleList();
         saveAndBroadcast();
         showToast(`#${ticket} is already a winner — stale bin entry removed, NOT re-drawn`);
+        return;
+      }
+      const num = Number(ticket);
+      if (num < poolStart || num > poolEnd) {
+        showToast(I18N[currentLang].restoreErrOutOfRange
+          .replace('{num}', ticket).replace('{start}', poolStart).replace('{end}', poolEnd), true);
         return;
       }
       recycleBin.splice(index, 1);
@@ -3537,9 +3904,16 @@
         showToast(`#${ticket} is already a winner — no duplicate created`);
         return;
       }
-      if (winners.length >= maxPrizes) maxPrizes++;
+      const num = Number(ticket);
+      if (num < poolStart || num > poolEnd) {
+        showToast(I18N[currentLang].restoreErrOutOfRange
+          .replace('{num}', ticket).replace('{start}', poolStart).replace('{end}', poolEnd), true);
+        return;
+      }
       recycleBin.splice(index, 1);
       winners.push(ticket);
+      maxPrizes = Math.max(maxPrizes, winners.length);
+      maxPrizes = Math.min(maxPrizes, getPoolSize());
       updateUI();
       renderRecycleList();
       saveAndBroadcast();
@@ -3553,16 +3927,30 @@
     function excludeBlacklistTicket() {
       if (isViewerMode) return;
       const input = document.getElementById('blacklistInput');
-      const raw = input.value.trim();
-      if (!raw) return;
-      const val = raw.replace(/\D/g, '').padStart(4, '0');
+      const digits = input.value.replace(/\D/g, '');
+      if (!digits) {
+        showToast(I18N[currentLang].poolErrRange, true);
+        return;
+      }
+      const val = digits.padStart(4, '0');
+      if (Number(val) < poolStart || Number(val) > poolEnd) {
+        showToast(I18N[currentLang].poolErrOutOfRange
+          .replace('{num}', val).replace('{start}', poolStart).replace('{end}', poolEnd), true);
+        return;
+      }
+      if (winners.includes(val)) {
+        showToast(I18N[currentLang].blacklistErrWinner.replace('{num}', val), true);
+        return;
+      }
+      recycleBin = recycleBin.filter(r => String(r.ticket) !== val);
       recycleBin.unshift({
         ticket: val,
-        originalSeq: 'Excluded',
+        originalSeq: I18N[currentLang].btnExclude,
         time: new Date().toLocaleTimeString()
       });
       input.value = '';
       updateUI();
+      renderRecycleList();
       saveAndBroadcast();
       showToast(`Excluded #${val}`);
     }
@@ -3635,7 +4023,7 @@
           if (pipTrack) {
             let cardsHtml = '';
             if (isSuspenseMode) {
-              cardsHtml = `<div class="proj-card"><span class="p-seq">★★★</span><span class="p-num">${t.projSuspense}</span></div>`;
+              cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projVipLabel}</span><span class="p-num">${t.projSuspense}</span></div>`;
             } else if (unclaimed.length === 0) {
               cardsHtml = `<div class="proj-card"><span class="p-seq">${t.projWaiting}</span><span class="p-num">${String(poolStart).padStart(4,'0')} - ${String(poolEnd).padStart(4,'0')}</span></div>`;
             } else {
@@ -3661,24 +4049,6 @@
         } catch (e) {}
       }
 
-      // 3. Operator Left Running Strip
-      const opTrack = document.getElementById('opCrawlTrack');
-      if (opTrack) {
-        if (unclaimed.length === 0) {
-          opTrack.innerHTML = `<div style="text-align:center; color:var(--text-soft); padding:40px 10px; font-size:1rem;">${t.crawlWaiting}</div>`;
-        } else {
-          const opCards = unclaimed.map(item => `
-            <div class="crawl-card" title="Click to verify" onclick="openSpotlight('${esc(item.num)}', ${item.seq})">
-              <div>
-                <div class="crawl-tag">${t.prizeItemPrefix.replace('{seq}', item.seq)}</div>
-                <div class="crawl-hint">⚡ ${I18N[currentLang].btnFocusVerify}</div>
-              </div>
-              <span class="crawl-num">${esc(item.num)}</span>
-            </div>
-          `).join('');
-          opTrack.innerHTML = opCards + opCards;
-        }
-      }
     }
 
     function animateScrollers() {
@@ -3694,19 +4064,8 @@
         } catch (e) {}
       }
 
-      const opTrack = document.getElementById('opCrawlTrack');
-      if (!isOpPaused && opTrack && winners.length > 0) {
-        opScrollPos += opSpeedPx;
-        const halfOp = opTrack.scrollHeight / 2;
-        if (opScrollPos >= halfOp) opScrollPos = 0;
-        opTrack.style.transform = `translateY(-${opScrollPos}px)`;
-      }
-
       requestAnimationFrame(animateScrollers);
     }
-
-    document.getElementById('opCrawlViewport').addEventListener('mouseenter', () => isOpPaused = true);
-    document.getElementById('opCrawlViewport').addEventListener('mouseleave', () => isOpPaused = false);
 
     function updateUI() {
       const available = getAvailablePool();
@@ -3748,8 +4107,9 @@
         auditList.innerHTML = voidAuditLogs.map(item => `
           <div class="modal-item">
             <div>
-              <strong>#${esc(item.seq)}</strong>: <span style="text-decoration:line-through; color:var(--danger-bright);">${esc(item.oldNum)}</span> 
-              ➜ <strong style="color:var(--imperial-gold); font-size:1.1rem;">${esc(item.newNum)}</strong>
+              ${item.msg
+                ? esc(item.msg)
+                : `<strong>#${esc(item.seq)}</strong>: <span style="text-decoration:line-through; color:var(--danger-bright);">${esc(item.oldNum)}</span> <span style="color:var(--text-dim);">&rarr;</span> <strong style="color:var(--imperial-gold); font-size:1.1rem;">${esc(item.newNum)}</strong>`}
             </div>
             <div style="font-size:0.75rem; color:#aaa;">${esc(item.time)}</div>
           </div>
@@ -3775,23 +4135,6 @@
 
     function toggleAuditModal(show) {
       document.getElementById('auditModal').style.display = show ? 'flex' : 'none';
-    }
-
-    function adjustOpSpeed(val) {
-      opSpeedPx = Number(val) / 55;
-    }
-
-    function adjustFont(delta) {
-      currentFontSize = Math.max(1.0, Math.min(2.2, currentFontSize + delta));
-      document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
-
-      if (activePipWindow && !activePipWindow.closed) {
-        try {
-          activePipWindow.document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
-        } catch (e) {}
-      }
-
-      if (!isViewerMode) saveAndBroadcast();
     }
 
     function toggleFullScreen() {
@@ -3946,7 +4289,8 @@
 
     function updateProjTimerPlayBtn() {
       const btn = document.getElementById('projTimerPlayPauseBtn');
-      if (btn) btn.textContent = projTimerRunning ? '⏸' : '▶';
+      if (btn) btn.title = projTimerRunning ? I18N[currentLang].projTimerPause : I18N[currentLang].projTimerPlay;
+      if (btn) btn.innerHTML = projTimerRunning ? '<svg class="mini-ico" viewBox="0 0 12 12" aria-hidden="true"><rect x="2" y="1" width="3" height="10" fill="currentColor"/><rect x="7" y="1" width="3" height="10" fill="currentColor"/></svg>' : '<svg class="mini-ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg>';
     }
 
     function toggleProjTimer() {
@@ -4082,7 +4426,7 @@
         isSuspenseMode = false;
         vipRollEvent = null;
         appliedVipRollKey = null;
-        vipSlotDismissed = false;
+        clearVipSlotDismissed();
         document.getElementById('batchGrid').innerHTML = `
           <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--gold-dark); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
             ${I18N[currentLang].batchEmptyHint}
@@ -4095,6 +4439,9 @@
         filterType = 'seq';
         filterStartVal = null;
         filterEndVal = null;
+        poolStart = 1001;
+        poolEnd = 3000;
+        maxPrizes = 110;
         document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('chip-all').classList.add('active');
         updateUI();
@@ -4157,8 +4504,11 @@
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
-        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-        if (activeTag !== 'input' && activeTag !== 'textarea' && activeTag !== 'select') {
+        const el = document.activeElement;
+        const activeTag = el ? el.tagName.toLowerCase() : '';
+        const isTextEntry = activeTag === 'input' || activeTag === 'textarea'
+          || activeTag === 'select' || activeTag === 'button' || (el && el.isContentEditable);
+        if (!isTextEntry) {
           e.preventDefault();
           toggleVip();
         }

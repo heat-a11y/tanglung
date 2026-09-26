@@ -138,14 +138,21 @@ describe('VIP projection slot behaviour', () => {
   });
 });
 
-describe('VIP slot dismiss button (synced)', () => {
+describe('VIP slot dismiss button (projection-local)', () => {
   const closeBtn = (app) => app.document.getElementById('projVipCloseBtn');
   const btnDisplay = (app) => app.window.getComputedStyle(closeBtn(app)).display;
+  const slotOf = (app) => app.document.getElementById('projVipSlot');
+  const drawVip = async (host) => {
+    host.window.startVip();
+    await sleep(60);
+    host.window.stopVip();
+    return host.window.getPayload();
+  };
 
   it('renders the X inside the VIP slot on the projection', () => {
     const proj = makeProjection();
     try {
-      const slot = proj.document.getElementById('projVipSlot');
+      const slot = slotOf(proj);
       const btn = closeBtn(proj);
       assert.ok(btn, 'close button must exist');
       assert.equal(btn.parentElement, slot, 'X must live inside the VIP slot');
@@ -161,7 +168,7 @@ describe('VIP slot dismiss button (synced)', () => {
     try {
       host.window.startVip();
       proj.applyState(host.window.getPayload());
-      assert.ok(proj.document.getElementById('projVipSlot').classList.contains('rolling'));
+      assert.ok(slotOf(proj).classList.contains('rolling'));
       assert.equal(btnDisplay(proj), 'none', 'X must be unavailable while rolling');
 
       await sleep(60);
@@ -173,69 +180,78 @@ describe('VIP slot dismiss button (synced)', () => {
     }
   });
 
-  it('X on the big projection hides the card and is allowed in viewer mode', async () => {
+  it('the winning number stays on the big screen until X is clicked', async () => {
     const host = makeHost();
     const proj = makeProjection();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
-      proj.applyState(host.window.getPayload());
+      proj.applyState(await drawVip(host));
 
-      const slot = proj.document.getElementById('projVipSlot');
+      const slot = slotOf(proj);
       assert.equal(slot.style.display, 'flex', 'card visible before pressing X');
+
+      await sleep(1200);
+      assert.equal(slot.style.display, 'flex', 'no auto-hide: it waits for the operator');
+      assert.equal(proj.document.getElementById('projVipNum').textContent, G(host, 'winners')[0]);
 
       closeBtn(proj).click();
 
       assert.equal(slot.style.display, 'none', 'X closes the floating card');
       assert.equal(G(proj, 'vipSlotDismissed'), true, 'dismissal recorded on the projection');
-      assert.equal(proj.window.getPayload().vipSlotDismissed, true, 'flag travels in the payload');
       assert.equal(G(proj, 'isViewerMode'), true, 'the close happened from a viewer-mode projection');
+      assert.equal(proj.document.getElementById('vipDisplay').textContent, G(host, 'winners')[0],
+        'closing the projection card never clears the console');
     } finally {
       close(host); close(proj);
     }
   });
 
-  it('dismissal applied from another device hides the card there too', async () => {
+  it('pressing X writes nothing to the shared state', async () => {
+    const host = makeHost();
+    const proj = makeProjection();
+    try {
+      const payload = await drawVip(host);
+      proj.applyState(payload);
+      closeBtn(proj).click();
+
+      const out = proj.window.getPayload();
+      assert.equal('vipSlotDismissed' in out, false,
+        'the dismissal is local, so a second screen or a reload cannot inherit it');
+    } finally {
+      close(host); close(proj);
+    }
+  });
+
+  it('a dismissal on one screen never hides the card on another', async () => {
     const host = makeHost();
     const projA = makeProjection();
     const projB = makeProjection();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
-
-      projA.applyState(host.window.getPayload());
-      closeBtn(projA).click();
-
-      // master receives the projection's write and republishes; B applies it
-      const payload = { ...host.window.getPayload(), vipSlotDismissed: true };
+      const payload = await drawVip(host);
+      projA.applyState(payload);
       projB.applyState(payload);
 
-      assert.equal(projB.document.getElementById('projVipSlot').style.display, 'none',
-        'every other screen hides the card');
-      assert.equal(projB.document.getElementById('projVipNum').textContent,
-        G(host, 'winners')[0], 'winning number itself is untouched');
+      closeBtn(projA).click();
+
+      assert.equal(slotOf(projA).style.display, 'none', 'the screen that was closed stays closed');
+      assert.equal(slotOf(projB).style.display, 'flex', 'the other screen keeps showing the number');
+      assert.equal(projB.document.getElementById('projVipNum').textContent, G(host, 'winners')[0]);
     } finally {
       close(host); close(projA); close(projB);
     }
   });
 
-  it('a late dismissal still hides a card whose draw event was already applied', async () => {
+  it('ignores any dismissal carried in incoming or saved state', async () => {
     const host = makeHost();
     const proj = makeProjection();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
-      const payload = host.window.getPayload();
+      const payload = await drawVip(host);
+      const slot = slotOf(proj);
 
-      proj.applyState(payload);
-      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'flex');
-
-      proj.applyState({ ...payload, vipSlotDismissed: true });
-      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'none',
-        'dismissal must apply even when the roll key was already seen');
+      for (const stale of [true, false, { value: true, ts: Date.now() }, { value: true, ts: 0 }]) {
+        proj.applyState({ ...payload, vipSlotDismissed: stale });
+        assert.equal(slot.style.display, 'flex',
+          'a saved dismissal must never leave a freshly opened projection without the number');
+      }
     } finally {
       close(host); close(proj);
     }
@@ -245,16 +261,13 @@ describe('VIP slot dismiss button (synced)', () => {
     const host = makeHost();
     const proj = makeProjection();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
-      proj.applyState(host.window.getPayload());
+      proj.applyState(await drawVip(host));
       closeBtn(proj).click();
-      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'none');
+      assert.equal(slotOf(proj).style.display, 'none');
 
       host.window.startVip();
       proj.applyState(host.window.getPayload());
-      const slot = proj.document.getElementById('projVipSlot');
+      const slot = slotOf(proj);
       assert.equal(slot.style.display, 'flex', 'a fresh draw re-opens the card');
       assert.ok(slot.classList.contains('rolling'));
 
@@ -262,24 +275,22 @@ describe('VIP slot dismiss button (synced)', () => {
       host.window.stopVip();
       proj.applyState(host.window.getPayload());
       assert.equal(slot.style.display, 'flex', 'final number stays on screen');
-      assert.equal(G(proj, 'vipSlotDismissed'), false, 'dismissal flag cleared by the new draw');
+      assert.equal(G(proj, 'vipSlotDismissed'), false, 'a new draw clears the local dismissal');
       assert.equal(proj.document.getElementById('projVipNum').textContent, G(host, 'winners')[1]);
     } finally {
       close(host); close(proj);
     }
   });
 
-  it('host pressing X hides its own slot and publishes the flag', async () => {
+  it('host pressing X hides only its own projection slot', async () => {
     const host = makeHost();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
+      await drawVip(host);
 
       host.window.closeProjVipSlot();
 
-      assert.equal(host.document.getElementById('projVipSlot').style.display, 'none');
-      assert.equal(host.window.getPayload().vipSlotDismissed, true);
+      assert.equal(slotOf(host).style.display, 'none');
+      assert.equal('vipSlotDismissed' in host.window.getPayload(), false);
       assert.equal(host.document.getElementById('vipDisplay').textContent, G(host, 'winners')[0],
         'console VIP display is not cleared by the projection X');
     } finally {
@@ -291,61 +302,42 @@ describe('VIP slot dismiss button (synced)', () => {
     const host = makeHost();
     const proj = makeProjection();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
-      proj.applyState(host.window.getPayload());
+      proj.applyState(await drawVip(host));
       closeBtn(proj).click();
 
       host.window.resetAll();
 
       assert.equal(G(host, 'vipSlotDismissed'), false);
-      assert.equal(host.window.getPayload().vipSlotDismissed, false);
+      assert.equal('vipSlotDismissed' in host.window.getPayload(), false);
     } finally {
       close(host); close(proj);
     }
   });
 
-  it('toolbar toggle brings a mistakenly closed card back, everywhere', async () => {
+  it('toolbar toggle brings a mistakenly closed card back on that screen', async () => {
     const host = makeHost();
-    const projA = makeProjection();
-    const projB = makeProjection();
+    const proj = makeProjection();
     try {
-      host.window.startVip();
-      await sleep(60);
-      host.window.stopVip();
-      const payload = host.window.getPayload();
-      projA.applyState(payload);
-      projB.applyState(payload);
+      proj.applyState(await drawVip(host));
+      const slot = slotOf(proj);
+      assert.equal(slot.style.display, 'flex');
 
-      closeBtn(projA).click();
-      assert.equal(projA.document.getElementById('projVipSlot').style.display, 'none');
-      assert.equal(projB.document.getElementById('projVipSlot').style.display, 'flex', 'B still shows it');
+      proj.document.getElementById('vipCardBtn').click();
+      assert.equal(slot.style.display, 'none', 'toggle hides it');
 
-      // the host receives the projection's write through the live database
-      host.applyState({ ...host.window.getPayload(), vipSlotDismissed: true });
-      assert.equal(host.document.getElementById('projVipSlot').style.display, 'none', 'host followed the close');
-
-      host.document.getElementById('vipCardBtn').click();
-      assert.equal(G(host, 'vipSlotDismissed'), false);
-      assert.equal(host.window.getPayload().vipSlotDismissed, false, 're-open is published');
-
-      projA.applyState(host.window.getPayload());
-      projB.applyState(host.window.getPayload());
-      for (const p of [projA, projB]) {
-        assert.equal(p.document.getElementById('projVipSlot').style.display, 'flex',
-          'card restored on every screen without a new draw');
-        assert.equal(p.document.getElementById('projVipNum').textContent, G(host, 'winners')[0]);
-      }
+      proj.document.getElementById('vipCardBtn').click();
+      assert.equal(slot.style.display, 'flex', 'toggle brings it back, no new draw needed');
+      assert.equal(proj.document.getElementById('projVipNum').textContent, G(host, 'winners')[0],
+        'the number shown is the winning one, untouched by re-opening');
     } finally {
-      close(host); close(projA); close(projB);
+      close(host); close(proj);
     }
   });
 
   it('toolbar toggle never resurrects an empty card', () => {
     const proj = makeProjection();
     try {
-      const slot = proj.document.getElementById('projVipSlot');
+      const slot = slotOf(proj);
       assert.equal(slot.style.display, 'none', 'no draw yet');
 
       proj.document.getElementById('vipCardBtn').click();
@@ -357,36 +349,18 @@ describe('VIP slot dismiss button (synced)', () => {
     }
   });
 
-  it('toolbar button label tracks the shared state', async () => {
+  it('toolbar button label tracks the local state', () => {
     const proj = makeProjection();
     try {
       const btn = proj.document.getElementById('vipCardBtn');
-      const t = () => btn.textContent;
-      assert.equal(t(), '👑 隐藏贵宾卡');
+      const label = () => btn.textContent;
+      assert.equal(label(), '隐藏贵宾卡');
 
       btn.click();
-      assert.equal(t(), '👑 显示贵宾卡');
+      assert.equal(label(), '显示贵宾卡');
 
-      proj.applyState({ vipSlotDismissed: false });
-      assert.equal(t(), '👑 隐藏贵宾卡', 'label follows remote state too');
-    } finally {
-      close(proj);
-    }
-  });
-
-  it('warns on screen when the dismissal cannot reach other devices', async () => {
-    const proj = makeProjection();
-    try {
-      S(proj, 'syncRef', { child: () => ({ set: () => Promise.reject(new Error('permission denied')) }) });
-
-      proj.window.closeProjVipSlot();
-      await sleep(20);
-
-      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'none', 'still hides locally');
-      const toast = proj.document.querySelector('#toastContainer .toast');
-      assert.ok(toast, 'a warning toast must be shown');
-      assert.ok(toast.classList.contains('error'), 'toast is styled as an error');
-      assert.match(toast.textContent, /sync failed/i);
+      btn.click();
+      assert.equal(label(), '隐藏贵宾卡');
     } finally {
       close(proj);
     }
@@ -529,8 +503,8 @@ describe('Manual entry / replacement (regression)', () => {
   it('restores a ticket back to the pool', () => {
     const host = makeHost();
     try {
-      S(host, 'recycleBin', [{ ticket: '0050', originalSeq: 2, time: '10:00' }]);
-      host.window.restoreToPool('0050', 0);
+      S(host, 'recycleBin', [{ ticket: '1050', originalSeq: 2, time: '10:00' }]);
+      host.window.restoreToPool('1050', 0);
       assert.equal(G(host, 'recycleBin').length, 0);
     } finally {
       close(host);
@@ -540,11 +514,11 @@ describe('Manual entry / replacement (regression)', () => {
   it('restores a ticket as a winner and grows prize quota when full', () => {
     const host = makeHost();
     try {
-      S(host, 'winners', ['0001']);
+      S(host, 'winners', ['1001']);
       S(host, 'maxPrizes', 1);
-      S(host, 'recycleBin', [{ ticket: '0050', originalSeq: 1, time: '10:00' }]);
-      host.window.restoreAsWinner('0050', 0);
-      assert.ok(G(host, 'winners').includes('0050'));
+      S(host, 'recycleBin', [{ ticket: '1050', originalSeq: 1, time: '10:00' }]);
+      host.window.restoreAsWinner('1050', 0);
+      assert.ok(G(host, 'winners').includes('1050'));
       assert.equal(G(host, 'maxPrizes'), 2, 'quota grew since list was full');
       assert.equal(G(host, 'recycleBin').length, 0);
     } finally {
@@ -555,12 +529,12 @@ describe('Manual entry / replacement (regression)', () => {
   it('blacklist exclusion sends the ticket to the recycle bin', () => {
     const host = makeHost();
     try {
-      host.document.getElementById('blacklistInput').value = '77';
+      host.document.getElementById('blacklistInput').value = '1077';
       host.window.excludeBlacklistTicket();
       const bin = G(host, 'recycleBin');
-      assert.equal(bin[0].ticket, '0077');
-      assert.equal(bin[0].originalSeq, 'Excluded');
-      assert.ok(!G(host, 'getAvailablePool')().includes('0077'), 'excluded number leaves the pool');
+      assert.equal(bin[0].ticket, '1077');
+      assert.equal(bin[0].originalSeq, G(host, 'I18N').BC.btnExclude, 'the bin label is localised');
+      assert.ok(!G(host, 'getAvailablePool()').includes('1077'), 'excluded number leaves the pool');
     } finally {
       close(host);
     }
@@ -685,10 +659,29 @@ describe('Cross-device state sync (regression)', () => {
         poolEnd: 123456,
         poolStart: 1
       });
-      assert.equal(G(host, 'maxPrizes'), 500);
-      assert.equal(G(host, 'poolEnd'), 9999);
+      assert.equal(G(host, 'poolStart'), 1);
+      assert.equal(G(host, 'poolEnd'), 9999, 'range never leaves the four-digit ticket space');
+      assert.equal(G(host, 'maxPrizes'), 9999, 'quota is capped at the pool size, not an arbitrary 500');
     } finally {
       close(host);
+    }
+  });
+
+  it('rejects a collapsed or inverted range coming from state', () => {
+    const host = makeHost();
+    for (const range of [
+      { poolStart: 3000, poolEnd: 1001 },
+      { poolStart: 500, poolEnd: 500 },
+      { poolStart: 0, poolEnd: 0 },
+      { poolStart: 'x', poolEnd: 'y' }
+    ]) {
+      host.applyState(range);
+      const start = G(host, 'poolStart');
+      const end = G(host, 'poolEnd');
+      assert.ok(start >= 1, 'start stays in range for ' + JSON.stringify(range));
+      assert.ok(end <= 9999, 'end stays in range for ' + JSON.stringify(range));
+      assert.ok(end > start, 'the pool is never empty for ' + JSON.stringify(range));
+      assert.ok(G(host, 'getAvailablePool()').length > 0, 'there is always something to draw');
     }
   });
 
@@ -848,6 +841,553 @@ describe('Default pool & prize quota', () => {
   });
 });
 
+describe('Custom ticket range dialog', () => {
+  const fields = (app) => ({
+    modal: app.document.getElementById('poolModal'),
+    start: app.document.getElementById('poolStartInput'),
+    end: app.document.getElementById('poolEndInput'),
+    size: app.document.getElementById('poolSizeReadout'),
+    prize: app.document.getElementById('poolPrizeInput'),
+    note: app.document.getElementById('poolRangeNote'),
+    error: app.document.getElementById('poolErrorText'),
+    apply: app.document.getElementById('poolApplyBtn')
+  });
+  const type = (el, v) => { el.value = v; el.dispatchEvent(new el.ownerDocument.defaultView.Event('input')); };
+
+  it('opens pre-filled with the live range and prize quota', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+      assert.equal(f.modal.style.display, 'flex');
+      assert.equal(f.start.value, '1001');
+      assert.equal(f.end.value, '3000');
+      assert.equal(f.prize.value, '110');
+      assert.equal(f.size.value, '2000', 'size is shown without touching apply');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('recalculates the pool size live and localises the summary', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+
+      type(f.start, '1');
+      type(f.end, '500');
+      assert.equal(f.size.value, '500');
+      assert.match(f.note.textContent, /500/);
+
+      type(f.start, '2500');
+      type(f.end, '9999');
+      assert.equal(f.size.value, '7500', 'inclusive of both ends');
+      assert.equal(f.error.hidden, true, 'a valid range shows no error');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('blocks apply for an empty, inverted or out-of-bounds range', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+
+      for (const [s, e] of [['', '3000'], ['3000', '1001'], ['1001', '1001'], ['0', '3000'], ['1001', '']]) {
+        type(f.start, s);
+        type(f.end, e);
+        assert.equal(f.apply.disabled, true, `apply must be blocked for ${s}-${e}`);
+        assert.equal(f.error.hidden, false, 'the reason is shown');
+      }
+
+      host.window.applyPoolRange();
+      assert.equal(G(host, 'poolStart'), 1001, 'a rejected range never changes the live pool');
+      assert.equal(G(host, 'poolEnd'), 3000);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('applies a smaller range and the pool really shrinks', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '1');
+      type(f.end, '200');
+      type(f.prize, '110');
+      host.window.applyPoolRange();
+
+      assert.equal(G(host, 'poolStart'), 1);
+      assert.equal(G(host, 'poolEnd'), 200);
+      assert.equal(G(host, 'maxPrizes'), 110, '110 prizes still fit in 200 tickets');
+
+      const pool = host.window.getAvailablePool();
+      assert.equal(pool.length, 200);
+      assert.equal(pool[0], '0001');
+      assert.equal(pool[199], '0200');
+      assert.equal(f.modal.style.display, 'none', 'the dialog closes on success');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('clamps the prize quota when the new range is too small', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '1');
+      type(f.end, '50');
+      type(f.prize, '110');
+      assert.equal(f.error.hidden, false, 'the clamp is previewed before applying');
+      assert.match(f.error.textContent, /50/);
+
+      host.window.applyPoolRange();
+      assert.equal(G(host, 'maxPrizes'), 50, 'quota can never exceed the tickets available');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('never lets the quota drop below what is already drawn', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      assert.equal(G(host, 'winners').length, 10);
+
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '1001');
+      type(f.end, '1100');
+      type(f.prize, '1');
+      host.window.applyPoolRange();
+
+      assert.equal(G(host, 'maxPrizes'), 10, 'quota stays at the drawn count');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('retires winners that fall outside the new range instead of orphaning them', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      const drawn = G(host, 'winners');
+      const stranded = drawn.filter(n => Number(n) > 1200);
+      const kept = drawn.filter(n => Number(n) <= 1200);
+      assert.ok(stranded.length > 0, 'the fixture must actually lose some numbers');
+
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '1001');
+      type(f.end, '1200');
+      host.window.applyPoolRange();
+
+      assert.equal([...G(host, 'winners')].join(','), kept.join(','), 'only in-range winners remain');
+      const bin = G(host, 'recycleBin').map(r => r.ticket);
+      for (const n of stranded) {
+        assert.ok(bin.includes(n), '#' + n + ' is retired into the recycle bin');
+        assert.ok(!host.window.getAvailablePool().includes(n), '#' + n + ' can never be drawn again');
+      }
+      const audit = host.document.getElementById('auditList').textContent;
+      assert.match(audit, new RegExp(String(stranded.length)), 'the audit log records how many');
+      assert.ok(!audit.includes('undefined'), 'the audit entry renders its message');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('a widened range keeps every winner and only adds fresh tickets', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      const drawn = [...G(host, 'winners')];
+
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '1');
+      type(f.end, '5000');
+      host.window.applyPoolRange();
+
+      assert.equal([...G(host, 'winners')].join(','), drawn.join(','), 'widening never touches history');
+      const pool = [...host.window.getAvailablePool()];
+      assert.equal(pool.length, 5000 - drawn.length);
+      for (const n of drawn) assert.ok(!pool.includes(n), '#' + n + ' stays excluded');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('the new range reaches every surface and the projector header card', () => {
+    const s = { host: makeHost(), viewer: makeViewer(), proj: makeProjection() };
+    try {
+      const f = fields(s.host);
+      s.host.window.editPoolSize();
+      type(f.start, '4000');
+      type(f.end, '4500');
+      type(f.prize, '20');
+      s.host.window.applyPoolRange();
+
+      const payload = s.host.window.getPayload();
+      for (const app of [s.viewer, s.proj]) app.applyState(payload);
+
+      for (const app of [s.host, s.viewer, s.proj]) {
+        assert.equal(G(app, 'poolStart'), 4000);
+        assert.equal(G(app, 'poolEnd'), 4500);
+        assert.equal(G(app, 'maxPrizes'), 20);
+        assert.equal(app.document.getElementById('poolCount').textContent, '501');
+      }
+      const pip = makePipBar();
+      pip.applyState(payload);
+      assert.match(
+        pip.document.getElementById('pipTrack').textContent,
+        /4000 - 4500/,
+        'the range card reflects the new range'
+      );
+      close(pip);
+    } finally {
+      Object.values(s).forEach(close);
+    }
+  });
+
+  it('a viewer cannot open or apply the dialog', () => {
+    const viewer = makeViewer();
+    try {
+      const f = fields(viewer);
+      viewer.window.editPoolSize();
+      assert.notEqual(f.modal.style.display, 'flex', 'read-only surface stays closed');
+
+      f.start.value = '1';
+      f.end.value = '10';
+      viewer.window.applyPoolRange();
+      assert.equal(G(viewer, 'poolStart'), 1001, 'range untouched');
+      assert.equal(G(viewer, 'poolEnd'), 3000);
+    } finally {
+      close(viewer);
+    }
+  });
+
+  it('cancelling keeps the live range and quota untouched', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '10');
+      type(f.end, '20');
+      type(f.prize, '5');
+      host.window.togglePoolModal(false);
+
+      assert.equal(f.modal.style.display, 'none');
+      assert.equal(G(host, 'poolStart'), 1001);
+      assert.equal(G(host, 'poolEnd'), 3000);
+      assert.equal(G(host, 'maxPrizes'), 110);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('ignores non-numeric input instead of poisoning the range', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '12ab34cd');
+      assert.equal(f.start.value, '1234', 'digits only, capped at four');
+      type(f.end, '56ef78');
+      assert.equal(f.end.value, '5678');
+      assert.equal(f.size.value, '4445', 'the live size follows the cleaned-up values');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('clamps a range typed with leading zeros', () => {
+    const host = makeHost();
+    try {
+      const f = fields(host);
+      host.window.editPoolSize();
+      type(f.start, '7');
+      type(f.end, '9');
+      assert.equal(f.size.value, '3', '3 tickets: 7, 8, 9');
+
+      host.window.applyPoolRange();
+      assert.equal(G(host, 'poolStart'), 7);
+      assert.equal(G(host, 'poolEnd'), 9);
+      assert.equal([...host.window.getAvailablePool()].join(','), '0007,0008,0009');
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Recycle bin stays inside the live range', () => {
+  it('refuses to return an out-of-range ticket to the pool', () => {
+    const host = makeHost();
+    try {
+      host.applyState({ poolStart: 2001, poolEnd: 2100, recycleBin: [{ ticket: '0500', time: 'x' }] });
+      host.window.restoreToPool('0500', 0);
+      assert.equal(G(host, 'recycleBin').length, 1, 'the entry is kept, not silently dropped');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('refuses to promote an out-of-range ticket to a winner', () => {
+    const host = makeHost();
+    try {
+      host.applyState({ poolStart: 2001, poolEnd: 2100, recycleBin: [{ ticket: '0500', time: 'x' }] });
+      host.window.restoreAsWinner('0500', 0);
+      assert.equal([...G(host, 'winners')].length, 0);
+      assert.equal(G(host, 'recycleBin').length, 1);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('still restores an in-range ticket and never duplicates a winner', () => {
+    const host = makeHost();
+    try {
+      host.applyState({ winners: ['1001'], recycleBin: [{ ticket: '1001', time: 'x' }, { ticket: '1002', time: 'x' }] });
+
+      host.window.restoreToPool('1001', 0);
+      assert.deepEqual(G(host, 'winners'), ['1001'], 'a stale bin entry never re-enables a winner');
+      assert.equal(G(host, 'recycleBin').length, 1);
+
+      host.window.restoreAsWinner('1002', 0);
+      assert.deepEqual(G(host, 'winners'), ['1001', '1002']);
+      assert.equal(G(host, 'recycleBin').length, 0);
+      assert.ok(!host.window.getAvailablePool().includes('1002'), 'restored winner is out of the pool');
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Blacklist exclusion is range-aware', () => {
+  const exclude = (app, value) => {
+    const input = app.document.getElementById('blacklistInput');
+    input.value = value;
+    app.window.excludeBlacklistTicket();
+  };
+
+  it('excludes a live ticket and keeps it out of the pool', () => {
+    const host = makeHost();
+    try {
+      exclude(host, '1500');
+      assert.equal(G(host, 'recycleBin')[0].ticket, '1500');
+      assert.ok(!host.window.getAvailablePool().includes('1500'));
+      assert.equal(host.document.getElementById('recycleBtnCount').textContent, '1');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('ignores letters and out-of-range numbers', () => {
+    const host = makeHost();
+    try {
+      exclude(host, 'abc');
+      assert.equal(G(host, 'recycleBin').length, 0);
+
+      exclude(host, '0500');
+      assert.equal(G(host, 'recycleBin').length, 0, 'outside 1001-3000, nothing to exclude');
+
+      exclude(host, '9999');
+      assert.equal(G(host, 'recycleBin').length, 0);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('refuses to blacklist a number that is already a winner', () => {
+    const host = makeHost();
+    try {
+      host.window.drawTen();
+      const winner = G(host, 'winners')[0];
+      exclude(host, winner);
+      assert.equal(G(host, 'recycleBin').length, 0, 'a winner is voided, not blacklisted');
+      assert.ok(G(host, 'winners').includes(winner));
+    } finally {
+      close(host);
+    }
+  });
+
+  it('does not stack duplicate bin entries', () => {
+    const host = makeHost();
+    try {
+      exclude(host, '1500');
+      exclude(host, '1500');
+      assert.equal(G(host, 'recycleBin').length, 1);
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Language and reset hygiene', () => {
+  it('keeps the document language in step with the UI language', () => {
+    const host = makeHost();
+    try {
+      for (const [lang, expected] of [['BC', 'zh-Hans'], ['BM', 'ms'], ['BI', 'en']]) {
+        host.window.changeLanguage(lang);
+        assert.equal(host.document.documentElement.lang, expected, 'html lang for ' + lang);
+        assert.equal(host.document.documentElement.getAttribute('lang'), expected);
+      }
+    } finally {
+      close(host);
+    }
+  });
+
+  it('adopts a remote language change too', () => {
+    const host = makeHost();
+    try {
+      host.applyState({ currentLang: 'BI' });
+      assert.equal(host.document.documentElement.lang, 'en');
+      assert.equal(host.document.documentElement.getAttribute('lang'), 'en');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('reset restores the default range and quota, not the values in force', () => {
+    const host = makeHost();
+    try {
+      host.applyState({ poolStart: 10, poolEnd: 20, maxPrizes: 5, winners: ['0015'] });
+      assert.equal(G(host, 'poolStart'), 10);
+
+      host.window.resetAll();
+      assert.equal(G(host, 'poolStart'), 1001);
+      assert.equal(G(host, 'poolEnd'), 3000);
+      assert.equal(G(host, 'maxPrizes'), 110);
+      assert.equal(host.window.getAvailablePool().length, 2000);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('the prize badge opens the same dialog as the pool badge', () => {
+    const host = makeHost();
+    try {
+      host.window.editMaxPrizes();
+      assert.equal(host.document.getElementById('poolModal').style.display, 'flex');
+      assert.equal(host.document.getElementById('poolPrizeInput').value, '110');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('spacebar does not double-fire the VIP roll while a button has focus', () => {
+    const host = makeHost();
+    try {
+      host.window.switchTab('vip');
+      const btn = host.document.getElementById('vipToggleBtn');
+      btn.focus();
+      assert.equal(host.document.activeElement, btn);
+
+      host.document.dispatchEvent(new host.window.KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
+
+      assert.equal(G(host, 'isRolling'), false, 'the focused button owns the spacebar');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('spacebar still rolls when no control is focused', () => {
+    const host = makeHost();
+    try {
+      host.window.switchTab('vip');
+      host.document.body.focus();
+      host.document.dispatchEvent(new host.window.KeyboardEvent('keydown', { code: 'Space', bubbles: true }));
+      assert.equal(G(host, 'isRolling'), true);
+    } finally {
+      close(host);
+    }
+  });
+});
+
+describe('Emoji-free interface', () => {
+  it('no pictographic emoji remain anywhere in the document', () => {
+    const host = makeHost();
+    try {
+      const html = host.document.documentElement.outerHTML;
+      const hits = html.match(/\p{Extended_Pictographic}/gu) || [];
+      assert.deepEqual(hits, [], 'emoji left in the markup: ' + hits.join(' '));
+    } finally {
+      close(host);
+    }
+  });
+
+  it('the browser title carries no emoji', () => {
+    const host = makeHost();
+    try {
+      assert.equal(/\p{Extended_Pictographic}/u.test(host.document.title), false, host.document.title);
+      assert.match(host.document.title, /幸运大抽奖/);
+    } finally {
+      close(host);
+    }
+  });
+
+  it('all three languages are emoji-free and share the same keys', () => {
+    const host = makeHost();
+    try {
+      for (const lang of ['BC', 'BM', 'BI']) {
+        host.window.changeLanguage(lang);
+        const dict = G(host, 'I18N')[lang];
+        for (const [key, value] of Object.entries(dict)) {
+          assert.equal(/\p{Extended_Pictographic}/u.test(value), false, lang + '.' + key);
+        }
+      }
+      const keys = ['BC', 'BM', 'BI'].map(l => Object.keys(G(host, 'I18N')[l]).sort().join('|'));
+      assert.equal(keys[0], keys[1], 'BM must have the same keys as BC');
+      assert.equal(keys[0], keys[2], 'BI must have the same keys as BC');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('every data-i18n key in the markup resolves in every language', () => {
+    const host = makeHost();
+    try {
+      const used = new Set(
+        [...host.document.documentElement.outerHTML.matchAll(/data-i18n(?:-title)?="([^"]+)"/g)].map(m => m[1])
+      );
+      assert.ok(used.size > 20, 'the fixture must actually exercise the translator');
+      for (const lang of ['BC', 'BM', 'BI']) {
+        const dict = G(host, 'I18N')[lang];
+        for (const key of used) {
+          assert.equal(typeof dict[key], 'string', lang + ' is missing ' + key);
+          assert.notEqual(dict[key].trim(), '', lang + '.' + key + ' must not be blank');
+        }
+      }
+    } finally {
+      close(host);
+    }
+  });
+
+  it('swapping language relabels the pool dialog and never leaks a key', () => {
+    const host = makeHost();
+    try {
+      host.window.editPoolSize();
+      const f = host.document.getElementById('poolStartInput');
+      for (const lang of ['BM', 'BI', 'BC']) {
+        host.window.changeLanguage(lang);
+        host.window.refreshPoolDraft();
+        for (const el of [f, host.document.getElementById('poolEndInput'),
+          host.document.getElementById('poolSizeReadout'), host.document.getElementById('poolPrizeInput')]) {
+          const text = [el.value, el.textContent, el.title].join(' ');
+          assert.equal(/[{}]|\bpool[A-Z]/.test(text), false, lang + ' leaked a template: ' + text);
+        }
+        assert.equal(/[{}]/.test(host.document.getElementById('poolRangeNote').textContent), false,
+          'note has no unfilled placeholder in ' + lang);
+      }
+    } finally {
+      close(host);
+    }
+  });
+});
+
 describe('Cross-surface sync (master / viewer / projection / PiP)', () => {
   const surfaces = () => {
     const apps = { host: makeHost(), viewer: makeViewer(), proj: makeProjection(), pip: makePipBar() };
@@ -943,7 +1483,7 @@ describe('Cross-surface sync (master / viewer / projection / PiP)', () => {
     }
   });
 
-  it('closing the VIP card on the projection reaches every other surface', async () => {
+  it('closing the VIP card is local, so the winning number survives everywhere', async () => {
     const s = surfaces();
     try {
       s.host.window.startVip();
@@ -953,12 +1493,12 @@ describe('Cross-surface sync (master / viewer / projection / PiP)', () => {
       for (const app of [s.viewer, s.proj, s.pip]) app.applyState(payload);
 
       s.proj.document.getElementById('projVipCloseBtn').click();
-      const closed = { ...s.host.window.getPayload(), vipSlotDismissed: true };
-      for (const app of [s.viewer, s.proj, s.pip]) app.applyState(closed);
+      const after = s.proj.window.getPayload();
+      for (const app of [s.viewer, s.proj, s.pip]) app.applyState(after);
 
-      assert.equal(G(s.viewer, 'vipSlotDismissed'), true, 'viewer knows');
-      assert.equal(G(s.pip, 'vipSlotDismissed'), true, 'PiP page knows');
       assert.equal(s.proj.document.getElementById('projVipSlot').style.display, 'none', 'projection card hidden');
+      assert.equal('vipSlotDismissed' in after, false, 'nothing about the close is shared');
+      assert.equal(G(s.viewer, 'vipSlotDismissed'), false, 'viewer card is unaffected');
       assert.equal(s.viewer.document.getElementById('vipDisplay').textContent, G(s.host, 'winners')[0],
         'winning number itself is never erased');
       assert.equal(s.pip.document.getElementById('pipTrack').innerHTML.includes(G(s.host, 'winners')[0]), true,
@@ -1165,7 +1705,11 @@ describe('No ticket number can ever repeat', () => {
     const host = makeHost();
     try {
       host.applyState({ maxPrizes: 99999, poolStart: 1001, poolEnd: 3000 });
-      assert.equal(G(host, 'maxPrizes'), 500, 'hostile quota clamped to 500');
+      assert.equal(G(host, 'maxPrizes'), 2000, 'hostile quota clamped to the 2000 tickets available');
+
+      host.applyState({ winners: new Array(1999).fill('1001').map((_, i) => String(1002 + i)), maxPrizes: 99999 });
+      assert.equal(G(host, 'maxPrizes'), G(host, 'getAvailablePool()').length + 1999,
+        'a quota can never exceed the number of tickets left');
     } finally {
       close(host);
     }
