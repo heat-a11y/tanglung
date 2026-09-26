@@ -136,6 +136,175 @@ describe('VIP projection slot behaviour', () => {
   });
 });
 
+describe('VIP slot dismiss button (synced)', () => {
+  const closeBtn = (app) => app.document.getElementById('projVipCloseBtn');
+  const btnDisplay = (app) => app.window.getComputedStyle(closeBtn(app)).display;
+
+  it('renders the X inside the VIP slot on the projection', () => {
+    const proj = makeProjection();
+    try {
+      const slot = proj.document.getElementById('projVipSlot');
+      const btn = closeBtn(proj);
+      assert.ok(btn, 'close button must exist');
+      assert.equal(btn.parentElement, slot, 'X must live inside the VIP slot');
+      assert.equal(btn.textContent, '✕');
+    } finally {
+      close(proj);
+    }
+  });
+
+  it('only offers the X once the number has settled (never mid-roll)', async () => {
+    const host = makeHost();
+    const proj = makeProjection();
+    try {
+      host.window.startVip();
+      proj.applyState(host.window.getPayload());
+      assert.ok(proj.document.getElementById('projVipSlot').classList.contains('rolling'));
+      assert.equal(btnDisplay(proj), 'none', 'X must be unavailable while rolling');
+
+      await sleep(60);
+      host.window.stopVip();
+      proj.applyState(host.window.getPayload());
+      assert.equal(btnDisplay(proj), 'flex', 'X available once the number is final');
+    } finally {
+      close(host); close(proj);
+    }
+  });
+
+  it('X on the big projection hides the card and is allowed in viewer mode', async () => {
+    const host = makeHost();
+    const proj = makeProjection();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+      proj.applyState(host.window.getPayload());
+
+      const slot = proj.document.getElementById('projVipSlot');
+      assert.equal(slot.style.display, 'flex', 'card visible before pressing X');
+
+      closeBtn(proj).click();
+
+      assert.equal(slot.style.display, 'none', 'X closes the floating card');
+      assert.equal(G(proj, 'vipSlotDismissed'), true, 'dismissal recorded on the projection');
+      assert.equal(proj.window.getPayload().vipSlotDismissed, true, 'flag travels in the payload');
+      assert.equal(G(proj, 'isViewerMode'), true, 'the close happened from a viewer-mode projection');
+    } finally {
+      close(host); close(proj);
+    }
+  });
+
+  it('dismissal applied from another device hides the card there too', async () => {
+    const host = makeHost();
+    const projA = makeProjection();
+    const projB = makeProjection();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+
+      projA.applyState(host.window.getPayload());
+      closeBtn(projA).click();
+
+      // master receives the projection's write and republishes; B applies it
+      const payload = { ...host.window.getPayload(), vipSlotDismissed: true };
+      projB.applyState(payload);
+
+      assert.equal(projB.document.getElementById('projVipSlot').style.display, 'none',
+        'every other screen hides the card');
+      assert.equal(projB.document.getElementById('projVipNum').textContent,
+        G(host, 'winners')[0], 'winning number itself is untouched');
+    } finally {
+      close(host); close(projA); close(projB);
+    }
+  });
+
+  it('a late dismissal still hides a card whose draw event was already applied', async () => {
+    const host = makeHost();
+    const proj = makeProjection();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+      const payload = host.window.getPayload();
+
+      proj.applyState(payload);
+      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'flex');
+
+      proj.applyState({ ...payload, vipSlotDismissed: true });
+      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'none',
+        'dismissal must apply even when the roll key was already seen');
+    } finally {
+      close(host); close(proj);
+    }
+  });
+
+  it('the next draw brings the card back on every screen', async () => {
+    const host = makeHost();
+    const proj = makeProjection();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+      proj.applyState(host.window.getPayload());
+      closeBtn(proj).click();
+      assert.equal(proj.document.getElementById('projVipSlot').style.display, 'none');
+
+      host.window.startVip();
+      proj.applyState(host.window.getPayload());
+      const slot = proj.document.getElementById('projVipSlot');
+      assert.equal(slot.style.display, 'flex', 'a fresh draw re-opens the card');
+      assert.ok(slot.classList.contains('rolling'));
+
+      await sleep(60);
+      host.window.stopVip();
+      proj.applyState(host.window.getPayload());
+      assert.equal(slot.style.display, 'flex', 'final number stays on screen');
+      assert.equal(G(proj, 'vipSlotDismissed'), false, 'dismissal flag cleared by the new draw');
+      assert.equal(proj.document.getElementById('projVipNum').textContent, G(host, 'winners')[1]);
+    } finally {
+      close(host); close(proj);
+    }
+  });
+
+  it('host pressing X hides its own slot and publishes the flag', async () => {
+    const host = makeHost();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+
+      host.window.closeProjVipSlot();
+
+      assert.equal(host.document.getElementById('projVipSlot').style.display, 'none');
+      assert.equal(host.window.getPayload().vipSlotDismissed, true);
+      assert.equal(host.document.getElementById('vipDisplay').textContent, G(host, 'winners')[0],
+        'console VIP display is not cleared by the projection X');
+    } finally {
+      close(host);
+    }
+  });
+
+  it('reset clears the dismissal so the next draw behaves normally', async () => {
+    const host = makeHost();
+    const proj = makeProjection();
+    try {
+      host.window.startVip();
+      await sleep(60);
+      host.window.stopVip();
+      proj.applyState(host.window.getPayload());
+      closeBtn(proj).click();
+
+      host.window.resetAll();
+
+      assert.equal(G(host, 'vipSlotDismissed'), false);
+      assert.equal(host.window.getPayload().vipSlotDismissed, false);
+    } finally {
+      close(host); close(proj);
+    }
+  });
+});
+
 describe('Batch 10 draw (regression)', () => {
   it('draws exactly 10 unique in-range winners and renders tags', () => {
     const host = makeHost();
