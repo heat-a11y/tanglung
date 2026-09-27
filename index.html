@@ -218,6 +218,31 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.001ms !important;
       }
+      /* A 0.001ms toast fade means the toast never becomes visible at all: it
+         animates straight to its final keyframe, so it can appear and vanish
+         inside one frame. The same applies to popIn. */
+      .toast,
+      .number-tag,
+      .modal-box,
+      .batch-result {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      /* The endless pulses stop dead at their start state, which leaves the
+         element looking inert rather than merely still -- so give them a static
+         equivalent: the ring and the red ink still read as "live". */
+      .vip-display.rolling,
+      .proj-vip-slot.rolling .proj-vip-num {
+        animation: none !important;
+        box-shadow: 0 0 0 3px var(--accent-glow) !important;
+        transform: none !important;
+      }
+      .proj-timer-chip .proj-timer-digits-inline.timeout {
+        animation: none !important;
+        box-shadow: 0 0 0 3px rgba(var(--danger-rgb), 0.28) !important;
+        transform: none !important;
+      }
     }
 
     body { background: var(--bg); color: var(--text);
@@ -270,6 +295,23 @@
       align-items: center;
       gap: 10px;
     }
+    .toast-action {
+      margin-left: auto;
+      padding: 4px 12px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--surface-2);
+      color: var(--accent);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .toast-action:hover {
+      background: rgba(var(--accent-rgb), 0.12);
+      border-color: var(--accent);
+    }
+
     .toast.error {
       border-color: var(--danger-strong);
       border-left-color: var(--danger-strong);
@@ -380,6 +422,10 @@
     }
     .stat-badge:hover {
       border-color: var(--border-strong);
+    }
+    .stat-badge:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
     }
     .stat-badge strong {
       color: var(--accent);
@@ -933,6 +979,7 @@
 
     .billboard-card {
       background: var(--surface-1);
+      color: var(--text);
       border: 1px solid var(--border-subtle);
       padding: 6px 8px;
       border-radius: var(--r-sm);
@@ -940,16 +987,31 @@
       justify-content: space-between;
       align-items: baseline;
       gap: 6px;
+      width: 100%;
       font-family: var(--font-num);
-      font-variant-numeric: tabular-nums;
       font-size: var(--fs-sm);
+      font-weight: 400;
+      line-height: inherit;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
       cursor: pointer;
       user-select: none;
+      -webkit-appearance: none;
+      appearance: none;
       transition: background 0.15s, border-color 0.15s;
     }
 
     .billboard-card:hover {
       background: rgba(var(--accent-rgb), 0.2);
+    }
+
+    /* The card is the only element in the grid, so its focus ring is the sole
+       keyboard affordance. The grid uses a gap, not negative margins, so the
+       outline needs no offset compensation to stay fully visible. */
+    .billboard-card:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: var(--r-sm);
     }
 
     .billboard-card.claimed {
@@ -1631,12 +1693,20 @@
       border: 1px solid var(--border-subtle);
       border-radius: var(--r-md);
       padding: 10px;
+      font: inherit;
+      text-align: left;
       cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
       transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
     }
     .theme-swatch:hover {
       transform: translateY(-2px);
       border-color: var(--border-strong);
+    }
+    .theme-swatch:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
     }
     .theme-swatch.active {
       border-color: var(--accent);
@@ -1666,6 +1736,37 @@
 
   <canvas id="confettiCanvas"></canvas>
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- FAIR-DRAW VERIFICATION -->
+  <div class="modal-backdrop" id="fairModal" style="display:none; z-index:10050;" onclick="if(event.target===this) toggleFairModal(false)">
+    <div class="modal-box" id="fairModalBox" style="max-width:560px;" role="dialog" aria-modal="true" aria-labelledby="fairTitle">
+      <div class="modal-header">
+        <h3 id="fairTitle" style="color:var(--accent);" data-i18n="fairTitle">抽獎可驗證性</h3>
+        <button class="icon-btn" id="fairCloseBtn" type="button" onclick="toggleFairModal(false)" data-i18n="fairClose">關閉</button>
+      </div>
+      <div id="fairBody"></div>
+      <div class="modal-footer">
+        <button class="icon-btn" id="fairCopyBtn" type="button" onclick="copyFairRecord()" data-i18n="fairCopy">複製紀錄</button>
+        <button class="action-btn" id="fairVerifyBtn" type="button" style="margin-bottom:0;" onclick="runFairVerify()" data-i18n="fairVerifyBtn">驗證</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIRM DIALOG: replaces the native confirm() that was untranslated,
+       unthemed, and froze the render thread. -->
+  <div class="modal-backdrop" id="confirmModal" style="display:none; z-index:10060;">
+    <div class="modal-box" style="max-width:440px;" role="alertdialog" aria-modal="true"
+         aria-labelledby="confirmTitle" aria-describedby="confirmBody" id="confirmBox">
+      <div class="modal-header">
+        <h3 id="confirmTitle" style="color:var(--accent);"></h3>
+      </div>
+      <p id="confirmBody" style="color:var(--text-2); font-size:0.9rem; line-height:1.6; margin:0 0 4px;"></p>
+      <div class="modal-footer">
+        <button class="icon-btn" id="confirmCancelBtn" type="button"></button>
+        <button class="action-btn" id="confirmOkBtn" type="button" style="margin-bottom:0;"></button>
+      </div>
+    </div>
+  </div>
 
   <!-- MULTI-USER CLOUD SYNC MODAL -->
   <div class="modal-backdrop" id="syncModal">
@@ -1720,7 +1821,8 @@
 
   <!-- AUDIENCE VERIFICATION SPOTLIGHT POP-UP -->
   <div id="spotlightModal" onclick="closeSpotlight()">
-    <div class="spotlight-card" onclick="event.stopPropagation()">
+    <div class="spotlight-card" id="spotlightCard" role="dialog" aria-modal="true"
+         aria-labelledby="spotlightTitle" aria-describedby="spotlightSub" onclick="event.stopPropagation()">
       <div class="spotlight-title" id="spotlightTitle">恭喜中奖</div>
       <div class="spotlight-num" id="spotlightNum">0000</div>
       <div style="font-size:1.15rem; color:var(--text-2);" id="spotlightSub">第 1 份奖品 · 正式中奖票号</div>
@@ -1728,7 +1830,7 @@
         <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; background:var(--success); color:var(--on-status); border-color:var(--success);" id="spotlightClaimBtn" onclick="toggleClaimCurrentSpotlight()"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>领奖核销 (Claim)</span></button>
         <button class="icon-btn" id="spotlightCallBtn" style="padding:7px 16px; font-size:0.95rem;" onclick="startClaimTimer()" data-i18n="btnCall10">现场10秒呼叫</button>
         <button class="icon-btn btn-danger" style="padding:7px 16px; font-size:0.95rem;" id="spotlightRedrawBtn" onclick="triggerDirectRedrawFromSpotlight()" data-i18n="btnVoidRedraw">作废重抽</button>
-        <button class="icon-btn" style="padding:7px 16px; font-size:0.95rem; border-color:var(--border-strong);" onclick="closeSpotlight()">关 闭</button>
+        <button class="icon-btn" id="spotlightCloseBtn" type="button" style="padding:7px 16px; font-size:0.95rem; border-color:var(--border-strong);" onclick="closeSpotlight()">关 闭</button>
       </div>
     </div>
   </div>
@@ -1866,10 +1968,10 @@
       </div>
 
       <div class="top-stats">
-        <div class="stat-badge" id="poolBadgeEl" data-i18n-title="poolRangeTitle" title="自定义号池范围" onclick="editPoolSize()" style="cursor:pointer;">
+        <div class="stat-badge" id="poolBadgeEl" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){ event.preventDefault(); editPoolSize(); }" data-i18n-title="poolRangeTitle" title="自定义号池范围" onclick="editPoolSize()" style="cursor:pointer;">
           <span data-i18n="poolLabel">号池</span>: <strong id="poolCount">2000</strong> / <span id="poolMaxLabel" class="stat-edit">3000</span>
         </div>
-        <div class="stat-badge" id="prizeBadgeEl" data-i18n-title="poolPrizeLabel" title="奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;">
+        <div class="stat-badge" id="prizeBadgeEl" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){ event.preventDefault(); editMaxPrizes(); }" data-i18n-title="poolPrizeLabel" title="奖品总份数" onclick="editMaxPrizes()" style="cursor:pointer;">
           <span data-i18n="wonLabel">已抽出</span>: <strong id="wonCount">0</strong> / <span id="maxPrizesLabel" class="stat-edit">110</span>
         </div>
         <div class="stat-badge">
@@ -1891,6 +1993,7 @@
         <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">大屏投影</button>
         <button class="icon-btn" onclick="openPiPOverlay()" data-i18n="navPip">桌面悬浮条</button>
         <button class="icon-btn" onclick="copyEmceeScript()" data-i18n="navScript">司仪口播稿</button>
+        <button class="icon-btn" onclick="toggleFairModal(true)" data-i18n="fairOpen">驗證公平</button>
         <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis" id="crisisBtn">应急</button>
         <button class="icon-btn" onclick="testSound()" data-i18n="navTestSound">试音</button>
         <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">音效: 开</button>
@@ -1927,6 +2030,7 @@
         <!-- Mode 2: VIP Single Picker -->
         <div id="vipPanel" class="panel">
           <div class="vip-display" id="vipDisplay">----</div>
+          <div id="rollCommitBox" style="display:none; flex-direction:column; gap:4px; align-items:center; padding:6px 10px; border:1px dashed var(--border-strong); border-radius:var(--r-sm); background:var(--surface-2);"></div>
           <button class="action-btn" id="vipToggleBtn" onclick="toggleVip()" data-i18n="btnStartRoll">开 始 滚 动</button>
           <div style="font-size:0.85rem; color:var(--accent-strong); font-weight:bold;" id="vipHintText" data-i18n="vipSpaceHint">舞台提示：可轻按 [空格键 SPACEBAR] 启停</div>
         </div>
@@ -1984,7 +2088,7 @@
         </div>
 
         <div class="search-container">
-          <input type="text" id="searchInput" maxlength="4" placeholder="0888" oninput="searchTicket(this.value)">
+          <input type="text" id="searchInput" maxlength="4" placeholder="0888" inputmode="numeric" oninput="searchTicket(this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); triggerSpotlightFromSearch(); }">
           <button class="filter-btn" onclick="triggerSpotlightFromSearch()" data-i18n="btnFocusVerify">核验定位</button>
         </div>
 
@@ -2094,6 +2198,8 @@
     let claimTimeRemaining = 10;
     let activeSpotlightTicket = null;
     let activeSpotlightIndex = -1;
+    let spotlightReturnFocus = null;
+    let fairReturnFocus = null;
 
     let activePipWindow = null;
     let pipScrollPos = 0;
@@ -2152,6 +2258,66 @@
         navSoundOff: "音效: 关",
         navFullscreen: "全屏",
         navReset: "重置",
+        fairTitle: "抽獎可驗證性",
+        fairClose: "關閉",
+        fairVerifyBtn: "驗證",
+        fairNoDraw: "尚未進行抽獎。",
+        fairExplainer: "抽獎前已先公佈種子雜湊，抽出後再公開種子。任何人都能離線重算，確認結果並非事後挑選。",
+        fairCommitLabel: "預先承諾雜湊",
+        fairSeedLabel: "種子",
+        fairPoolLabel: "號池",
+        fairPoolSize: "{n} 個號碼",
+        fairPicksLabel: "抽出結果",
+        fairVerifying: "驗證中...",
+        fairVerdictOk: "驗證通過：結果可重現。",
+        fairVerdictBad: "驗證失敗：結果無法重現。",
+        fairStepRecord: "记录",
+        fairLocked: "本次承诺已锁定",
+        needTicketNumber: "請先輸入票號。",
+        emptyRange: "此範圍內沒有得獎號碼。",
+        noWinnersYet: "尚未抽出任何號碼。",
+        noWinners: "沒有得獎號碼可匯出。",
+        copiedScript: "口播稿已複製到剪貼簿。",
+        importFailed: "備份匯入失敗。",
+        allowPopups: "請允許彈出視窗以開啟全寬獎號列。",
+        rangeIs: "可用範圍：{a} - {b}",
+        alreadyWonAt: "{n} 已在第 {seq} 份中獎。",
+        onBlacklist: "{n} 位於作廢／黑名單中，請先從回收站復原。",
+        clipboardBlocked: "無法存取剪貼簿，請手動複製",
+        ticketAdded: "已加入票號 #{n}。",
+        fairCopy: "複製紀錄",
+        fairCopied: "驗證紀錄已複製。",
+        fairClosed: "已關閉驗證視窗。",
+        fairNonceLabel: "隨機數",
+        fairTimeLabel: "抽取時間",
+        fairReCommitted: "滚动中号池变动，已重新承诺。",
+        fairStepRecordBad: "缺少号池快照，无法重算。",
+        fairStepPool: "号池",
+        fairStepPoolOk: "{n} 个号码，与承诺时一致",
+        fairStepPoolBad: "号池与承诺时不同，承诺无法覆盖本次抽取。",
+        fairStepCommit: "承诺",
+        fairStepCommitOk: "由种子、号池与名额重算出的哈希与公布值相同",
+        fairStepCommitBad: "重算哈希与公布值不符。",
+        fairStepSeed: "种子",
+        fairStepSeedOk: "种子与随机数格式正确",
+        fairStepSeedBad: "种子或随机数格式无效。",
+        fairStepPick: "第 {n} 个",
+        fairStepPickBad: "重算得 {got}，公布为 {want}",
+        fairOpen: "驗證公平",
+        confirmOk: "確認",
+        confirmCancel: "取消",
+        resetConfirmTitle: "重置整場活動？",
+        resetConfirmBody: "將清除所有中獎號碼、核銷記錄與回收站。確認後有 10 秒可撤銷。",
+        resetDone: "已重置",
+        toastUndo: "復原",
+        undoDone: "已復原",
+        redrawTitle: "作廢並重抽",
+        redrawBody: "獎項 #{seq}：票號 [{ticket}] 作廢並補抽一個號碼？",
+        expiredTitle: "認領逾時",
+        expiredBody: "票號 [{ticket}] 10 秒內無人認領，立即重抽？",
+        noBackup: "號池已無備用號碼！",
+        replacementDrawn: "補抽完成：{ticket}",
+        replacedTicket: "已將 #{old} 替換為 #{new}！",
         tabBatch: "十连抽模式 (10 Slots)",
         tabVip: "贵宾大奖台 (VIP Slot)",
         tabManual: "手动录入 / 补抽 (Manual)",
@@ -2178,6 +2344,8 @@
         chipCustom: "自定义...",
         btnFocusVerify: "核验定位",
         bbEmpty: "暂无得奖数据",
+        bbCardTitle: "點擊核驗",
+        bbCardAria: "核驗第 {seq} 號得獎號碼 {num}",
         syncTitle: "跨设备实时云同步",
         syncStatusLabel: "连接状态:",
         syncOffline: "离线",
@@ -2288,6 +2456,66 @@
         navSoundOff: "Bunyi: Bisu",
         navFullscreen: "Skrin Penuh",
         navReset: "Tetapkan Semula",
+        fairTitle: "Keadilinan undian",
+        fairClose: "Tutup",
+        fairVerifyBtn: "Sahkan",
+        fairNoDraw: "Belum ada undian.",
+        fairExplainer: "Hash benih diterbitkan sebelum undian, dan benih didedahkan selepasUndian. Sesiapa sahaja boleh mengira semula secara luar talian untuk mengesahkan hasil itu tidak dipilih selepas itu.",
+        fairCommitLabel: "Hash komitmen",
+        fairSeedLabel: "Benih",
+        fairPoolLabel: "Kumpulan",
+        fairPoolSize: "{n} nombor",
+        fairPicksLabel: "Hasil undian",
+        fairVerifying: "Mengesahkan...",
+        fairVerdictOk: "Disahkan: hasil boleh dihasilkan semula.",
+        fairVerdictBad: "Gagal disahkan: hasil tidak boleh dihasilkan semula.",
+        fairStepRecord: "Rekod",
+        fairLocked: "Komitmen untuk undian ini telah dikunci",
+        needTicketNumber: "Sila masukkan nombor tiket dahulu.",
+        emptyRange: "Tiada nombor winners dalam julat ini.",
+        noWinnersYet: "Belum ada nombor undian.",
+        noWinners: "Tiada nombor winners untuk dieksport.",
+        copiedScript: "Skrip salinan disalin ke papan keratan.",
+        importFailed: "Import sandaran gagal.",
+        allowPopups: "Sila benarkan pop-up untuk membuka bar hadiah penuh.",
+        rangeIs: "Julat tersedia: {a} - {b}",
+        alreadyWonAt: "{n} sudah menang pada hadiah #{seq}.",
+        onBlacklist: "{n} ada dalam senarai dibatalkan / blacklist — pulihkannya daripada tong kitar semula dahulu.",
+        clipboardBlocked: "Papan keratan tidak boleh diakses, sila salin secara manual",
+        ticketAdded: "Nombor tiket #{n} telah ditambah.",
+        fairCopy: "Salin rekod",
+        fairCopied: "Rekod pengesahan disalin.",
+        fairClosed: "Tetingkap pengesahan ditutup.",
+        fairNonceLabel: "Nombor rawak",
+        fairTimeLabel: "Masa undian",
+        fairReCommitted: "Kumpulan berubah semasa bergulir, komitmen baharu dibuat.",
+        fairStepRecordBad: "Tiada rakaman kumpulan, jadi tidak boleh dikira semula.",
+        fairStepPool: "Kumpulan",
+        fairStepPoolOk: "{n} nombor, sepadan dengan komitmen",
+        fairStepPoolBad: "Kumpulan berbeza daripada yang dikomitkan.",
+        fairStepCommit: "Komitmen",
+        fairStepCommitOk: "Hash yang dikira semula daripada benih, kumpulan dan kuota sepadan dengan yang diterbitkan",
+        fairStepCommitBad: "Hash yang dikira semula tidak sepadan.",
+        fairStepSeed: "Benih",
+        fairStepSeedOk: "Format benih dan nombor rawak sah",
+        fairStepSeedBad: "Format benih atau nombor rawak tidak sah.",
+        fairStepPick: "Ke-{n}",
+        fairStepPickBad: "Dikira semula {got}, tetapi yang diterbitkan {want}",
+        fairOpen: "Sahkan adil",
+        confirmOk: "Sahkan",
+        confirmCancel: "Batal",
+        resetConfirmTitle: "Set semula keseluruhan acara?",
+        resetConfirmBody: "Semua nombor winners, rekod penebusan dan tong kitar semula akan dipadam. Anda ada 10 saat untuk membatalkan selepas mengesahkan.",
+        resetDone: "Telah diset semula",
+        toastUndo: "Buat asal",
+        undoDone: "Berjaya dibatalkan",
+        redrawTitle: "Gugurkan dan gambar semula",
+        redrawBody: "Hadiah #{seq}: nombor [{ticket}] gugur dan satu nombor digambar ganti?",
+        expiredTitle: "Tuntutan tamat",
+        expiredBody: "Nombor [{ticket}] tiada siapa dalam 10 saat. Gambar semula sekarang?",
+        noBackup: "Tiada nombor ganti dalam kumpulan!",
+        replacementDrawn: "Gambar ganti: {ticket}",
+        replacedTicket: "#{old} telah digantikan dengan #{new}!",
         tabBatch: "Cabut 10 Tiket",
         tabVip: "Pentas VIP",
         tabManual: "Masuk Manual / Ganti",
@@ -2314,6 +2542,8 @@
         chipCustom: "Tersuai...",
         btnFocusVerify: "Cari Tiket",
         bbEmpty: "Tiada rekod pemenang",
+        bbCardTitle: "Klik untuk sahkan",
+        bbCardAria: "Sahkan nombor hadiah ke-{seq}: {num}",
         syncTitle: "Sinkronisasi Firebase",
         syncStatusLabel: "Status Sambungan:",
         syncOffline: "Luar Talian",
@@ -2424,6 +2654,66 @@
         navSoundOff: "Audio: Muted",
         navFullscreen: "Fullscreen",
         navReset: "Reset All",
+        fairTitle: "Draw verifiability",
+        fairClose: "Close",
+        fairVerifyBtn: "Verify",
+        fairNoDraw: "No draw has run yet.",
+        fairExplainer: "A seed hash was published before the draw and the seed was revealed after it. Anyone can recompute the result offline to confirm it was not chosen afterwards.",
+        fairCommitLabel: "Pre-commit hash",
+        fairSeedLabel: "Seed",
+        fairPoolLabel: "Pool",
+        fairPoolSize: "{n} tickets",
+        fairPicksLabel: "Drawn",
+        fairVerifying: "Verifying...",
+        fairVerdictOk: "Verified: the result is reproducible.",
+        fairVerdictBad: "Verification failed: the result is not reproducible.",
+        fairStepRecord: "Record",
+        fairLocked: "Commitment locked for this roll",
+        needTicketNumber: "Enter a ticket number first.",
+        emptyRange: "No winners in this range.",
+        noWinnersYet: "No numbers have been drawn yet.",
+        noWinners: "No winners to export.",
+        copiedScript: "Emcee script copied to the clipboard.",
+        importFailed: "Backup import failed.",
+        allowPopups: "Please allow pop-ups to open the full-width bar.",
+        rangeIs: "Available range: {a} - {b}",
+        alreadyWonAt: "{n} already won at position #{seq}.",
+        onBlacklist: "{n} is on the void / blacklist list — restore it from the recycle bin first.",
+        clipboardBlocked: "The clipboard is not available; please copy manually",
+        ticketAdded: "Ticket #{n} added.",
+        fairCopy: "Copy record",
+        fairCopied: "Verification record copied.",
+        fairClosed: "Verification window closed.",
+        fairNonceLabel: "Nonce",
+        fairTimeLabel: "Drawn at",
+        fairReCommitted: "The pool changed during the roll, so a new commitment was made.",
+        fairStepRecordBad: "No pool snapshot, so the result cannot be recomputed.",
+        fairStepPool: "Pool",
+        fairStepPoolOk: "{n} tickets, matching the commitment",
+        fairStepPoolBad: "The pool differs from the committed one.",
+        fairStepCommit: "Commitment",
+        fairStepCommitOk: "The hash recomputed from seed, pool and quota matches the published value",
+        fairStepCommitBad: "The recomputed hash does not match the published value.",
+        fairStepSeed: "Seed",
+        fairStepSeedOk: "Seed and nonce are well formed",
+        fairStepSeedBad: "Seed or nonce is malformed.",
+        fairStepPick: "Pick {n}",
+        fairStepPickBad: "Re-derived {got}, published {want}",
+        fairOpen: "Verify fairness",
+        confirmOk: "Confirm",
+        confirmCancel: "Cancel",
+        resetConfirmTitle: "Reset the whole event?",
+        resetConfirmBody: "This clears every winner, claim record and the recycle bin. You get 10 seconds to undo after confirming.",
+        resetDone: "Reset complete",
+        toastUndo: "Undo",
+        undoDone: "Reset undone",
+        redrawTitle: "Void and redraw",
+        redrawBody: "Prize #{seq}: void ticket [{ticket}] and draw a replacement?",
+        expiredTitle: "Claim window expired",
+        expiredBody: "Ticket [{ticket}] was unclaimed for 10 seconds. Redraw now?",
+        noBackup: "No backup tickets left in the pool!",
+        replacementDrawn: "Replacement drawn: {ticket}",
+        replacedTicket: "Replaced #{old} with #{new}!",
         tabBatch: "Batch 10 Draw",
         tabVip: "VIP Single Stage",
         tabManual: "Manual Entry / Redraw",
@@ -2450,6 +2740,8 @@
         chipCustom: "Custom...",
         btnFocusVerify: "Locate Ticket",
         bbEmpty: "No winners drawn yet",
+        bbCardTitle: "Click to verify",
+        bbCardAria: "Verify prize number {num}, draw number {seq}",
         syncTitle: "Cross-Device Real-Time Cloud Sync",
         syncStatusLabel: "Connection Status:",
         syncOffline: "Offline",
@@ -2847,7 +3139,8 @@
           // Preview the theme as it will actually look: that mode's neutrals
           // behind this theme's accent ramp.
           return `
-          <div class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}"
+          <button type="button" class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}"
+               aria-pressed="${active ? 'true' : 'false'}"
                style="background:${n.bg}; border-color:${n.border};">
             <div class="theme-swatch-bars" style="--sw:${c['--accent']}">
               <div style="background:${c['--accent-deep']};"></div>
@@ -2856,7 +3149,7 @@
               <div style="background:${c['--accent-contrast']};"></div>
             </div>
             <div class="theme-swatch-name" style="color:${n.text};">${th.name}</div>
-          </div>`;
+          </button>`;
         }).join('');
         return `<div class="theme-group">
             <div class="theme-group-title" style="color:${n.text}; background:${n.surface}; border-color:${n.border};">
@@ -2930,15 +3223,116 @@
         .replace(/'/g, '&#39;');
     }
 
-    function showToast(msg, isError = false) {
+    function showToast(msg, isError = false, action = null) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast ${isError ? 'error' : ''}`;
       toast.innerHTML = `<span class="toast-mark${isError ? ' err' : ''}"></span><span>${esc(msg)}</span>`;
-      container.appendChild(toast);
-      setTimeout(() => {
+      let timer = null;
+      const dismiss = () => {
+        if (timer) clearTimeout(timer);
         if (toast.parentNode) toast.parentNode.removeChild(toast);
-      }, 4000);
+      };
+      if (action) {
+        const btn = document.createElement('button');
+        btn.className = 'toast-action';
+        btn.type = 'button';
+        btn.textContent = action.label;
+        btn.addEventListener('click', () => {
+          dismiss();
+          action.onClick();
+        });
+        toast.appendChild(btn);
+      }
+      container.appendChild(toast);
+      // An undoable toast needs to outlive the default 4s, so the lifetime is
+      // the caller's to set. The animation is a class, not an inline duration.
+      const life = (action && action.duration) || 4000;
+      toast.style.animation = `toastIn 0.3s ease, toastOut 0.3s ease ${(life - 300) / 1000}s forwards`;
+      timer = setTimeout(dismiss, life);
+      return dismiss;
+    }
+
+    /* Themed, localizable replacement for the native confirm(). Resolves
+       asynchronously; the three call sites that used window.confirm() were
+       printing English in BC and BM sessions and blocking the render thread. */
+    let confirmResolver = null;
+    function confirmDialog(opts) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        const box = document.getElementById('confirmBox');
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        // One dialog at a time: a second request resolves the first as denied
+        // rather than leaving a promise that can never settle.
+        if (confirmResolver) confirmResolver(false);
+        // Captured before focus moves into the dialog.
+        const restoreFocus = document.activeElement;
+        const t = I18N[currentLang];
+        document.getElementById('confirmTitle').textContent = opts.title;
+        document.getElementById('confirmBody').textContent = opts.body;
+        okBtn.textContent = opts.okLabel || t.confirmOk;
+        cancelBtn.textContent = opts.cancelLabel || t.confirmCancel;
+        okBtn.className = `action-btn ${opts.danger ? 'btn-danger' : ''}`.trim();
+        okBtn.style.marginBottom = '0';
+        const finish = (value) => {
+          confirmResolver = null;
+          modal.style.display = 'none';
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+          document.removeEventListener('keydown', onKey, true);
+          // Hand focus back to whatever opened the dialog. Without this, focus
+          // lands on <body> and the operator has to tab from the top again to
+          // reach the draw button -- painful on a laptop that is running the
+          // projector from a second screen.
+          if (restoreFocus && restoreFocus.isConnected) {
+            try { restoreFocus.focus({ preventScroll: true }); } catch (e) { restoreFocus.focus(); }
+          }
+          resolve(value);
+        };
+        const onOk = () => finish(true);
+        const onCancel = () => finish(false);
+        const onKey = (e) => {
+          if (modal.style.display === 'none') return;
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            finish(false);
+            return;
+          }
+          // Enter is deliberately NOT bound to the confirming action. Both
+          // buttons are real <button>s, so Enter and Space already activate
+          // whichever one has focus; intercepting it here would let a
+          // keyboard user who deliberately tabbed to Cancel still trigger a
+          // destructive action.
+          if (e.key === 'Tab') {
+            // Both buttons are always visible for the lifetime of the dialog,
+            // so the trap needs no visibility probe -- and offsetParent is
+            // useless here anyway, since it is null for every element in a
+            // headless document.
+            const focusables = [cancelBtn, okBtn].filter(el => !el.disabled && !el.hidden);
+            if (focusables.length === 0) return;
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            if (e.shiftKey && document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            } else if (!e.shiftKey && document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        };
+        confirmResolver = finish;
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKey, true);
+        modal.style.display = 'flex';
+        // Focus the safe choice, and move focus into the dialog so Escape and
+        // Tab behave for keyboard and screen-reader users.
+        cancelBtn.focus();
+        if (box.setAttribute) box.setAttribute('aria-label', opts.title);
+      });
     }
 
     function initAudio() {
@@ -3048,6 +3442,406 @@
       return new Set(sanitizeList(recycleBin)
         .map(r => (typeof r === 'string' ? r : (r && r.ticket)))
         .filter(Boolean));
+    }
+
+    /* ---- SHA-256 fallback -------------------------------------------------
+       crypto.subtle is unavailable on insecure origins (a projector laptop
+       opened over file://, for example), and a fair-draw feature that silently
+       disappears there is worse than one that works slowly. This is a plain
+       FIPS 180-4 implementation, used only when subtle is missing. */
+    const SHA256_K = new Uint32Array([
+      0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+      0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+      0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+      0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+      0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+      0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+      0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+      0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+    ]);
+    function sha256Bytes(bytes) {
+      const len = bytes.length;
+      const total = (((len + 9 + 63) >> 6) << 6);
+      const m = new Uint8Array(total);
+      m.set(bytes);
+      m[len] = 0x80;
+      const dv = new DataView(m.buffer);
+      dv.setUint32(total - 4, len * 8, false);
+      const h = new Uint32Array([0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19]);
+      const w = new Uint32Array(64);
+      const rr = (x, n) => (x >>> n) | (x << (32 - n));
+      for (let off = 0; off < total; off += 64) {
+        for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4, false);
+        for (let i = 16; i < 64; i++) {
+          const a15 = w[i - 15], a2 = w[i - 2];
+          const s0 = rr(a15, 7) ^ rr(a15, 18) ^ (a15 >>> 3);
+          const s1 = rr(a2, 17) ^ rr(a2, 19) ^ (a2 >>> 10);
+          w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+        }
+        let [a, b, c, d, e, f, g, h2] = h;
+        for (let i = 0; i < 64; i++) {
+          const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25);
+          const ch = (e & f) ^ (~e & g);
+          const t1 = (h2 + S1 + ch + SHA256_K[i] + w[i]) >>> 0;
+          const S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22);
+          const maj = (a & b) ^ (a & c) ^ (b & c);
+          const t2 = (S0 + maj) >>> 0;
+          h2 = g; g = f; f = e; e = (d + t1) >>> 0;
+          d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+        }
+        h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0; h[2] = (h[2] + c) >>> 0;
+        h[3] = (h[3] + d) >>> 0; h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + f) >>> 0;
+        h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + h2) >>> 0;
+      }
+      const out = new Uint8Array(32);
+      const odv = new DataView(out.buffer);
+      for (let i = 0; i < 8; i++) odv.setUint32(i * 4, h[i], false);
+      return out;
+    }
+    function hmacSha256(keyBytes, messageBytes) {
+      const block = 64;
+      let key = keyBytes;
+      if (key.length > block) key = sha256Bytes(key);
+      const pad = new Uint8Array(block);
+      pad.set(key);
+      const ipad = new Uint8Array(block + messageBytes.length);
+      const opad = new Uint8Array(block + 32);
+      for (let i = 0; i < block; i++) {
+        ipad[i] = pad[i] ^ 0x36;
+        opad[i] = pad[i] ^ 0x5c;
+      }
+      ipad.set(messageBytes, block);
+      const inner = sha256Bytes(ipad);
+      opad.set(inner, block);
+      return sha256Bytes(opad);
+    }
+
+    /* ---- Provably fair draw ------------------------------------------------
+       A commit-reveal scheme, so a disputed result can be re-derived offline:
+
+         1. Before the winner is chosen, a 32-byte serverSeed is frozen and
+            published as a hash. The commitment covers the seed, the pool, and
+            the draw size, so it cannot be swapped afterwards -- and neither can
+            the ticket list be quietly edited to favour whoever is watching.
+         2. Each pick consumes HMAC-SHA-256(serverSeed, `${nonce}|${i}|${attempt}`),
+            reduced into the remaining pool by unbiased rejection sampling.
+         3. After the draw, serverSeed is revealed. Anyone re-hashes it, checks
+            it against the published commitment, and re-runs the same stream to
+            land on the same ticket.
+
+       These primitives are synchronous on purpose. The commitment has to be
+       computed and put on screen at the moment the roll starts, and
+       crypto.subtle is async -- awaiting it inside a click handler would leave
+       a window where the operator could still change their mind. The hashes
+       here are on 32-byte seeds and a few-kilobyte pool string, so the pure-JS
+       path costs well under a millisecond; the results are checked against
+       node:crypto in tests/smoke.test.mjs. */
+    const FAIR_DOMAIN = 'tanglung-fair-v1';
+    let fairCommit = null;   // { commit, poolSig, quota, ts }
+    let fairDraw = null;     // full commit-reveal record for the most recent draw
+    let rollCommit = null;   // commitment frozen when a VIP roll starts
+
+    function toHex(buf) {
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    function hexToBytes(hex) {
+      const out = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+      return out;
+    }
+    // Declared as functions rather than consts so the test suite can reach them
+    // and check them against node:crypto; the fair-* names keep them from
+    // colliding with anything else on the page.
+    function fairUtf8(str) { return new TextEncoder().encode(str); }
+    function sha256HexSync(text) { return toHex(sha256Bytes(fairUtf8(text))); }
+    function hmacHexSync(keyHex, message) {
+      return toHex(hmacSha256(hexToBytes(keyHex), fairUtf8(message)));
+    }
+
+    /* Signature of the exact ticket list a draw was made from. */
+    function poolSignature(candidates) {
+      return sha256HexSync(FAIR_DOMAIN + '|pool|' + candidates.length + '|' + candidates.join(','));
+    }
+
+    /* A fresh 32-byte secret. crypto.getRandomValues only, never Math.random. */
+    function newServerSeed() {
+      return toHex(crypto.getRandomValues(new Uint8Array(32)).buffer);
+    }
+
+    /* Reduce a 256-bit digest into [0, n) without modulo bias.
+       Returns -1 when the draw is rejected, so the caller must re-key and try
+       again; with n <= a few thousand the rejection chance is ~n/2^256, i.e.
+       effectively never, but the loop is what makes the mapping exactly
+       uniform rather than nearly uniform. */
+    function fairIndex(streamHex, n) {
+      const x = BigInt('0x' + streamHex);
+      const range = 1n << 256n;
+      const limit = range - (range % BigInt(n));
+      return x < limit ? Number(x % BigInt(n)) : -1;
+    }
+
+    /* Freeze a seed and publish only its hash. The seed stays secret until the
+       draw it backs is finished. */
+    function commitFairDraw(candidates, quota) {
+      const serverSeed = newServerSeed();
+      const nonce = toHex(crypto.getRandomValues(new Uint8Array(8)).buffer);
+      const poolSig = poolSignature(candidates);
+      fairCommit = {
+        commit: sha256HexSync(FAIR_DOMAIN + '|commit|' + serverSeed + '|' + poolSig + '|' + quota),
+        poolSig,
+        quota: Number(quota) || 0,
+        ts: Date.now()
+      };
+      return { serverSeed, nonce };
+    }
+
+    /* Derive `count` tickets from a committed seed, removing each from the
+       caller's live pool as it goes. This is the single choke point every draw
+       path uses, so there is exactly one implementation to audit. */
+    function drawFromSeed(committed, poolSnapshot, count, candidates) {
+      const remaining = poolSnapshot.slice();
+      const picks = [];
+      for (let i = 0; i < count && remaining.length; i++) {
+        let index = -1;
+        for (let attempt = 0; attempt < 8 && index < 0; attempt++) {
+          const stream = hmacHexSync(committed.serverSeed, `${committed.nonce}|${i}|${attempt}`);
+          index = fairIndex(stream, remaining.length);
+        }
+        if (index < 0) throw new Error('fair draw: rejection sampling did not converge');
+        const picked = remaining.splice(index, 1)[0];
+        picks.push(picked);
+        candidates.splice(candidates.indexOf(picked), 1);
+      }
+      return picks;
+    }
+
+    /* Build the reveal record for a draw that has just finished. */
+    function recordReveal(committed, poolSnapshot, picks) {
+      fairDraw = {
+        commit: fairCommit.commit,
+        poolSig: fairCommit.poolSig,
+        quota: fairCommit.quota,
+        serverSeed: committed.serverSeed,
+        nonce: committed.nonce,
+        pool: poolSnapshot,
+        picks: picks.slice(),
+        ts: Date.now()
+      };
+      return fairDraw;
+    }
+
+    /* Commit, derive, and record the reveal in one step. */
+    function fairDrawFrom(candidates, count) {
+      const poolSnapshot = candidates.slice();
+      const committed = commitFairDraw(poolSnapshot, count);
+      const picks = drawFromSeed(committed, poolSnapshot, count, candidates);
+      recordReveal(committed, poolSnapshot, picks);
+      return picks;
+    }
+
+    /* While a VIP roll is running, show the commitment that is already locked
+       in. This is the whole point of the scheme: the audience sees the hash
+       before there is an outcome to be suspicious of. */
+    function renderRollCommitment() {
+      const el = document.getElementById('rollCommitBox');
+      if (!el || !rollCommit) return;
+      const t = I18N[currentLang];
+      el.style.display = 'flex';
+      el.innerHTML = `<span style="color:var(--text-3); font-size:var(--fs-xs);">${esc(t.fairLocked)}</span>
+        <code style="font-family:var(--font-num); font-size:var(--fs-xs); color:var(--text-2); word-break:break-all;">${esc(fairCommit.commit)}</code>`;
+    }
+
+    function clearRollCommitment() {
+      const el = document.getElementById('rollCommitBox');
+      if (el) el.style.display = 'none';
+    }
+
+    /* ---- Verification window ------------------------------------------- */
+    function toggleFairModal(show) {
+      const modal = document.getElementById('fairModal');
+      if (!modal) return;
+      if (show) {
+        renderFairModal();
+        fairReturnFocus = document.activeElement;
+        const closeBtn = document.getElementById('fairCloseBtn');
+        if (closeBtn) closeBtn.focus();
+      } else {
+        modal.style.display = 'none';
+        if (fairReturnFocus && fairReturnFocus.isConnected) {
+          try { fairReturnFocus.focus({ preventScroll: true }); } catch (e) { fairReturnFocus.focus(); }
+        }
+        fairReturnFocus = null;
+      }
+      modal.style.display = show ? 'flex' : 'none';
+    }
+
+    function fairTimestamp(ts) {
+      if (!ts) return '—';
+      try { return new Date(ts).toLocaleString(); } catch (e) { return String(ts); }
+    }
+
+    function renderFairModal() {
+      const t = I18N[currentLang];
+      const body = document.getElementById('fairBody');
+      const verifyBtn = document.getElementById('fairVerifyBtn');
+      const copyBtn = document.getElementById('fairCopyBtn');
+      if (!body) return;
+      if (!fairDraw) {
+        body.innerHTML = `<p style="color:var(--text-2); font-size:0.9rem; line-height:1.7;">${esc(t.fairNoDraw)}</p>`;
+        if (verifyBtn) verifyBtn.disabled = true;
+        if (copyBtn) copyBtn.disabled = true;
+        return;
+      }
+      if (verifyBtn) verifyBtn.disabled = false;
+      if (copyBtn) copyBtn.disabled = false;
+      const picks = fairDraw.picks
+        .map(n => `<code style="background:var(--surface-2); padding:2px 8px; border-radius:var(--r-sm); font-family:var(--font-num);">${esc(n)}</code>`)
+        .join(' ');
+      const row = (label, value) =>
+        `<dt style="color:var(--text-3); font-weight:700;">${esc(label)}</dt><dd style="margin:0;">${value}</dd>`;
+      body.innerHTML = `
+        <p style="color:var(--text-2); font-size:0.85rem; line-height:1.7; margin:0 0 14px;">${esc(t.fairExplainer)}</p>
+        <dl style="margin:0 0 12px; font-size:0.8rem; display:grid; grid-template-columns:auto 1fr; gap:8px 14px; align-items:start;">
+          ${row(t.fairCommitLabel, `<code style="font-family:var(--font-num); word-break:break-all;">${esc(fairDraw.commit)}</code>`)}
+          ${row(t.fairSeedLabel, `<code style="font-family:var(--font-num); word-break:break-all;">${esc(fairDraw.serverSeed)}</code>`)}
+          ${row(t.fairNonceLabel, `<code style="font-family:var(--font-num);">${esc(fairDraw.nonce)}</code>`)}
+          ${row(t.fairPoolLabel, esc(t.fairPoolSize.replace('{n}', String(fairDraw.pool.length))))}
+          ${row(t.fairPicksLabel, `<span style="display:flex; flex-wrap:wrap; gap:6px;">${picks}</span>`)}
+          ${row(t.fairTimeLabel, esc(fairTimestamp(fairDraw.ts)))}
+        </dl>
+        <div id="fairResult"></div>`;
+    }
+
+    function runFairVerify() {
+      const t = I18N[currentLang];
+      const out = document.getElementById('fairResult');
+      if (!out || !fairDraw) return;
+      const res = verifyFairDraw(fairDraw);
+      const rows = res.steps.map(st => `
+        <div style="display:flex; gap:8px; align-items:baseline; font-size:0.8rem; padding:3px 0; line-height:1.5;">
+          <span aria-hidden="true" style="color:${st.ok ? 'var(--success-strong)' : 'var(--danger-strong)'}; font-weight:800;">${st.ok ? '&#10003;' : '&#10007;'}</span>
+          <span style="font-weight:700; font-family:var(--font-num); min-width:72px; flex-shrink:0;">${esc(st.label)}</span>
+          <span style="color:var(--text-2);">${esc(st.detail)}</span>
+        </div>`).join('');
+      out.innerHTML = `
+        <div role="status" style="border:1px solid ${res.ok ? 'var(--success)' : 'var(--danger-strong)'}; border-radius:var(--r-md); padding:10px 12px; background:var(--surface-1);">
+          <div style="font-weight:800; font-size:0.9rem; margin-bottom:6px; color:${res.ok ? 'var(--success-strong)' : 'var(--danger-strong)'};">
+            ${esc(res.ok ? t.fairVerdictOk : t.fairVerdictBad)}
+          </div>
+          ${rows}
+        </div>`;
+    }
+
+    /* The record is the evidence. Handing it over as one JSON blob lets the
+       operator attach it to a screenshot of the published commitment. */
+    function fairRecordJson() {
+      return JSON.stringify({
+        domain: FAIR_DOMAIN,
+        commit: fairDraw.commit,
+        poolSig: fairDraw.poolSig,
+        quota: fairDraw.quota,
+        serverSeed: fairDraw.serverSeed,
+        nonce: fairDraw.nonce,
+        pool: fairDraw.pool,
+        picks: fairDraw.picks,
+        ts: fairDraw.ts
+      }, null, 2);
+    }
+
+    function copyFairRecord() {
+      const t = I18N[currentLang];
+      if (!fairDraw) return;
+      if (!navigator.clipboard || !navigator.clipboard.writeText) {
+        return showClipboardFallback(fairRecordJson());
+      }
+      navigator.clipboard.writeText(fairRecordJson())
+        .then(() => showToast(t.fairCopied))
+        .catch(() => showClipboardFallback(fairRecordJson()));
+    }
+
+    /* ---- Verifier -------------------------------------------------------
+       The mapping from digest to index is written out again here on purpose.
+       fairIndex() and verifyIndex() are separate implementations, so a bug in
+       the draw path cannot quietly produce a matching "verified" result in the
+       check. The hash primitives are SHA-256 and HMAC, which any language
+       already has. */
+    function verifyIndex(streamHex, n) {
+      const d = BigInt(n);
+      // Largest multiple of n that fits in 256 bits. Digest values at or above
+      // it would make residue 0 over-represented, so they are discarded.
+      const m = ((1n << 256n) / d) * d;
+      // fairIndex() parses the digest in one go and compares against a
+      // precomputed limit. This walks it as eight 32-bit limbs and latches the
+      // verdict on the first limb that crosses the bound. Both accept exactly
+      // the digests below m, so both land on the same ticket; they are separate
+      // code so a mistake in one cannot quietly agree with a mistake in the
+      // other.
+      let acc = 0n;
+      let accepted = true;
+      for (let limb = 0; limb < 8; limb++) {
+        acc = (acc << 32n) + BigInt(parseInt(streamHex.slice(limb * 8, limb * 8 + 8), 16));
+        if (accepted && acc >= m) accepted = false;
+      }
+      return accepted ? Number(acc % d) : -1;
+    }
+
+    function verifyFairDraw(record) {
+      const t = I18N[currentLang] || I18N.BC;
+      const steps = [];
+      if (!record || !record.pool) {
+        return { ok: false, steps: [{ ok: false, label: t.fairStepRecord, detail: t.fairStepRecordBad }] };
+      }
+
+      const sig = poolSignature(record.pool);
+      const poolOk = sig === record.poolSig;
+      steps.push({
+        ok: poolOk,
+        label: t.fairStepPool,
+        detail: poolOk
+          ? t.fairStepPoolOk.replace('{n}', String(record.pool.length))
+          : t.fairStepPoolBad
+      });
+      if (!poolOk) return { ok: false, steps };
+
+      const expectCommit = sha256HexSync(
+        FAIR_DOMAIN + '|commit|' + record.serverSeed + '|' + record.poolSig + '|' + record.quota
+      );
+      const commitOk = expectCommit === record.commit;
+      steps.push({
+        ok: commitOk,
+        label: t.fairStepCommit,
+        detail: commitOk ? t.fairStepCommitOk : t.fairStepCommitBad
+      });
+      if (!commitOk) return { ok: false, steps };
+
+      const shapeOk = /^[0-9a-f]{64}$/.test(record.serverSeed) && /^[0-9a-f]{16}$/.test(record.nonce);
+      steps.push({
+        ok: shapeOk,
+        label: t.fairStepSeed,
+        detail: shapeOk ? t.fairStepSeedOk : t.fairStepSeedBad
+      });
+
+      let ok = shapeOk;
+      const remaining = record.pool.slice();
+      for (let i = 0; i < record.picks.length; i++) {
+        let index = -1;
+        for (let attempt = 0; attempt < 8 && index < 0; attempt++) {
+          const stream = hmacHexSync(record.serverSeed, `${record.nonce}|${i}|${attempt}`);
+          index = verifyIndex(stream, remaining.length);
+        }
+        const got = index >= 0 ? remaining[index] : null;
+        const pickOk = got === record.picks[i];
+        if (!pickOk) ok = false;
+        steps.push({
+          ok: pickOk,
+          label: t.fairStepPick.replace('{n}', String(i + 1)),
+          detail: pickOk
+            ? record.picks[i]
+            : t.fairStepPickBad.replace('{want}', record.picks[i]).replace('{got}', String(got))
+        });
+        if (index >= 0) remaining.splice(index, 1);
+      }
+      return { ok, steps };
     }
 
     function getAvailablePool() {
@@ -3226,6 +4020,22 @@
         isSuspenseMode: Boolean(isSuspenseMode),
         projHideClaimed: Boolean(projHideClaimed),
         vipRollEvent: vipRollEvent || null,
+        // The commit-reveal record for the most recent draw. Persisted so a
+        // reload, a second device, or a screenshot taken after the event can
+        // still be checked. The pool is bounded (one snapshot of a few thousand
+        // short strings), and it is dropped rather than kept if it is huge.
+        fairDraw: fairDraw && fairDraw.pool && fairDraw.pool.length <= 5000
+          ? {
+              commit: fairDraw.commit,
+              poolSig: fairDraw.poolSig,
+              quota: fairDraw.quota,
+              serverSeed: fairDraw.serverSeed,
+              nonce: fairDraw.nonce,
+              pool: fairDraw.pool,
+              picks: fairDraw.picks,
+              ts: fairDraw.ts
+            }
+          : null,
         currentFontSize: Number(currentFontSize),
         currentLang,
         currentTheme,
@@ -3300,6 +4110,9 @@
       if (d.filterType) filterType = d.filterType;
       if (typeof d.isSuspenseMode === 'boolean') isSuspenseMode = d.isSuspenseMode;
       if (typeof d.projHideClaimed === 'boolean') projHideClaimed = d.projHideClaimed;
+      if (d.fairDraw && Array.isArray(d.fairDraw.picks) && Array.isArray(d.fairDraw.pool)) {
+        fairDraw = d.fairDraw;
+      }
 
       if (d.currentFontSize) {
         currentFontSize = Math.max(1.0, Math.min(2.2, Number(d.currentFontSize)));
@@ -3511,18 +4324,15 @@
       const quota = maxPrizes - winners.length;
 
       if (quota <= 0 || candidates.length === 0) {
-        return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+        return showToast(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes), true);
       }
 
       const count = Math.min(10, quota, candidates.length);
-      const batch = [];
-
-      for (let i = 0; i < count; i++) {
-        const idx = Math.floor(Math.random() * candidates.length);
-        const picked = candidates.splice(idx, 1)[0];
-        batch.push(picked);
-        winners.push(picked);
-      }
+      // Commit the seed, then derive the winners from it. The published hash
+      // fixes seed + pool + count in time; the reveal makes the derivation
+      // reproducible afterwards.
+      const batch = fairDrawFrom(candidates, count);
+      for (const picked of batch) winners.push(picked);
 
       const grid = document.getElementById('batchGrid');
       grid.innerHTML = '';
@@ -3556,7 +4366,7 @@
       if (isViewerMode) return;
       const candidates = getAvailablePool();
       if (winners.length >= maxPrizes || candidates.length === 0) {
-        return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+        return showToast(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes), true);
       }
       startVipRollAnimation(true);
       vipRollEvent = { phase: 'start', ts: Date.now() };
@@ -3575,8 +4385,27 @@
         stopVipRollAnimation();
         return;
       }
-      const finalIdx = Math.floor(Math.random() * candidates.length);
-      const picked = candidates.splice(finalIdx, 1)[0];
+      let picked;
+      if (rollCommit) {
+        // The pool is normally frozen for the duration of the roll. If the
+        // operator voided or claimed a ticket mid-roll, the commitment no
+        // longer covers the live pool, so throw it away and commit again -- and
+        // say so, rather than quietly reusing a stale promise.
+        const stillValid = rollCommit.pool.length === candidates.length
+          && rollCommit.pool.every((x, i) => x === candidates[i]);
+        if (stillValid) {
+          const picks = drawFromSeed(rollCommit.committed, rollCommit.pool, 1, candidates);
+          picked = picks[0];
+          recordReveal(rollCommit.committed, rollCommit.pool, [picked]);
+        } else {
+          picked = fairDrawFrom(candidates, 1)[0];
+          showToast(I18N[currentLang].fairReCommitted, true);
+        }
+      } else {
+        picked = fairDrawFrom(candidates, 1)[0];
+      }
+      rollCommit = null;
+      clearRollCommitment();
       winners.push(picked);
 
       document.getElementById('vipDisplay').textContent = picked;
@@ -3598,6 +4427,20 @@
       if (!opVisible && !projVisible) return;
       const candidates = getAvailablePool();
       if (candidates.length === 0) return;
+      // Freeze the seed at the START of the roll, not at the stop. Otherwise the
+      // operator could keep rolling until the number they wanted came up, and
+      // the commitment would be worthless. The hash goes on screen while the
+      // roll is still running, so the audience sees the promise before the
+      // outcome exists.
+      // A projection or audience window replays the roll from the sync event
+      // and must not mint a seed of its own: only the host that is actually
+      // choosing a ticket makes a commitment.
+      if (!isViewerMode) {
+        const poolAtStart = candidates.slice();
+        const committed = commitFairDraw(poolAtStart, 1);
+        rollCommit = { committed, pool: poolAtStart };
+        renderRollCommitment();
+      }
       isRolling = true;
       vipRollStartTs = Date.now();
       const btn = document.getElementById('vipToggleBtn');
@@ -3615,6 +4458,11 @@
         slot.classList.add('rolling');
       }
       const slotNum = document.getElementById('projVipNum');
+      // 20 swaps a second is a strobe. Reduced motion keeps the roll running
+      // (the operator still needs the button state and the live ring) but drops
+      // the swap to a slow drift and stays silent, since the audio ticks are
+      // the other half of the same problem.
+      const reduced = prefersReducedMotion();
       rollTimer = setInterval(() => {
         if (Date.now() - vipRollStartTs > 60000) {
           stopVipRollAnimation();
@@ -3624,8 +4472,8 @@
         const val = candidates[tempIdx] || "----";
         disp.textContent = val;
         if (slotNum) slotNum.textContent = val;
-        if (playSfx) playTick();
-      }, 50);
+        if (playSfx && !reduced) playTick();
+      }, reduced ? 700 : 50);
     }
 
     function stopVipRollAnimation(finalNum) {
@@ -3689,26 +4537,29 @@
     // MODE 3: MANUAL ENTRY
     function confirmManualEntry() {
       if (isViewerMode) return;
-      if (winners.length >= maxPrizes) return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+      const t = I18N[currentLang];
+      if (winners.length >= maxPrizes) return showToast(t.pacingDone.replace('{quota}', maxPrizes), true);
       
       const input = document.getElementById('manualTicketInput');
       let val = input.value.trim();
-      if (!val) return alert(I18N[currentLang].manualInputHint);
+      if (!val) return showToast(t.manualInputHint, true);
       
       val = val.padStart(4, '0');
       const numVal = parseInt(val, 10);
 
-      if (numVal < poolStart || numVal > poolEnd) return alert(`Range: ${poolStart} - ${poolEnd}`);
+      if (numVal < poolStart || numVal > poolEnd) {
+        return showToast(t.rangeIs.replace('{a}', String(poolStart)).replace('{b}', String(poolEnd)), true);
+      }
 
       const existingIdx = winners.indexOf(val);
       if (existingIdx !== -1) {
-        alert(`${val} already won at #${existingIdx + 1}!`);
+        showToast(t.alreadyWonAt.replace('{n}', val).replace('{seq}', String(existingIdx + 1)), true);
         input.select();
         return;
       }
 
       if (getRecycledTickets().has(val)) {
-        alert(`${val} is on the void / blacklist list — restore it from the recycle bin first!`);
+        showToast(t.onBlacklist.replace('{n}', val), true);
         input.select();
         return;
       }
@@ -3719,73 +4570,79 @@
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`Ticket #${val} added!`);
+      showToast(t.ticketAdded.replace('{n}', val));
     }
 
     function drawSingleManual() {
       if (isViewerMode) return;
       const candidates = getAvailablePool();
       if (winners.length >= maxPrizes || candidates.length === 0) {
-        return alert(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes));
+        return showToast(I18N[currentLang].pacingDone.replace('{quota}', maxPrizes), true);
       }
 
-      const finalIdx = Math.floor(Math.random() * candidates.length);
-      const picked = candidates.splice(finalIdx, 1)[0];
+      const picked = fairDrawFrom(candidates, 1)[0];
       winners.push(picked);
 
       playFestiveGong();
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(`Replacement drawn: ${picked}`);
+      showToast(I18N[currentLang].replacementDrawn.replace('{ticket}', picked));
     }
 
-    function promptRedrawSlot(ticketNum, index) {
+    async function promptRedrawSlot(ticketNum, index) {
       if (isViewerMode) return false;
       const candidates = getAvailablePool();
       if (candidates.length === 0) {
-        showToast("No backup tickets left in pool!", true);
+        showToast(I18N[currentLang].noBackup, true);
         return false;
       }
 
-      const confirmed = confirm(`Prize #${index + 1}: Ticket [${ticketNum}] forfeited? Click OK to replace in-place!`);
+      const t = I18N[currentLang];
+      const confirmed = await confirmDialog({
+        title: t.redrawTitle,
+        body: t.redrawBody.replace('{seq}', String(index + 1)).replace('{ticket}', ticketNum),
+        okLabel: t.confirmOk,
+        cancelLabel: t.confirmCancel,
+        danger: true
+      });
+      if (!confirmed) return false;
 
-      if (confirmed) {
-        const newIdx = Math.floor(Math.random() * candidates.length);
-        const replacement = candidates.splice(newIdx, 1)[0];
+      const replacement = fairDrawFrom(candidates, 1)[0];
+      // The draw mutates the shared candidate list, so honour the result
+      // immediately: the old number is retired and the replacement takes the
+      // exact prize slot, which is what "replace in place" means.
+      recycleBin.unshift({
+        ticket: ticketNum,
+        originalSeq: index + 1,
+        time: new Date().toLocaleTimeString()
+      });
 
-        recycleBin.unshift({
-          ticket: ticketNum,
-          originalSeq: index + 1,
-          time: new Date().toLocaleTimeString()
-        });
+      const cIdx = claimedWinners.indexOf(ticketNum);
+      if (cIdx !== -1) claimedWinners.splice(cIdx, 1);
 
-        const cIdx = claimedWinners.indexOf(ticketNum);
-        if (cIdx !== -1) claimedWinners.splice(cIdx, 1);
+      winners[index] = replacement;
 
-        winners[index] = replacement;
+      voidAuditLogs.unshift({
+        seq: index + 1,
+        oldNum: ticketNum,
+        newNum: replacement,
+        time: new Date().toLocaleTimeString()
+      });
 
-        voidAuditLogs.unshift({
-          seq: index + 1,
-          oldNum: ticketNum,
-          newNum: replacement,
-          time: new Date().toLocaleTimeString()
-        });
-
-        if (activeSpotlightIndex === index) {
-          activeSpotlightTicket = replacement;
-          document.getElementById('spotlightNum').textContent = replacement;
-          document.getElementById('spotlightSub').textContent = `${I18N[currentLang].prizeItemPrefix.replace('{seq}', index + 1)} · [${replacement}]`;
-        }
-
-        playFestiveGong();
-        triggerConfetti();
-        updateUI();
-        saveAndBroadcast(isViewerMode);
-        showToast(`Replaced #${ticketNum} -> #${replacement}!`);
-        return true;
+      if (activeSpotlightIndex === index) {
+        activeSpotlightTicket = replacement;
+        document.getElementById('spotlightNum').textContent = replacement;
+        document.getElementById('spotlightSub').textContent = `${I18N[currentLang].prizeItemPrefix.replace('{seq}', index + 1)} · [${replacement}]`;
       }
-      return false;
+
+      playFestiveGong();
+      triggerConfetti();
+      updateUI();
+      saveAndBroadcast(isViewerMode);
+      showToast(I18N[currentLang].replacedTicket
+        .replace('{old}', ticketNum).replace('{new}', replacement));
+      return true;
     }
 
     function triggerDirectRedrawFromSpotlight() {
@@ -3904,6 +4761,7 @@
 
     function renderFilteredBillboard() {
       const bb = document.getElementById('billboardGrid');
+      const t = I18N[currentLang];
       const filtered = getFilteredWinnersList();
 
       document.getElementById('bbFilteredCount').textContent = filtered.length;
@@ -3915,10 +4773,10 @@
         bb.innerHTML = filtered.map(item => {
           const isClaimed = claimedWinners.includes(item.num);
           return `
-            <div class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${esc(item.num)}" title="Click to verify" onclick="openSpotlight('${esc(item.num)}', ${item.seq})">
+            <button type="button" class="billboard-card ${isClaimed ? 'claimed' : ''}" id="card-${esc(item.num)}" title="${esc(t.bbCardTitle)}" data-i18n-title="bbCardTitle" aria-label="${esc(t.bbCardAria.replace('{num}', item.num).replace('{seq}', String(item.seq)))}" onclick="openSpotlight('${esc(item.num)}', ${item.seq})">
               <span class="bb-seq">#${item.seq}${isClaimed ? tag : ''}</span>
               <span class="bb-num">${esc(item.num)}</span>
-            </div>
+            </button>
           `;
         }).join('');
       }
@@ -3926,7 +4784,7 @@
 
     function exportRangeCSV() {
       const filtered = getFilteredWinnersList();
-      if (filtered.length === 0) return alert("Empty range!");
+      if (filtered.length === 0) return showToast(t.emptyRange, true);
       let csv = "Prize Sequence,Ticket Number,Claimed Status\n";
       filtered.forEach(item => {
         const status = claimedWinners.includes(item.num) ? "Claimed" : "Pending";
@@ -3966,21 +4824,61 @@
 
       document.getElementById('spotlightModal').style.display = 'flex';
       playFestiveGong();
+      // Move focus into the dialog and remember where it came from, so the
+      // keyboard path can reach the buttons and the operator lands back on the
+      // card they were verifying.
+      spotlightReturnFocus = document.activeElement;
+      const closeBtn = document.getElementById('spotlightCloseBtn');
+      if (closeBtn) closeBtn.focus();
     }
 
     function closeSpotlight() {
       document.getElementById('spotlightModal').style.display = 'none';
       stopClaimTimer();
+      clearRollCommitment();
+      if (spotlightReturnFocus && spotlightReturnFocus.isConnected) {
+        try { spotlightReturnFocus.focus({ preventScroll: true }); } catch (e) { spotlightReturnFocus.focus(); }
+      }
+      spotlightReturnFocus = null;
     }
 
     function triggerSpotlightFromSearch() {
       const val = document.getElementById('searchInput').value.trim();
-      if (!val) return alert("Please type ticket number!");
+      if (!val) return showToast(t.needTicketNumber, true);
       const idx = winners.indexOf(val.padStart(4, '0'));
       if (idx !== -1) {
         openSpotlight(winners[idx], idx + 1);
       } else {
         showToast(`Not found: ${val}`, true);
+      }
+    }
+
+    /* The spotlight is a dialog, so it owes the keyboard the same three things
+       the confirm dialog does: Escape to dismiss, Tab to stay inside, and
+       focus back where it started. */
+    function spotlightKeydown(e) {
+      const modal = document.getElementById('spotlightModal');
+      if (!modal || modal.style.display === 'none') return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        closeSpotlight();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const box = document.getElementById('spotlightCard');
+        if (!box) return;
+        const focusables = [...box.querySelectorAll('button')].filter(el => !el.disabled && el.offsetParent !== null || !el.disabled);
+        if (focusables.length === 0) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     }
 
@@ -4005,9 +4903,19 @@
           playBuzzer();
           setTimeout(() => {
             if (activeSpotlightTicket && activeSpotlightIndex >= 0) {
-              const doRedraw = !isViewerMode && confirm(`10s Expired! Ticket [${activeSpotlightTicket}] absent. Redraw now?`);
-              if (doRedraw) {
-                promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
+              // Async: the dialog stays up and the buzz already played, so the
+              // operator decides on a timer rather than a blocking prompt.
+              if (!isViewerMode) {
+                const t = I18N[currentLang];
+                confirmDialog({
+                  title: t.expiredTitle,
+                  body: t.expiredBody.replace('{ticket}', activeSpotlightTicket),
+                  okLabel: t.confirmOk,
+                  cancelLabel: t.confirmCancel,
+                  danger: true
+                }).then((ok) => {
+                  if (ok) promptRedrawSlot(activeSpotlightTicket, activeSpotlightIndex);
+                });
               }
             }
           }, 150);
@@ -4034,13 +4942,39 @@
     }
 
     function copyEmceeScript() {
-      if (winners.length === 0) return alert("No winners yet!");
+      if (winners.length === 0) return showToast(t.noWinnersYet, true);
       const filtered = getFilteredWinnersList();
       const listStr = filtered.map(i => `#${i.seq}:【${i.num}】`).join(', ');
       const script = `Lucky Draw Winners (${filtered.length} total):\n${listStr}`;
       navigator.clipboard.writeText(script).then(() => {
-        showToast("Copied script to clipboard!");
-      }).catch(() => alert(script));
+        showToast(t.copiedScript);
+      }).catch(() => showClipboardFallback(script));
+    }
+
+    /* Clipboard access is denied in plenty of ordinary situations (no HTTPS, a
+       locked-down projector browser). Falling back to a selectable dialog beats
+       both a native alert and a toast the text is already gone from. */
+    function showClipboardFallback(text) {
+      const modal = document.getElementById('confirmModal');
+      const box = document.getElementById('confirmBox');
+      const body = document.getElementById('confirmBody');
+      const t = I18N[currentLang];
+      document.getElementById('confirmTitle').textContent = t.clipboardBlocked;
+      body.textContent = text;
+      const ok = document.getElementById('confirmOkBtn');
+      const cancel = document.getElementById('confirmCancelBtn');
+      ok.textContent = t.confirmOk;
+      cancel.textContent = t.confirmCancel;
+      ok.className = 'action-btn';
+      ok.style.marginBottom = '0';
+      modal.style.display = 'flex';
+      const range = document.createRange();
+      range.selectNodeContents(body);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      cancel.focus();
+      void box;
     }
 
     function toggleRecycleModal(show) {
@@ -4179,7 +5113,7 @@
             showToast("JSON Restored!");
           }
         } catch (err) {
-          alert("Import failed!");
+          showToast(t.importFailed, true);
         }
       };
       reader.readAsText(file);
@@ -4252,6 +5186,11 @@
     }
 
     function animateScrollers() {
+      // A never-ending horizontal sweep of the whole winner list is exactly the
+      // sustained large-area motion that reduced-motion users ask us to drop.
+      // The list stays readable and still; the bar itself keeps showing the
+      // claim/prize state, so no information is lost.
+      if (prefersReducedMotion()) return;
       const pipTrack = activePipWindow && !activePipWindow.closed
         ? activePipWindow.document.getElementById('pipTrack')
         : (pipBarMode ? document.getElementById('pipTrack') : null);
@@ -4327,7 +5266,11 @@
         const found = document.getElementById(`card-${val}`);
         if (found) {
           found.classList.add('highlight');
-          found.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Not every embedded webview implements scrollIntoView, and a missing
+          // scroll must not take the highlight down with it.
+          if (typeof found.scrollIntoView === 'function') {
+            found.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' });
+          }
           playTick();
         }
       }
@@ -4351,7 +5294,7 @@
 
     /* Bump BUILD_ID whenever the shipped file changes shape, so anyone
        reporting a stale render can be identified at a glance. */
-    const BUILD_ID = '2026.09.27-c';
+    const BUILD_ID = '2026.09.27-d';
 
     function renderBuildStamp() {
       const el = document.getElementById('buildStamp');
@@ -4602,11 +5545,11 @@
       const screenW = Math.max(320, Math.min((window.screen && window.screen.availWidth) || 1280, 3840));
       const features = `left=0,top=0,width=${screenW},height=76,toolbar=no,menubar=no,location=no,status=no,scrollbars=no,resizable=yes`;
       const win = window.open(url.toString(), 'TanglungPiPBar', features);
-      if (!win) alert("Please allow pop-ups to open the full-width bar.");
+      if (!win) showToast(t.allowPopups, true);
     }
 
     function exportCSV() {
-      if (winners.length === 0) return alert("No winners!");
+      if (winners.length === 0) return showToast(t.noWinners, true);
       let csv = "Prize Sequence,Ticket Number,Claimed Status\n";
       winners.forEach((w, idx) => {
         const status = claimedWinners.includes(w) ? "Claimed" : "Pending";
@@ -4618,45 +5561,142 @@
       link.click();
     }
 
-    function resetAll() {
-      if (isViewerMode) return;
-      if (confirm("Reset everything?")) {
-        stopVipRollAnimation();
-        stopClaimTimer();
-        closeSpotlight();
-        localStorage.removeItem(STORAGE_KEY);
-        winners = [];
-        claimedWinners = [];
-        recycleBin = [];
-        voidAuditLogs = [];
-        customMainTitle = null;
-        customSubTitle = null;
-        filterActive = false;
-        isSuspenseMode = false;
-        vipRollEvent = null;
-        appliedVipRollKey = null;
-        clearVipSlotDismissed();
-        document.getElementById('batchGrid').innerHTML = `
-          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--accent-strong); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
-            ${I18N[currentLang].batchEmptyHint}
-          </div>`;
-        document.getElementById('vipDisplay').textContent = '----';
-        document.getElementById('searchInput').value = '';
-        document.getElementById('rangeStart').value = '';
-        document.getElementById('rangeEnd').value = '';
-        document.getElementById('filterModeSelect').value = 'seq';
-        filterType = 'seq';
-        filterStartVal = null;
-        filterEndVal = null;
-        poolStart = 1001;
-        poolEnd = 3000;
-        maxPrizes = 110;
-        document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('chip-all').classList.add('active');
-        updateUI();
-        saveAndBroadcast();
-        showToast("Reset Completed!");
+    /* Snapshot every field resetAll() touches, so a reset is a reversible state
+       change rather than a one-way wipe of the whole event. */
+    function snapshotForUndo() {
+      return {
+        winners: winners.slice(),
+        claimedWinners: claimedWinners.slice(),
+        recycleBin: recycleBin.slice(),
+        voidAuditLogs: voidAuditLogs.slice(),
+        filterActive, filterStartVal, filterEndVal, filterType,
+        isSuspenseMode, vipRollEvent, appliedVipRollKey,
+        poolStart, poolEnd, maxPrizes,
+        customMainTitle, customSubTitle,
+        projHideClaimed, currentFontSize, currentLang, currentTheme,
+        // The filter inputs are the one part of the filter that lives only in
+        // the DOM, so the snapshot has to carry their literal text or the undo
+        // would restore the filter but show blank boxes next to it.
+        rangeStartText: (document.getElementById('rangeStart') || {}).value || '',
+        rangeEndText: (document.getElementById('rangeEnd') || {}).value || '',
+        filterModeText: (document.getElementById('filterModeSelect') || {}).value || 'seq'
+      };
+    }
+
+    function restoreFromUndo(snap) {
+      if (!snap) return;
+      winners = snap.winners.slice();
+      claimedWinners = snap.claimedWinners.slice();
+      recycleBin = snap.recycleBin.slice();
+      voidAuditLogs = snap.voidAuditLogs.slice();
+      filterActive = snap.filterActive;
+      filterStartVal = snap.filterStartVal;
+      filterEndVal = snap.filterEndVal;
+      filterType = snap.filterType;
+      isSuspenseMode = snap.isSuspenseMode;
+      vipRollEvent = snap.vipRollEvent;
+      appliedVipRollKey = snap.appliedVipRollKey;
+      poolStart = snap.poolStart;
+      poolEnd = snap.poolEnd;
+      maxPrizes = snap.maxPrizes;
+      customMainTitle = snap.customMainTitle;
+      customSubTitle = snap.customSubTitle;
+      projHideClaimed = snap.projHideClaimed;
+      // The renderers read a lot of DOM state directly, so the reliable restore
+      // is to write the same values into the inputs and let updateUI() redraw.
+      const setVal = (id, v) => { const el = document.getElementById(id); if (el && v !== undefined && v !== null) el.value = v; };
+      setVal('searchInput', '');
+      setVal('rangeStart', snap.rangeStartText);
+      setVal('rangeEnd', snap.rangeEndText);
+      setVal('filterModeSelect', snap.filterModeText);
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      const allChip = document.getElementById('chip-all');
+      if (allChip) allChip.classList.add('active');
+      if (snap.currentFontSize) {
+        currentFontSize = snap.currentFontSize;
+        document.documentElement.style.setProperty('--strip-font', `${currentFontSize}rem`);
       }
+      if (snap.currentTheme && (THEMES[snap.currentTheme] || LEGACY_THEME_ALIAS[snap.currentTheme])) {
+        applyTheme(snap.currentTheme);
+      }
+      togglePoolModal(false);
+      updateUI();
+      renderRecycleList();
+      saveAndBroadcast();
+    }
+
+    async function resetAll() {
+      if (isViewerMode) return;
+      const t = I18N[currentLang];
+      const ok = await confirmDialog({
+        title: t.resetConfirmTitle,
+        body: t.resetConfirmBody,
+        okLabel: t.confirmOk,
+        cancelLabel: t.confirmCancel,
+        danger: true
+      });
+      if (!ok) return;
+
+      const snapshot = snapshotForUndo();
+      stopVipRollAnimation();
+      stopClaimTimer();
+      closeSpotlight();
+      winners = [];
+      claimedWinners = [];
+      recycleBin = [];
+      voidAuditLogs = [];
+      customMainTitle = null;
+      customSubTitle = null;
+      filterActive = false;
+      isSuspenseMode = false;
+      vipRollEvent = null;
+      appliedVipRollKey = null;
+      clearVipSlotDismissed();
+      const batchGrid = document.getElementById('batchGrid');
+      if (batchGrid) {
+        batchGrid.innerHTML = `
+          <div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; color:var(--accent-strong); font-size:1.1rem; font-weight:bold; text-align:center; padding:20px;">
+            ${t.batchEmptyHint}
+          </div>`;
+      }
+      const vipDisp = document.getElementById('vipDisplay');
+      if (vipDisp) vipDisp.textContent = '----';
+      const searchEl = document.getElementById('searchInput');
+      if (searchEl) searchEl.value = '';
+      const rangeStartEl = document.getElementById('rangeStart');
+      const rangeEndEl = document.getElementById('rangeEnd');
+      if (rangeStartEl) rangeStartEl.value = '';
+      if (rangeEndEl) rangeEndEl.value = '';
+      const modeSel = document.getElementById('filterModeSelect');
+      if (modeSel) modeSel.value = 'seq';
+      filterType = 'seq';
+      filterStartVal = null;
+      filterEndVal = null;
+      poolStart = 1001;
+      poolEnd = 3000;
+      maxPrizes = 110;
+      document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      const chipAll = document.getElementById('chip-all');
+      if (chipAll) chipAll.classList.add('active');
+      updateUI();
+      saveAndBroadcast();
+      // Undo rather than a second confirmation: the operator has already agreed
+      // once, and a 10s window is cheaper than making them confirm twice.
+      showToast(t.resetDone, false, {
+        label: t.toastUndo,
+        duration: 10000,
+        onClick: () => {
+          restoreFromUndo(snapshot);
+          showToast(I18N[currentLang].undoDone);
+        }
+      });
+    }
+
+    /* True when the operator has asked for less motion. Read live so a mid-event
+       change takes effect on the next animation. */
+    function prefersReducedMotion() {
+      return typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
     function triggerConfetti() {
@@ -4664,6 +5704,24 @@
       const ctx = canvas.getContext('2d');
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+
+      // ~80 frames of 95 particles is a full-screen burst. With reduced motion
+      // the celebration still happens -- as one static frame that clears itself
+      // -- rather than being dropped, since the result is announced in text too.
+      if (prefersReducedMotion()) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(244, 196, 48, 0.5)';
+        for (let i = 0; i < 40; i++) {
+          ctx.fillRect(
+            (canvas.width / 40) * i,
+            canvas.height / 2 + ((i % 7) - 3) * 12,
+            canvas.width / 80,
+            6
+          );
+        }
+        setTimeout(() => ctx.clearRect(0, 0, canvas.width, canvas.height), 400);
+        return;
+      }
 
       let particles = [];
       const colors = ['#f4c430', '#d63031', '#ffffff', '#e67e22', '#fffa65'];
@@ -4712,6 +5770,36 @@
     });
 
     window.addEventListener('keydown', (e) => {
+      // A dialog owns the keyboard while it is open; the spacebar roll shortcut
+      // must not fire underneath a confirmation the operator is reading.
+      if (document.getElementById('spotlightModal').style.display === 'flex') {
+        spotlightKeydown(e);
+        return;
+      }
+      const fairModal = document.getElementById('fairModal');
+      if (fairModal && fairModal.style.display === 'flex') {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleFairModal(false);
+          return;
+        }
+        if (e.key === 'Tab') {
+          const box = document.getElementById('fairModalBox');
+          const focusables = box ? [...box.querySelectorAll('button')].filter(el => !el.disabled) : [];
+          if (focusables.length === 0) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
       if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
         const el = document.activeElement;
         const activeTag = el ? el.tagName.toLowerCase() : '';
@@ -4761,12 +5849,6 @@
           })();
       window.open(url, '_blank');
     }
-
-    async function sha256Hex(text) {
-  const data = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
     async function promptBecomeHost() {
       const pin = prompt(I18N[currentLang].hostPrompt);
