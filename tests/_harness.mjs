@@ -171,6 +171,18 @@ export function createApp({ master = false, projection = false, viewer = false, 
     dialogs() {
       return window.__dialogs || [];
     },
+    /**
+     * Text of every toast currently on screen. Errors are reported through the
+     * toast channel, not a native alert(), so assertions read them from here.
+     */
+    toasts() {
+      return [...document.querySelectorAll('#toastContainer .toast')]
+        .map(el => el.textContent || '');
+    },
+    clearToasts() {
+      const c = document.getElementById('toastContainer');
+      if (c) c.innerHTML = '';
+    },
     clearDialogs() {
       window.__dialogs = [];
     },

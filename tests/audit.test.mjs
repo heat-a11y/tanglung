@@ -311,7 +311,7 @@ describe('VIP slot dismiss button (projection-local)', () => {
       proj.applyState(await drawVip(host));
       closeBtn(proj).click();
 
-      host.window.resetAll();
+      await resetAllNow(host);
 
       assert.equal(G(host, 'vipSlotDismissed'), false);
       assert.equal('vipSlotDismissed' in host.window.getPayload(), false);
@@ -374,10 +374,10 @@ describe('VIP slot dismiss button (projection-local)', () => {
 });
 
 describe('Batch 10 draw (regression)', () => {
-  it('draws exactly 10 unique in-range winners and renders tags', () => {
+  it('draws exactly 10 unique in-range winners and renders tags', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       assert.equal(G(host, 'winners').length, 10);
       assert.equal(new Set(G(host, 'winners')).size, 10, 'winners must be unique');
       for (const num of G(host, 'winners')) {
@@ -394,11 +394,11 @@ describe('Batch 10 draw (regression)', () => {
     }
   });
 
-  it('never draws the same number twice across consecutive batches', () => {
+  it('never draws the same number twice across consecutive batches', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
-      host.window.drawTen();
+      await host.window.drawTen();
+      await host.window.drawTen();
       assert.equal(G(host, 'winners').length, 20);
       assert.equal(new Set(G(host, 'winners')).size, 20);
     } finally {
@@ -434,9 +434,12 @@ describe('VIP single draw on console (regression)', () => {
       host.window.updateUI();
       assert.equal(host.document.getElementById('batchDrawBtn').disabled, true);
       assert.equal(host.document.getElementById('vipToggleBtn').disabled, true);
+      host.clearToasts();
       host.window.startVip();
       assert.equal(G(host, 'winners').length, 1, 'no new winner when exhausted');
-      assert.ok(host.dialogs().some(([k]) => k === 'alert'), 'alerted that draw is finished');
+      const toasts = host.document.querySelectorAll('#toastContainer .toast.error');
+      assert.equal(toasts.length, 1, 'exactly one error toast, and no native dialog');
+      assert.equal(host.dialogs().length, 0, 'a native alert() must not be used for this path');
     } finally {
       close(host);
     }
@@ -461,9 +464,13 @@ describe('Manual entry / replacement (regression)', () => {
     try {
       S(host, 'winners', ['1042']);
       host.document.getElementById('manualTicketInput').value = '1042';
+      host.clearToasts();
       host.window.confirmManualEntry();
       assert.equal(G(host, 'winners').length, 1);
-      assert.ok(host.dialogs().some(([k, m]) => k === 'alert' && String(m).includes('already won')));
+      const toasts = host.document.querySelectorAll('#toastContainer .toast.error');
+      assert.equal(toasts.length, 1, 'the duplicate must be refused with one error toast');
+      // The message names the ticket, so it cannot be a generic string.
+      assert.ok(toasts[0].textContent.includes('1042'), `toast said: ${toasts[0].textContent}`);
     } finally {
       close(host);
     }
@@ -473,20 +480,24 @@ describe('Manual entry / replacement (regression)', () => {
     const host = makeHost();
     try {
       host.document.getElementById('manualTicketInput').value = '9999';
+      host.clearToasts();
       host.window.confirmManualEntry();
       assert.equal(G(host, 'winners').length, 0);
-      assert.ok(host.dialogs().some(([k, m]) => k === 'alert' && String(m).includes('Range')));
+      const toasts = host.document.querySelectorAll('#toastContainer .toast.error');
+      assert.equal(toasts.length, 1, 'the out-of-range entry must be refused with one error toast');
+      // The message has to state the usable range, not just "no".
+      assert.match(toasts[0].textContent, /1001\D+3000/, `toast said: ${toasts[0].textContent}`);
     } finally {
       close(host);
     }
   });
 
-  it('in-place redraw moves the voided ticket to recycle bin, logs audit, clears claim, and replaces in place', () => {
+  it('in-place redraw moves the voided ticket to recycle bin, logs audit, clears claim, and replaces in place', async () => {
     const host = makeHost();
     try {
       S(host, 'winners', ['0001', '0002', '0003']);
       S(host, 'claimedWinners', ['0002']);
-      const ok = host.window.promptRedrawSlot('0002', 1);
+      const ok = await redrawSlotNow(host, '0002', 1);
       assert.equal(ok, true);
       const winners = G(host, 'winners');
       assert.equal(winners.length, 3, 'in-place replacement keeps length');
@@ -701,12 +712,12 @@ describe('Cross-device state sync (regression)', () => {
     }
   });
 
-  it('viewer cannot trigger vip roll or batch draw', () => {
+  it('viewer cannot trigger vip roll or batch draw', async () => {
     const viewer = createApp({ viewer: true });
     try {
       const before = G(viewer, 'winners').length;
       viewer.window.startVip();
-      viewer.window.drawTen();
+      await viewer.window.drawTen();
       assert.equal(G(viewer, 'winners').length, before, 'viewer draws must be no-ops');
       assert.ok(viewer.document.getElementById('batchDrawBtn').classList.contains('viewer-disabled'));
     } finally {
@@ -780,7 +791,7 @@ describe('Pacing, counters & bonus prizes (regression)', () => {
 });
 
 describe('Reset, sound & themes (regression)', () => {
-  it('resetAll clears state and resets the VIP display', () => {
+  it('resetAll clears state and resets the VIP display', async () => {
     const host = makeHost();
     try {
       S(host, 'winners', ['0001']);
@@ -788,7 +799,7 @@ describe('Reset, sound & themes (regression)', () => {
       S(host, 'recycleBin', [{ ticket: '0050' }]);
       S(host, 'voidAuditLogs', [{ seq: 1 }]);
       S(host, 'vipRollEvent', { phase: 'stop', ts: 1, num: '0001' });
-      host.window.resetAll();
+      await resetAllNow(host);
       assert.equal(G(host, 'winners').length, 0);
       assert.equal(G(host, 'claimedWinners').length, 0);
       assert.equal(G(host, 'recycleBin').length, 0);
@@ -982,10 +993,10 @@ describe('Custom ticket range dialog', () => {
     }
   });
 
-  it('never lets the quota drop below what is already drawn', () => {
+  it('never lets the quota drop below what is already drawn', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       assert.equal(G(host, 'winners').length, 10);
 
       const f = fields(host);
@@ -1001,10 +1012,10 @@ describe('Custom ticket range dialog', () => {
     }
   });
 
-  it('retires winners that fall outside the new range instead of orphaning them', () => {
+  it('retires winners that fall outside the new range instead of orphaning them', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       const drawn = G(host, 'winners');
       const stranded = drawn.filter(n => Number(n) > 1200);
       const kept = drawn.filter(n => Number(n) <= 1200);
@@ -1030,10 +1041,10 @@ describe('Custom ticket range dialog', () => {
     }
   });
 
-  it('a widened range keeps every winner and only adds fresh tickets', () => {
+  it('a widened range keeps every winner and only adds fresh tickets', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       const drawn = [...G(host, 'winners')];
 
       const f = fields(host);
@@ -1231,10 +1242,10 @@ describe('Blacklist exclusion is range-aware', () => {
     }
   });
 
-  it('refuses to blacklist a number that is already a winner', () => {
+  it('refuses to blacklist a number that is already a winner', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       const winner = G(host, 'winners')[0];
       exclude(host, winner);
       assert.equal(G(host, 'recycleBin').length, 0, 'a winner is voided, not blacklisted');
@@ -1281,13 +1292,13 @@ describe('Language and reset hygiene', () => {
     }
   });
 
-  it('reset restores the default range and quota, not the values in force', () => {
+  it('reset restores the default range and quota, not the values in force', async () => {
     const host = makeHost();
     try {
       host.applyState({ poolStart: 10, poolEnd: 20, maxPrizes: 5, winners: ['0015'] });
       assert.equal(G(host, 'poolStart'), 10);
 
-      host.window.resetAll();
+      await resetAllNow(host);
       assert.equal(G(host, 'poolStart'), 1001);
       assert.equal(G(host, 'poolEnd'), 3000);
       assert.equal(G(host, 'maxPrizes'), 110);
@@ -1485,10 +1496,10 @@ describe('Cross-surface sync (master / viewer / projection / PiP)', () => {
     }
   });
 
-  it('a host batch of 10 propagates to every surface, all within 1001-3000', () => {
+  it('a host batch of 10 propagates to every surface, all within 1001-3000', async () => {
     const s = surfaces();
     try {
-      s.host.window.drawTen();
+      await s.host.window.drawTen();
       const payload = s.host.window.getPayload();
       for (const app of [s.viewer, s.proj, s.pip]) app.applyState(payload);
 
@@ -1568,7 +1579,7 @@ describe('No ticket number can ever repeat', () => {
         for (const n of w) seen.add(n);
       };
 
-      for (let i = 0; i < 10; i++) { host.window.drawTen(); check(`batch ${i + 1}`); }
+      for (let i = 0; i < 10; i++) { await host.window.drawTen(); check(`batch ${i + 1}`); }
       assert.equal(G(host, 'winners').length, 100);
 
       await sleep(60);
@@ -1580,7 +1591,7 @@ describe('No ticket number can ever repeat', () => {
       assert.equal(seen.size, 101, '101 unique tickets taken');
 
       // quota respected
-      while (G(host, 'winners').length < 110) { host.window.drawTen(); }
+      while (G(host, 'winners').length < 110) { await host.window.drawTen(); }
       check('at quota');
       assert.equal(G(host, 'winners').length, 110);
       assert.equal(seen.size, 110, '110 unique tickets, no repeats');
@@ -1588,21 +1599,23 @@ describe('No ticket number can ever repeat', () => {
 
       host.clearDialogs();
       host.window.startVip();
-      assert.ok(host.dialogs().some(([, m]) => String(m).includes('110')), 'no draw past the 110 quota');
+      assert.ok(host.toasts().some(m => String(m).includes('110')), 'no draw past the 110 quota');
+      assert.equal(host.dialogs().filter(([k]) => k === 'alert').length, 0,
+        'the quota message must not come from a native alert()');
       assert.equal(G(host, 'winners').length, 110, 'still exactly 110');
     } finally {
       close(host);
     }
   });
 
-  it('in-place redraw never re-draws the voided ticket', () => {
+  it('in-place redraw never re-draws the voided ticket', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       const before = [...G(host, 'winners')];
       const voided = before[3];
 
-      host.window.promptRedrawSlot(voided, 3);
+      await redrawSlotNow(host, voided, 3);
       const after = G(host, 'winners');
       assert.equal(after.length, 10, 'list length unchanged');
       assert.notEqual(after[3], voided, 'slot 4 holds a different ticket');
@@ -1615,32 +1628,34 @@ describe('No ticket number can ever repeat', () => {
     }
   });
 
-  it('manual entry refuses a winner, a voided ticket and an out-of-range number', () => {
+  it('manual entry refuses a winner, a voided ticket and an out-of-range number', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       const winner = G(host, 'winners')[0];
       const input = host.document.getElementById('manualTicketInput');
 
+      host.clearToasts();
       input.value = winner;
       host.window.confirmManualEntry();
-      assert.ok(host.dialogs().some(([, m]) => String(m).includes('already won')), 'existing winner refused');
+      assert.ok(host.toasts().some(m => String(m).includes(winner)),
+        'the existing winner must be refused and named in the message');
 
-      host.clearDialogs();
+      host.clearToasts();
       G(host, 'recycleBin').push({ ticket: '1234', originalSeq: 3, time: 'now' });
       input.value = '1234';
       host.window.confirmManualEntry();
-      assert.ok(host.dialogs().some(([, m]) => String(m).includes('void / blacklist')), 'voided ticket refused');
+      assert.ok(host.toasts().some(m => String(m).includes('1234')), 'the voided ticket must be named');
       assert.equal(G(host, 'winners').includes('1234'), false, 'never became a winner');
 
-      host.clearDialogs();
+      host.clearToasts();
       input.value = '0500';
       host.window.confirmManualEntry();
-      assert.ok(host.dialogs().some(([, m]) => String(m).includes('Range')), 'below 1001 refused');
+      assert.ok(host.toasts().some(m => String(m).includes('1001')), 'below 1001 refused');
 
       input.value = '3001';
       host.window.confirmManualEntry();
-      assert.ok(host.dialogs().some(([, m]) => String(m).includes('Range')), 'above 3000 refused');
+      assert.ok(host.toasts().some(m => String(m).includes('3000')), 'above 3000 refused');
 
       assert.equal(new Set(G(host, 'winners')).size, G(host, 'winners').length, 'still unique');
     } finally {
@@ -1648,10 +1663,10 @@ describe('No ticket number can ever repeat', () => {
     }
   });
 
-  it('restoring a recycle-bin entry that is already a winner cannot duplicate it', () => {
+  it('restoring a recycle-bin entry that is already a winner cannot duplicate it', async () => {
     const host = makeHost();
     try {
-      host.window.drawTen();
+      await host.window.drawTen();
       const winner = G(host, 'winners')[2];
       G(host, 'recycleBin').push({ ticket: winner, originalSeq: 3, time: 'now' });
 
@@ -2060,3 +2075,31 @@ describe('Destructive actions are visibly red and legible', () => {
     }
   });
 });
+
+/* The native confirm() dialogs became async, so every call site that gated on
+   one now needs to await it. These helpers drive the themed dialog the same way
+   an operator would: click the button. */
+export function answerConfirm(app, accept = true) {
+  const d = app.document;
+  const ok = d.getElementById('confirmOkBtn');
+  const cancel = d.getElementById('confirmCancelBtn');
+  assert.ok(ok && cancel, 'the confirm dialog markup is missing');
+  assert.notEqual(d.getElementById('confirmModal').style.display, 'none',
+    'the dialog never opened');
+  (accept ? ok : cancel).click();
+}
+
+export async function resetAllNow(app) {
+  const done = app.window.resetAll();
+  // resetAll awaits the dialog, so let the promise register its listeners first.
+  await Promise.resolve();
+  answerConfirm(app, true);
+  return done;
+}
+
+export async function redrawSlotNow(app, ticket, index) {
+  const done = app.window.promptRedrawSlot(ticket, index);
+  await Promise.resolve();
+  answerConfirm(app, true);
+  return done;
+}
