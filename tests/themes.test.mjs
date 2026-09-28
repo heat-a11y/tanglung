@@ -77,6 +77,23 @@ for (const m of html.matchAll(
 }
 const scaleFor = (mode) => (mode === 'dark' ? DARK : LIGHT);
 
+/* The festival tag sits after `colors` in each entry, so the main regex above
+   cannot see it. Entry boundaries have to be walked explicitly here: a lazy
+   match from one entry's opener to the first `fest` line it meets would happily
+   swallow every base theme in between and tag the whole prefix with one
+   festival. Split on the openers, then look inside each slice. */
+const FESTIVALS = {};
+{
+  const openers = [...html.matchAll(/^ {6}(\w+): \{$/gm)];
+  for (let i = 0; i < openers.length; i++) {
+    const from = openers[i].index + openers[i][0].length;
+    const to = i + 1 < openers.length ? openers[i + 1].index : html.length;
+    const body = html.slice(from, to);
+    const fest = body.match(/^ {8}fest: "([a-zA-Z]+)"$/m);
+    if (fest) FESTIVALS[openers[i][1]] = { fest: fest[1], mode: THEMES[openers[i][1]] && THEMES[openers[i][1]].mode };
+  }
+}
+
 /* Resolve the full token set for one theme, including the color-mix() tints
    the stylesheet derives from --accent. */
 function tokensFor(theme) {
@@ -131,8 +148,37 @@ const PAIRS = [
 ];
 
 describe('theme palette alignment', () => {
-  it('declares exactly 20 themes', () => {
-    assert.equal(Object.keys(THEMES).length, 20);
+  it('declares every theme it promises', () => {
+    // 20 base hues (10 light, 10 dark) plus a light and a dark variant for
+    // each of the 8 festivals. The base count is the floor that the contrast
+    // and alias tests below were written against, so it is checked separately
+    // rather than being allowed to drift with the festival list.
+    assert.ok(Object.keys(THEMES).length >= 20, 'the base palette must not shrink');
+  });
+
+  it('ships a light and a dark variant of every festival', () => {
+    const fests = new Map();
+    for (const [id, t] of Object.entries(FESTIVALS)) {
+      if (!fests.has(t.fest)) fests.set(t.fest, []);
+      fests.get(t.fest).push({ id, mode: t.mode });
+    }
+    const expected = [
+      'chineseNewYear', 'tanglung', 'hariRaya', 'deepavali',
+      'gawai', 'christmas', 'vesakDay', 'thaipusam'
+    ];
+    assert.deepEqual([...fests.keys()].sort(), [...expected].sort(),
+      'the festival list should not change without the picker labels following it');
+    for (const [fest, list] of fests) {
+      assert.deepEqual(list.map((v) => v.mode).sort(), ['dark', 'light'],
+        `${fest} must offer both a light and a dark variant`);
+    }
+  });
+
+  it('gives no base theme a festival tag', () => {
+    for (const [id, t] of Object.entries(THEMES)) {
+      if (FESTIVALS[id]) continue;
+      assert.equal(t.fest, undefined, `${id} is a base hue and should not claim a festival`);
+    }
   });
 
   it('gives every theme a display name', () => {
@@ -149,11 +195,21 @@ describe('theme palette alignment', () => {
     }
   });
 
-  it('splits 20 themes into 10 light and 10 dark', () => {
+  it('keeps the base palette at 10 light and 10 dark', () => {
+    const base = Object.entries(THEMES).filter(([id]) => !FESTIVALS[id]);
+    const light = base.filter(([, t]) => t.mode === 'light');
+    const dark = base.filter(([, t]) => t.mode === 'dark');
+    assert.equal(light.length, 10, 'expected 10 base light themes');
+    assert.equal(dark.length, 10, 'expected 10 base dark themes');
+  });
+
+  it('keeps the whole set mode-balanced, festivals included', () => {
+    // Every section of the picker has to offer a real choice, so the totals
+    // cannot quietly tilt as festivals are added.
     const light = Object.entries(THEMES).filter(([, t]) => t.mode === 'light');
     const dark = Object.entries(THEMES).filter(([, t]) => t.mode === 'dark');
-    assert.equal(light.length, 10, 'expected 10 light themes');
-    assert.equal(dark.length, 10, 'expected 10 dark themes');
+    assert.equal(light.length, dark.length,
+      'light and dark must stay equal across base and festival themes combined');
   });
 
   it('keeps one ink per mode, and every shade readable under it', () => {
@@ -375,7 +431,7 @@ describe('every rule pairs its tokens legibly', () => {
     );
   });
 
-  it('meets its contrast floor in every one of the 20 themes', () => {
+  it('meets its contrast floor in every theme', () => {
     const failures = new Map();
     for (const p of pairs) {
       if (p.got >= p.min) continue;
@@ -422,27 +478,87 @@ describe('theme words render correctly in every language', () => {
     }
   });
 
-  it('shows all 20 swatches under localized light and dark headings', async () => {
+  it('shows every swatch, festivals first, under localized headings', async () => {
     const { createApp } = await import('./_harness.mjs');
     const host = createApp({ master: true });
     try {
       const { window: w, document: d } = host;
+      const total = Object.keys(THEMES).length;
       for (const lang of ['BC', 'BM', 'BI']) {
         w.changeLanguage(lang);
         w.toggleThemeModal(true);
         const dict = host.get('I18N')[lang];
         const modal = d.getElementById('themeModal');
         assert.equal(modal.style.display, 'flex', `${lang}: picker did not open`);
-        assert.equal(d.querySelectorAll('.theme-swatch').length, 20, `${lang}: wrong swatch count`);
-        assert.equal(d.querySelectorAll('.theme-group').length, 2, `${lang}: expected a light and a dark group`);
+        assert.equal(d.querySelectorAll('.theme-swatch').length, total, `${lang}: wrong swatch count`);
+        /* One section per festival -- the operator asked for named festivals,
+           not a single undifferentiated "festivals" bucket -- plus the two base
+           mode sections. */
+        const festKeys = [...new Set(Object.values(FESTIVALS).map((f) => f.fest))];
+        assert.equal(d.querySelectorAll('.theme-group').length, festKeys.length + 2,
+          `${lang}: expected one section per festival plus the two base sections`);
+        const groups = [...d.querySelectorAll('.theme-group')];
         const titles = [...d.querySelectorAll('.theme-group-title')].map((e) => e.textContent.trim());
-        assert.ok(titles[0].includes(dict.themeGroupLight), `${lang}: first group is not the light heading (${titles[0]})`);
-        assert.ok(titles[1].includes(dict.themeGroupDark), `${lang}: second group is not the dark heading (${titles[1]})`);
+
+        // Festivals lead, because that is why the picker gets opened at all.
+        festKeys.forEach((fest, i) => {
+          const key = 'fest' + fest.charAt(0).toUpperCase() + fest.slice(1);
+          assert.ok(titles[i] && titles[i].includes(dict[key]),
+            `${lang}: section ${i + 1} should be the ${fest} heading, got "${titles[i]}"`);
+        });
+        assert.ok(titles[festKeys.length].includes(dict.themeGroupLight),
+          `${lang}: the base light heading is in the wrong place (${titles[festKeys.length]})`);
+        assert.ok(titles[festKeys.length + 1].includes(dict.themeGroupDark),
+          `${lang}: the base dark heading is in the wrong place (${titles[festKeys.length + 1]})`);
+
+        // Each festival section holds only its own pair, and both variants of a
+        // festival land in the same section -- otherwise the operator has to
+        // hunt for the dark one somewhere else on the grid.
+        festKeys.forEach((fest, i) => {
+          const ids = [...groups[i].querySelectorAll('.theme-swatch')]
+            .map((b) => b.getAttribute('onclick').match(/'(\w+)'/)[1]);
+          assert.equal(ids.length, 2, `${lang}: ${fest} should show exactly a light and a dark variant`);
+          for (const id of ids) {
+            assert.equal(FESTIVALS[id].fest, fest, `${lang}: ${id} does not belong under ${fest}`);
+          }
+        });
+        // No base hue may leak into a festival section.
+        const baseGroups = groups.slice(festKeys.length);
+        const baseIds = [...baseGroups.flatMap((g) => [...g.querySelectorAll('.theme-swatch')])]
+          .map((b) => b.getAttribute('onclick').match(/'(\w+)'/)[1]);
+        assert.equal(baseIds.length, Object.keys(THEMES).length - Object.keys(FESTIVALS).length,
+          `${lang}: the base sections should hold exactly the non-festival themes`);
         // No swatch label may leak a mode word from another language.
         for (const n of d.querySelectorAll('.theme-swatch-name')) {
           assert.equal(/[淺深]色/.test(n.textContent), false, `${lang}: swatch label leaks a Chinese mode word: ${n.textContent}`);
         }
         w.toggleThemeModal(false);
+      }
+    } finally {
+      host.dom.window.close();
+    }
+  });
+
+  it('previews each festival swatch against the neutrals of its own mode', async () => {
+    // The festivals section mixes light and dark cards on purpose, so the
+    // heading chrome has to follow the CURRENT mode while each card follows its
+    // own. Getting this backwards paints dark-mode cards with light backgrounds.
+    const { createApp } = await import('./_harness.mjs');
+    const host = createApp({ master: true });
+    try {
+      const { window: w, document: d } = host;
+      w.toggleThemeModal(true);
+      const lightBg = w.getComputedStyle(d.querySelector('[data-mode="light"]') || d.body)
+        .getPropertyValue('--bg').trim();
+      for (const id of Object.keys(FESTIVALS)) {
+        const card = d.querySelector(`.theme-swatch[onclick="setTheme('${id}')"]`);
+        assert.ok(card, `${id} has no swatch`);
+        const bg = card.getAttribute('style').match(/background:\s*(#[0-9a-f]{6})/)[1];
+        if (FESTIVALS[id].mode === 'light') {
+          assert.equal(bg, lightBg, `${id} is a light theme and should sit on light neutrals`);
+        } else {
+          assert.notEqual(bg, lightBg, `${id} is a dark theme and should not sit on light neutrals`);
+        }
       }
     } finally {
       host.dom.window.close();

@@ -13,24 +13,31 @@
   <style id="mainStyles">
     /* Mode-driven neutrals. A theme picks its mode, and the mode picks the
        neutral scale, so 10 light themes can never drift into a dark theme's
-       contrast behaviour. Every pair below is asserted in tests/themes.test.mjs. */
+       contrast behaviour. Every pair below is asserted in tests/themes.test.mjs.
+
+       The scale is a cool neutral, not a pure grey: a trace of blue in the
+       shadows is what separates "paper" from "card" without needing a border
+       on every edge, which is how current sites layer their greys. */
     :root,
     [data-mode="light"] {
-      /* Neutral scale */
-      --bg: #f4f5f7;
+      /* Neutral scale: page -> card -> raised -> inset. Each step is a real
+         step, so elevation reads from the surface alone. */
+      --bg: #f6f7f9;
       --bg-2: #ffffff;
       --surface-1: #ffffff;
-      --surface-2: #fafafa;
-      --surface-3: #f1f2f4;
+      --surface-2: #fbfcfd;
+      --surface-3: #f0f2f5;
       --surface-input: #ffffff;
-      --surface-disabled: #eef0f2;
-      --border: #e3e5e9;
-      --border-subtle: #eef0f2;
-      --border-strong: #cdd1d8;
-      --text: #16181d;
-      --text-2: #565c66;
-      --text-3: #6b7280;
-      --text-disabled: #a6acb5;
+      --surface-disabled: #eff1f4;
+      /* Borders get lighter and greyer as they recede; only --border-strong
+         is allowed to be dark enough to draw a control's outline. */
+      --border: #e4e7ec;
+      --border-subtle: #eef0f4;
+      --border-strong: #c8ced8;
+      --text: #0f1218;
+      --text-2: #525a67;
+      --text-3: #6b7480;
+      --text-disabled: #a2aab5;
       --surface-result: #ffffff;
       --surface-rgb: 255, 255, 255;
       --on-status: #ffffff;
@@ -54,34 +61,37 @@
     }
 
     [data-mode="dark"] {
-      --bg: #0d0f13;
-      --bg-2: #14171d;
-      --surface-1: #181c23;
-      --surface-2: #1f242c;
-      --surface-3: #272d36;
-      --surface-input: #111419;
-      --surface-disabled: #20252d;
-      --border: #2c333d;
-      --border-subtle: #232932;
-      --border-strong: #3d4550;
-      --text: #eef1f6;
-      --text-2: #b4bdc9;
-      --text-3: #8d97a3;
-      --text-disabled: #646d79;
-      --surface-result: #111519;
-      --surface-rgb: 24, 28, 35;
+      /* Dark is not light-inverted: the steps are hand-picked so that each
+         surface is one notch above the one behind it. --surface-1 sits barely
+         above the page so cards read as cards without a hard edge. */
+      --bg: #0a0b0e;
+      --bg-2: #101216;
+      --surface-1: #14171c;
+      --surface-2: #191d23;
+      --surface-3: #242931;
+      --surface-input: #0e1014;
+      --surface-disabled: #1c2027;
+      --border: #262b33;
+      --border-subtle: #1c2026;
+      --border-strong: #363d47;
+      --text: #f1f4f8;
+      --text-2: #a9b2be;
+      --text-3: #7c8694;
+      --text-disabled: #5b636e;
+      --surface-result: #0f1216;
+      --surface-rgb: 20, 23, 28;
       --on-status: #0b0d10;
       --result-ink: #f4f7fa;
       --success: #4ade80;
       --success-strong: #60e28f;
-      --success-soft: #1d3828;
+      --success-soft: #24442e;
       --warning: #fbbf24;
-      --warning-soft: #3b3119;
+      --warning-soft: #4e3c15;
       --danger: #f87171;
       --danger-strong: #f98282;
-      --danger-soft: #492c2c;
+      --danger-soft: #4d2623;
       --info: #60a5fa;
-      --info-soft: #27354c;
+      --info-soft: #1e3552;
       --success-rgb: 74, 222, 128;
       --success-strong-rgb: 96, 226, 143;
       --warning-rgb: 251, 191, 36;
@@ -103,40 +113,20 @@
        flash unaccented before the first applyTheme() call. Values match the
        default theme (indigo). */
     :root {
-      --accent: #4f46e5;
-      --accent-rgb: 79, 70, 229;
+      --accent: #4f54e2;
+      --accent-rgb: 79, 84, 226;
       --accent-contrast: #ffffff;
-      --accent-strong: #3f38b7;
-      --accent-strong-rgb: 63, 56, 183;
-      --accent-deep: #36309c;
-      --accent-bright: #9e99f1;
-      --accent-bright-rgb: 158, 153, 241;
+      --accent-strong: #362ebc;
+      --accent-strong-rgb: 54, 46, 188;
+      --accent-deep: #2a10a6;
+      --accent-bright: #a6b5ff;
+      --accent-bright-rgb: 166, 181, 255;
     }
 
-    /* Mode-independent: type, spacing, radii, shadow depth -- and the stage.
-       The stage (projector wall and desktop bar) is deliberately dark in BOTH
-       modes: a projector in a dim hall washes out on a light ground, and the
-       desktop bar floats over whatever is on the user's screen. */
-    :root {
-      --stage-bg: #0b0d10;
-      --stage-surface: #151920;
-      --stage-surface-2: #1e232b;
-      --stage-border: #333b46;
-      --stage-text: #f7f9fb;
-      --stage-text-2: #a9b3c0;
-      --scrim: rgba(11, 13, 16, 0.45);
-      --strip-font: 1.35rem;
-    }
-    :root {
-      --stage-bg: #0b0d10;
-      --stage-surface: #151920;
-      --stage-surface-2: #1e232b;
-      --stage-border: #333b46;
-      --stage-text: #f7f9fb;
-      --stage-text-2: #a9b3c0;
-      --scrim: rgba(11, 13, 16, 0.45);
-      --strip-font: 1.35rem;
-    }
+    /* Mode-independent: type, spacing, radii, motion, shadow depth -- and the
+       stage. The stage (projector wall and desktop bar) is deliberately dark in
+       BOTH modes: a projector in a dim hall washes out on a light ground, and
+       the desktop bar floats over whatever is on the user's screen. */
     :root {
       --stage-bg: #0b0d10;
       --stage-surface: #151920;
@@ -169,16 +159,30 @@
       --sp-5: 24px;
       --sp-6: 32px;
 
-      --r-sm: 6px;
-      --r-md: 8px;
-      --r-lg: 12px;
+      /* Corners are generous by current standards: 8px on a control, 16px on a
+         panel. The old 6px/8px/12px read as 2015-era. */
+      --r-sm: 8px;
+      --r-md: 10px;
+      --r-lg: 16px;
       --r-pill: 999px;
 
-      /* Soft, low-contrast shadows: neither a light nor a dark base needs heavy
-         ones, so these stay subtle in both modes. */
-      --sh-1: 0 1px 2px rgba(16, 18, 24, 0.06);
-      --sh-2: 0 4px 12px rgba(16, 18, 24, 0.08);
-      --sh-3: 0 12px 32px rgba(16, 18, 24, 0.12);
+      /* Motion. Every transition in the app is one of these three durations on
+         one of these three curves, which is what makes the interface feel
+         fluid instead of merely animated: a short curve for anything the
+         pointer is driving, a long decel for anything entering the screen, and
+         a slight overshoot for anything the operator committed to. */
+      --dur-1: 120ms;
+      --dur-2: 200ms;
+      --dur-3: 320ms;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+      /* Two-layer shadows: a tight contact shadow plus a wide ambient one.
+         Neither a light nor a dark base needs a single heavy drop. */
+      --sh-1: 0 1px 2px rgba(16, 18, 24, 0.06), 0 1px 1px rgba(16, 18, 24, 0.04);
+      --sh-2: 0 2px 4px rgba(16, 18, 24, 0.04), 0 4px 12px rgba(16, 18, 24, 0.07);
+      --sh-3: 0 4px 8px rgba(16, 18, 24, 0.04), 0 12px 32px rgba(16, 18, 24, 0.11);
       --focus-ring: 0 0 0 3px var(--accent-ring);
     }
 
@@ -220,11 +224,17 @@
       }
       /* A 0.001ms toast fade means the toast never becomes visible at all: it
          animates straight to its final keyframe, so it can appear and vanish
-         inside one frame. The same applies to popIn. */
+         inside one frame. The same applies to popIn. Every entrance below ends
+         on its resting state, so 0.001ms alone would be survivable -- but a
+         still version is cheaper to paint and cannot be caught mid-transform
+         if the browser batches the first frame. */
       .toast,
       .number-tag,
       .modal-box,
-      .batch-result {
+      .modal-backdrop,
+      .spotlight-card,
+      .panel.active,
+      .more-menu-panel {
         animation: none !important;
         opacity: 1 !important;
         transform: none !important;
@@ -311,6 +321,14 @@
       background: rgba(var(--accent-rgb), 0.12);
       border-color: var(--accent);
     }
+    .toast-action {
+      transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
+        transform var(--dur-1) var(--ease-out);
+    }
+    .toast-action:active {
+      transform: scale(0.96);
+      transition-duration: 90ms;
+    }
 
     .toast.error {
       border-color: var(--danger-strong);
@@ -335,6 +353,24 @@
     @keyframes toastOut {
       from { opacity: 1; }
       to { opacity: 0; }
+    }
+    /* The two entrances every surface in the app shares. A modal is a card
+       arriving; a tab panel is a card arriving. Same curve, same distance, so
+       moving between them does not change the rhythm of the interface. */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: none; }
+    }
+    /* Staggered entrance for the winner grid. Each card waits a little longer
+       than the one before it, so a batch of ten resolves in order instead of
+       appearing as a single block. */
+    @keyframes dealIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.94); }
+      to { opacity: 1; transform: none; }
     }
 
     .top-bar {
@@ -380,6 +416,9 @@
       letter-spacing: 0.04em;
       outline: none;
     }
+    .brand-subtitle, .build-stamp {
+      transition: color var(--dur-2) var(--ease-out);
+    }
 
     /* Surfaces the exact file version on screen, so a stale browser render is
        self-evident instead of something the user has to report. */
@@ -392,7 +431,6 @@
       margin-right: 0.4em;
       flex: none;
     }
-    .icon-btn { display: inline-flex; align-items: center; justify-content: center; }
 
     .build-stamp {
       font-size: 10px;
@@ -419,9 +457,16 @@
       color: var(--text);
       user-select: none;
       white-space: nowrap;
+      transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
+        transform var(--dur-1) var(--ease-out);
     }
     .stat-badge:hover {
       border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .stat-badge:active {
+      transform: translateY(0) scale(0.97);
+      transition-duration: 90ms;
     }
     .stat-badge:focus-visible {
       outline: 3px solid var(--accent);
@@ -462,6 +507,11 @@
     }
 
     .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      line-height: 1.3;
       background: rgba(var(--accent-rgb), 0.12);
       border: 1px solid var(--border-strong);
       color: var(--accent);
@@ -470,21 +520,133 @@
       cursor: pointer;
       font-weight: 700;
       font-size: var(--fs-sm);
-      line-height: 1.3;
-      transition: background 0.15s, border-color 0.15s, color 0.15s;
       white-space: nowrap;
+      /* One transition list for the whole control, so a press never reads as
+         two unrelated effects: colour and surface cross-fade while the lift
+         and the squeeze run on their own, shorter clock. */
+      transition: background var(--dur-1) var(--ease-out),
+        border-color var(--dur-1) var(--ease-out),
+        color var(--dur-1) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        transform var(--dur-1) var(--ease-out);
     }
     .icon-btn:hover:not(:disabled) {
       background: rgba(var(--accent-rgb), 0.24);
       border-color: var(--accent);
+      transform: translateY(-1px);
+      box-shadow: var(--sh-1);
     }
+    /* The press is deliberately under 150ms. Anything slower stops feeling
+       connected to the finger and starts feeling like a lag. */
     .icon-btn:active:not(:disabled) {
-      transform: translateY(1px);
+      transform: translateY(0) scale(0.96);
+      box-shadow: none;
+      transition-duration: 90ms;
     }
     .icon-btn:disabled,
     .icon-btn[aria-disabled="true"] {
       opacity: 0.45;
       cursor: not-allowed;
+    }
+
+    /* The overflow menu. Fourteen controls in one strip is a wall of text, so
+       the six an operator reaches for mid-draw stay here and everything else
+       drops behind one trigger. */
+    .more-menu {
+      position: relative;
+      display: inline-flex;
+    }
+
+    /* Icons are sized and aligned off the text's line-box, so a label can grow
+       or shrink across the three languages without the glyph drifting out of
+       the button's optical centre. */
+    .icon-glyph {
+      width: 15px;
+      height: 15px;
+      flex: 0 0 auto;
+      display: block;
+    }
+    .more-menu-trigger {
+      padding: 6px 9px;
+    }
+    /* The only affordance telling you the bar has a second row is the glyph
+       itself, so it turns to an X while the panel is out. */
+    .more-menu-trigger[aria-expanded="true"] .icon-glyph {
+      transform: rotate(90deg);
+      transition: transform var(--dur-2) var(--ease-spring);
+    }
+    .more-menu-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      z-index: 30;
+      min-width: 236px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 6px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-md);
+      box-shadow: var(--sh-3);
+      opacity: 0;
+      transform: translateY(-6px) scale(0.97);
+      transform-origin: top right;
+      pointer-events: none;
+      transition: opacity var(--dur-2) var(--ease-out),
+        transform var(--dur-2) var(--ease-out);
+    }
+    .more-menu-panel.is-open {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    /* An author-level `display: flex` outranks the UA's [hidden] { display:
+       none }, so the closed state has to be restated or the panel would never
+       actually leave the screen. */
+    .more-menu-panel[hidden] {
+      display: none;
+    }
+
+    .more-menu-item {
+      justify-content: flex-start;
+      width: 100%;
+      padding: 8px 10px;
+      text-align: left;
+      background: var(--surface-1);
+      border-color: transparent;
+    }
+    .more-menu-item:hover:not(:disabled) {
+      background: var(--surface-3);
+      border-color: var(--border-strong);
+      /* Menu rows slide across rather than up: the direction matches the list
+         they belong to. */
+      transform: translateX(2px);
+    }
+    .more-menu-item:active:not(:disabled) {
+      transform: translateX(2px) scale(0.98);
+    }
+    /* One hairline splits the dialog-opening rows from the diagnostics below,
+       so a row that starts a draw is not mistaken for one that reports on it. */
+    .more-menu-sep {
+      height: 1px;
+      margin: 5px 4px;
+      background: var(--border-subtle);
+    }
+
+    /* An icon-only control still needs a text equivalent for a screen reader
+       and for anything that copies the bar's text. */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
     }
 
     .btn-sync {
@@ -632,10 +794,17 @@
       color: var(--accent);
       border-radius: var(--r-sm);
       cursor: pointer;
-      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+      transition: background var(--dur-2) var(--ease-out),
+        color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        transform var(--dur-1) var(--ease-out);
     }
     .tab-btn:hover:not(.active) {
       background: rgba(var(--accent-rgb), 0.08);
+    }
+    .tab-btn:active:not(.active) {
+      transform: scale(0.98);
+      transition-duration: 90ms;
     }
 
     .tab-btn.active {
@@ -654,6 +823,7 @@
     }
     .panel.active {
       display: flex;
+      animation: riseIn var(--dur-3) var(--ease-out);
     }
 
     .action-btn {
@@ -667,15 +837,21 @@
       box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 6px 16px rgba(var(--accent-rgb), 0.22);
       margin-bottom: var(--sp-3);
       letter-spacing: 0.05em;
-      transition: transform 0.1s, box-shadow 0.15s;
+      transition: transform var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out),
+        background var(--dur-1) var(--ease-out);
       flex-shrink: 0;
     }
     .action-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 10px 24px rgba(var(--accent-rgb), 0.28);
+      transform: translateY(-2px);
+      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 14px 28px rgba(var(--accent-rgb), 0.3);
     }
+    /* The draw button is pressed in a dark hall, often without looking. A
+       visible squeeze is the only confirmation the press registered. */
     .action-btn:active:not(:disabled) {
-      transform: translateY(0);
+      transform: translateY(0) scale(0.975);
+      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 4px 10px rgba(var(--accent-rgb), 0.2);
+      transition-duration: 90ms;
     }
     .action-btn:disabled {
       background: var(--surface-disabled);
@@ -712,12 +888,248 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      animation: popIn 0.3s ease;
+      /* `backwards` is what makes the stagger work: during a card's delay it
+         holds the first keyframe, so it waits off-screen instead of sitting
+         visible and then jumping. */
+      animation: dealIn var(--dur-3) var(--ease-spring) backwards;
       box-shadow: var(--sh-1);
       position: relative;
       padding: 6px;
       min-height: 60px;
     }
+
+    /* A batch is always exactly ten (5x2), so the whole stagger is a fixed
+       table. Each card waits 40ms longer than the one before it: the batch
+       resolves in draw order instead of appearing as a single block. */
+    /* Shortcut legend */
+    .shortcut-list {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .shortcut-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .shortcut-row:last-child {
+      border-bottom: none;
+    }
+
+    .shortcut-keys {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 0 0 auto;
+      min-width: 104px;
+      margin: 0;
+    }
+
+    .shortcut-key {
+      font-family: var(--font-num);
+      font-size: 0.72rem;
+      font-weight: 700;
+      line-height: 1;
+      padding: 5px 7px;
+      min-width: 26px;
+      text-align: center;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border-strong);
+      border-bottom-width: 2px;
+      background: var(--surface-2);
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .shortcut-plus {
+      font-size: 0.7rem;
+      color: var(--text-2);
+    }
+
+    .shortcut-desc {
+      margin: 0;
+      font-size: 0.84rem;
+      color: var(--text);
+    }
+
+    /* Batch action row: a sibling of .batch-grid, because the grid is a fixed
+       5x2 whose stagger is keyed to nth-child(1..10). */
+    .batch-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .batch-actions-empty {
+      font-size: 0.8rem;
+      color: var(--text-2);
+    }
+
+    .batch-round-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+
+    .batch-round-tickets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .batch-round-chip {
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: var(--r-sm);
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-batch-redraw,
+    .btn-batch-history {
+      font-family: var(--font-sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      min-height: 34px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--surface-2);
+      color: var(--text);
+      cursor: pointer;
+      transition: background var(--dur-1), border-color var(--dur-1), transform var(--dur-1);
+    }
+
+    .btn-batch-redraw {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+    }
+
+    .btn-batch-redraw:hover,
+    .btn-batch-history:hover {
+      background: var(--surface-3);
+    }
+
+    .btn-batch-redraw:active,
+    .btn-batch-history:active {
+      transform: scale(0.97);
+    }
+
+    /* History rows */
+    .round-row {
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: var(--surface-2);
+    }
+
+    .round-row.stale {
+      opacity: 0.62;
+    }
+
+    .round-row-head {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .round-seq {
+      font-family: var(--font-num);
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--accent-strong);
+    }
+
+    .round-count,
+    .round-time {
+      font-size: 0.74rem;
+      color: var(--text-2);
+    }
+
+    .round-time {
+      margin-left: auto;
+    }
+
+    .round-tickets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+
+    .round-chip {
+      font-family: var(--font-num);
+      font-variant-numeric: tabular-nums;
+      font-size: 0.78rem;
+      padding: 2px 6px;
+      border-radius: var(--r-sm);
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+    }
+
+    .round-row-foot {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-round-redraw {
+      font-family: var(--font-sans);
+      font-size: 0.76rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      min-height: 32px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent-strong);
+      cursor: pointer;
+      transition: background var(--dur-1);
+    }
+
+    .btn-round-redraw:hover {
+      background: var(--surface-3);
+    }
+
+    .round-stale-note,
+    .round-empty {
+      font-size: 0.78rem;
+      color: var(--text-2);
+    }
+
+    .round-empty {
+      display: block;
+      text-align: center;
+      padding: 18px 0;
+    }
+
+    .batch-grid .number-tag:nth-child(1) { animation-delay: 0ms; }
+    .batch-grid .number-tag:nth-child(2) { animation-delay: 40ms; }
+    .batch-grid .number-tag:nth-child(3) { animation-delay: 80ms; }
+    .batch-grid .number-tag:nth-child(4) { animation-delay: 120ms; }
+    .batch-grid .number-tag:nth-child(5) { animation-delay: 160ms; }
+    .batch-grid .number-tag:nth-child(6) { animation-delay: 200ms; }
+    .batch-grid .number-tag:nth-child(7) { animation-delay: 240ms; }
+    .batch-grid .number-tag:nth-child(8) { animation-delay: 280ms; }
+    .batch-grid .number-tag:nth-child(9) { animation-delay: 320ms; }
+    .batch-grid .number-tag:nth-child(10) { animation-delay: 360ms; }
 
     .number-tag .sub-seq {
       font-size: var(--fs-xs);
@@ -930,11 +1342,16 @@
       border-radius: var(--r-pill);
       font-size: var(--fs-xs);
       cursor: pointer;
-      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      transition: background var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out),
+        border-color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
     }
     .chip-btn:hover {
       border-color: var(--border-strong);
       color: var(--accent);
+    }
+    .chip-btn:active {
+      transform: scale(0.94);
+      transition-duration: 90ms;
     }
     .chip-btn.active {
       background: var(--accent);
@@ -998,11 +1415,17 @@
       user-select: none;
       -webkit-appearance: none;
       appearance: none;
-      transition: background 0.15s, border-color 0.15s;
+      transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
+        transform var(--dur-1) var(--ease-out);
     }
 
     .billboard-card:hover {
       background: rgba(var(--accent-rgb), 0.2);
+      transform: translateX(2px);
+    }
+    .billboard-card:active {
+      transform: translateX(2px) scale(0.98);
+      transition-duration: 90ms;
     }
 
     /* The card is the only element in the grid, so its focus ring is the sole
@@ -1066,6 +1489,7 @@
       justify-content: center;
       align-items: center;
       padding: 12px;
+      animation: fadeIn var(--dur-2) var(--ease-out);
     }
 
     .modal-box {
@@ -1080,6 +1504,7 @@
       padding: var(--sp-4);
       color: var(--text);
       box-shadow: var(--sh-3);
+      animation: riseIn var(--dur-3) var(--ease-spring);
     }
 
     .modal-header {
@@ -1366,6 +1791,91 @@
     #projectorView.transparent-mode .proj-body {
       background: transparent !important;
       box-shadow: none !important;
+    }
+
+    /* Transparent mode has to reach the toolbar too. It carries its own opaque
+       surface, so before this the "transparent background" button left a solid
+       bar across the top of an otherwise see-through screen. */
+    #projectorView.transparent-mode .proj-toolbar {
+      background: transparent !important;
+      box-shadow: none !important;
+      border-bottom-color: transparent !important;
+    }
+
+    /* Clean mode: the stage and nothing else. */
+    #projectorView.clean-mode .proj-toolbar {
+      display: none !important;
+    }
+
+    #projectorView.clean-mode .proj-vip-close {
+      display: none !important;
+    }
+
+    /* No focus ring on a screen nobody is going to click, and no hover
+       affordances either -- both are chrome. */
+    #projectorView.clean-mode :focus-visible,
+    #projectorView.clean-mode :hover {
+      outline: none !important;
+    }
+
+    /* Print / screenshot: paper has no projector chrome and no viewport-sized
+       fixed positioning, and the browser's own print header and footer are
+       turned off because they would sit on top of the numbers. */
+    @media print {
+      @page {
+        margin: 8mm;
+      }
+
+      body {
+        background: var(--stage-bg) !important;
+      }
+
+      #operatorView,
+      .proj-toolbar,
+      .toast-container,
+      .modal-backdrop,
+      #pipBarView,
+      .proj-vip-close {
+        display: none !important;
+      }
+
+      #projectorView {
+        display: flex !important;
+        position: static !important;
+        inset: auto !important;
+        height: auto !important;
+        min-height: 0 !important;
+        background: var(--stage-bg) !important;
+        z-index: auto !important;
+      }
+
+      #projectorView .proj-body {
+        background: transparent !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+      }
+
+      /* A grid that is sized for a projector collapses to a single squashed
+         column on paper, so it is reflowed to fit the sheet. */
+      #projectorView .proj-static-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        grid-auto-rows: auto !important;
+        gap: 6mm !important;
+        overflow: visible !important;
+        height: auto !important;
+      }
+
+      #projectorView .proj-grid-card,
+      #projectorView .proj-vip-num {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
 
     .proj-toolbar {
@@ -1698,11 +2208,17 @@
       cursor: pointer;
       -webkit-appearance: none;
       appearance: none;
-      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      transition: transform var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out),
+        box-shadow var(--dur-2) var(--ease-out);
     }
     .theme-swatch:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
       border-color: var(--border-strong);
+      box-shadow: var(--sh-2);
+    }
+    .theme-swatch:active {
+      transform: translateY(-1px) scale(0.98);
+      transition-duration: 90ms;
     }
     .theme-swatch:focus-visible {
       outline: 3px solid var(--accent);
@@ -1912,6 +2428,30 @@
     </div>
   </div>
 
+  <!-- Shortcut legend: the shortcuts exist, so they have to be findable -->
+  <div class="modal-backdrop" id="shortcutModal">
+    <div class="modal-box" id="shortcutModalBox" style="max-width:520px; width:94%; max-height:76vh; overflow:auto;">
+      <div class="modal-header">
+        <h3 data-i18n="shortcutTitle">键盘快捷键</h3>
+        <button class="icon-btn" onclick="toggleShortcutModal(false)" data-i18n-title="btnClose" title="Close">×</button>
+      </div>
+      <dl class="shortcut-list" id="shortcutList"></dl>
+      <button type="button" class="action-btn" style="margin-top:16px; margin-bottom:0; width:100%;" onclick="toggleShortcutModal(false)" data-i18n="btnClose">关闭</button>
+    </div>
+  </div>
+
+  <!-- Draw history: which batch of ten was drawn when, and whether it can still be taken back -->
+  <div class="modal-backdrop" id="roundModal">
+    <div class="modal-box" id="roundModalBox" style="max-width:620px; width:94%; max-height:76vh; overflow:auto;">
+      <div class="modal-header">
+        <h3 data-i18n="roundHistoryTitle">抽签批次记录 / Draw History</h3>
+        <button class="icon-btn" onclick="toggleRoundModal(false)" data-i18n-title="btnClose" title="Close">×</button>
+      </div>
+      <div id="roundList"></div>
+      <button type="button" class="action-btn" style="margin-top:16px; margin-bottom:0; width:100%;" onclick="toggleRoundModal(false)" data-i18n="btnClose">关闭</button>
+    </div>
+  </div>
+
   <!-- 4. LIVE CRISIS TOOLS MODAL -->
   <div class="modal-backdrop" id="crisisModal">
     <div class="modal-box">
@@ -1960,8 +2500,13 @@
           <span class="brand-title" id="appMainTitle" contenteditable="true" spellcheck="false" title="点击直接编辑庆典主题">
             中秋提灯节庆典 · 幸运大抽奖
           </span>
+          <!-- Must match I18N.BC.brandSub exactly. applyLanguageUI() treats a
+               subtitle that matches no dictionary value as an operator
+               override, so a hard-coded English line here pinned the subtitle
+               to English in all three languages while the title above it
+               localized correctly. -->
           <span class="brand-subtitle" id="appSubTitle" contenteditable="true" spellcheck="false" title="点击直接编辑副标题">
-            Tanglung Festival Grand Lucky Draw
+            现场大屏幕同步抽奖系统
           </span>
           <span class="build-stamp" id="buildStamp" title="Build ID &mdash; if this looks out of date, hard-reload the page"></span>
         </div>
@@ -1986,20 +2531,77 @@
           <option value="BI">English (BI)</option>
         </select>
 
-        <button class="icon-btn" onclick="toggleThemeModal(true)" id="themeBtn" data-i18n="navTheme">主题 / Theme</button>
-        <button class="icon-btn btn-sync" onclick="toggleSyncModal(true)" id="syncNavBtn" data-i18n="navSync">联机大厅</button>
-        <button class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()" data-i18n="navSuspenseOff">隐蔽模式: 关</button>
-        <button class="icon-btn btn-recycle" onclick="toggleRecycleModal(true)"><span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)</button>
-        <button class="icon-btn btn-projector" onclick="openProjectionTab()" data-i18n="navProj">大屏投影</button>
-        <button class="icon-btn" onclick="openPiPOverlay()" data-i18n="navPip">桌面悬浮条</button>
-        <button class="icon-btn" onclick="copyEmceeScript()" data-i18n="navScript">司仪口播稿</button>
-        <button class="icon-btn" onclick="toggleFairModal(true)" data-i18n="fairOpen">驗證公平</button>
-        <button class="icon-btn" onclick="toggleCrisisModal(true)" data-i18n="navCrisis" id="crisisBtn">应急</button>
-        <button class="icon-btn" onclick="testSound()" data-i18n="navTestSound">试音</button>
-        <button class="icon-btn" id="soundBtn" onclick="toggleSound()" data-i18n="navSoundOn">音效: 开</button>
-        <button class="icon-btn" onclick="toggleFullScreen()" data-i18n="navFullscreen">⛶ 全屏</button>
-        <button class="icon-btn" onclick="exportCSV()">CSV</button>
-        <button class="icon-btn btn-danger" onclick="resetAll()" data-i18n="navReset" id="resetBtn">↺ 重置</button>
+        <!-- Six controls stay on the bar. These are the ones an operator
+             reaches for while a draw is in progress, so putting them behind a
+             menu would add a click to the moments that cannot afford one.
+             Everything else is a setup or a recovery action and lives in the
+             overflow menu below. -->
+        <button type="button" class="icon-btn btn-sync" id="syncNavBtn" onclick="toggleSyncModal(true)">
+          <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg><span data-i18n="navSync">联机大厅</span>
+        </button>
+        <button type="button" class="icon-btn btn-suspense" id="suspenseBtn" onclick="toggleSuspenseMode()">
+          <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg><span id="suspenseLabel" data-i18n="navSuspenseOff">隐蔽模式: 关</span>
+        </button>
+        <button type="button" class="icon-btn btn-projector" onclick="openProjectionTab()">
+          <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span data-i18n="navProj">大屏投影</span>
+        </button>
+        <button type="button" class="icon-btn" onclick="openPiPOverlay()">
+          <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></svg><span data-i18n="navPip">桌面悬浮条</span>
+        </button>
+        <button type="button" class="icon-btn" onclick="toggleFullScreen()">
+          <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><span data-i18n="navFullscreen">全屏</span>
+        </button>
+
+        <!-- The overflow menu. The buttons are the same elements that used to
+             sit here, moved rather than rewritten, so every id, handler and
+             i18n key they depend on still resolves unchanged. -->
+        <div class="more-menu" id="moreMenu">
+          <button type="button" class="icon-btn more-menu-trigger" id="moreMenuBtn"
+                  aria-haspopup="true" aria-expanded="false" aria-controls="moreMenuPanel"
+                  data-i18n-title="navMore" data-i18n-aria-label="navMore"
+                  title="更多" aria-label="更多"
+                  onclick="toggleMoreMenu()">
+            <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span class="visually-hidden" data-i18n="navMore">更多</span>
+          </button>
+          <div class="more-menu-panel" id="moreMenuPanel" aria-labelledby="moreMenuBtn" hidden>
+            <button type="button" class="icon-btn more-menu-item" id="themeBtn" onclick="toggleThemeModal(true)">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 2.7 6.34 8.36a8 8 0 1 0 11.32 0Z"/></svg><span data-i18n="navTheme">主题 / Theme</span>
+            </button>
+            <button type="button" class="icon-btn more-menu-item btn-recycle" onclick="toggleRecycleModal(true)">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg><span data-i18n="navRecycle">回收站</span> (<span id="recycleBtnCount">0</span>)
+            </button>
+            <button type="button" class="icon-btn more-menu-item" onclick="copyEmceeScript()">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span data-i18n="navScript">司仪口播稿</span>
+            </button>
+            <button type="button" class="icon-btn more-menu-item" onclick="toggleFairModal(true)">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg><span data-i18n="fairOpen">驗證公平</span>
+            </button>
+            <button type="button" class="icon-btn more-menu-item" onclick="toggleCrisisModal(true)" id="crisisBtn">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10.29 3.86 2.11 17.86A2 2 0 0 0 3.83 21h16.34a2 2 0 0 0 1.72-3.14l-8.18-14a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg><span data-i18n="navCrisis">应急</span>
+            </button>
+            <div class="more-menu-sep" aria-hidden="true"></div>
+            <button type="button" class="icon-btn more-menu-item" onclick="testSound()">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 4.9a10 10 0 0 1 0 14.2"/></svg><span data-i18n="navTestSound">试音</span>
+            </button>
+            <button type="button" class="icon-btn more-menu-item" id="soundBtn" onclick="toggleSound()">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H2v6h4l5 4Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg><span id="soundLabel" data-i18n="navSoundOn">音效: 开</span>
+            </button>
+            <button type="button" class="icon-btn more-menu-item" onclick="exportCSV()">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5M12 15V3"/></svg><span>CSV</span>
+            </button>
+            <div class="more-menu-sep" aria-hidden="true"></div>
+            <button type="button" class="icon-btn more-menu-item" id="shortcutHelpBtn" onclick="toggleShortcutModal(true)">
+              <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M9 13h6M8 16.5h8"/></svg><span data-i18n="navShortcuts">快捷键</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Reset stays out of the menu on purpose: it is the one control that
+             must never be one stray click away, and it is the only one that
+             always asks before acting. -->
+        <button type="button" class="icon-btn btn-danger" id="resetBtn" onclick="resetAll()">
+          <svg class="icon-glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 2v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L3 8"/></svg><span data-i18n="navReset">重置</span>
+        </button>
       </div>
     </div>
 
@@ -2011,8 +2613,13 @@
           当前环节：幸运安慰奖抽取
         </div>
 
+        <!-- The draw result is announced here, as one sentence. Marking the
+             grid itself as a live region would read out all ten cards, one
+             after another, on top of the toast. -->
+        <div class="visually-hidden" id="drawAnnounce" role="status" aria-live="polite" aria-atomic="true"></div>
+
         <div class="tab-group" id="tabGroupEl">
-          <button class="tab-btn active" id="tabBatchBtn" onclick="switchTab('batch')" data-i18n="tabBatch">十连抽模式 (10 Slots)</button>
+          <button class="tab-btn active" id="tabBatchBtn" aria-current="true" onclick="switchTab('batch')" data-i18n="tabBatch">十连抽模式 (10 Slots)</button>
           <button class="tab-btn" id="tabVipBtn" onclick="switchTab('vip')" data-i18n="tabVip">贵宾大奖台 (VIP Slot)</button>
           <button class="tab-btn" id="tabManualBtn" onclick="switchTab('manual')" data-i18n="tabManual">手动录入 / 补抽 (Manual)</button>
         </div>
@@ -2025,6 +2632,7 @@
               点击上方按钮同时抽出 10 个幸运号码
             </div>
           </div>
+          <div class="batch-actions" id="batchActions"></div>
         </div>
 
         <!-- Mode 2: VIP Single Picker -->
@@ -2113,6 +2721,7 @@
       <div class="proj-title" id="projHeaderTitle">实时中奖大屏幕投影</div>
       <div class="proj-btn-group">
         <button class="icon-btn" id="projBgBtn" onclick="toggleProjTransparent()" data-i18n="btnToggleBgTrans">背景: 全彩纯黑</button>
+        <button class="icon-btn" id="projCleanBtn" onclick="toggleProjClean()" data-i18n="btnProjClean">纯净画面</button>
         <button class="icon-btn" onclick="toggleProjTimer()" data-i18n="projTimerBtn">领奖倒计时</button>
         <span class="proj-timer-chip" id="projTimerChip">
           <span class="proj-timer-digits-inline" id="projTimerDigits">05:00</span>
@@ -2171,12 +2780,27 @@
     let poolStart = 1001;
     let poolEnd = 3000;
     const STORAGE_KEY = "tanglung_stage_v39_realtime";
+    /* Language and theme are also written to their own tiny key, and read from
+       it before the first paint. The full state blob already carries both, but
+       it is written by the host AFTER the app has drawn, so a projection
+       window or a reloaded tablet shows a flash of the default Chinese/indigo
+       before the operator's chosen language and theme arrive. Two hundred bytes
+       of localStorage remove the flash without waiting for the network. */
+    const PREFS_KEY = "tanglung_display_prefs";
     const VIP_ROLL_TTL = 30000;
 
     let winners = [];
     let claimedWinners = [];
     let recycleBin = [];
     let voidAuditLogs = [];
+    /* One entry per drawTen() call, so a batch can be taken back as a unit.
+       This is deliberately a PARALLEL array rather than metadata hung off
+       `winners`: winners is a flat string[] that sanitizeList() dedupes and
+       strips back to 4-digit strings on every load, so anything attached to an
+       element there would be discarded the next time the state round-trips.
+       Entries hold only the ticket strings plus where they sat. */
+    let drawRounds = [];
+    let drawRoundSeq = 0;
     let isRolling = false;
     let rollTimer = null;
     let vipRollStartTs = 0;
@@ -2184,7 +2808,10 @@
     let appliedVipRollKey = null;
     // Projection-local only: never synced, never persisted. A VIP number stays on
     // the big screen until an operator closes it here, and the next draw reopens it.
+    // Same for clean mode: whether the projector is being photographed or driven
+    // live is a property of that one screen, not of the draw.
     let vipSlotDismissed = false;
+    let projClean = false;
     let soundOn = true;
     let currentFontSize = 1.35;
 
@@ -2242,6 +2869,28 @@
         themeLabel: "主题",
         themeGroupLight: "淺色主題 · Light",
         themeGroupDark: "深色主題 · Dark",
+        themeGroupFest: "節慶主題 · Festivals",
+        exitConfirm: "抽签进行中，确认离开？",
+        exitConfirmTitle: "确认离开？",
+        exitConfirmBody: "本次抽签尚未完成，还有未保存的工作。离开页面会丢失当前状态。",
+        exitConfirmLeave: "仍要离开",
+        btnProjClean: "纯净画面",
+        btnProjCleanExit: "退出纯净",
+        navShortcuts: "快捷键",
+        shortcutTitle: "键盘快捷键",
+        shortcutLegend: "打开/关闭本列表",
+        shortcutLegendAlt: "打开/关闭本列表",
+        shortcutDismiss: "关闭当前弹窗或菜单",
+        shortcutEnter: "确认手动录入 / 打开票号",
+        shortcutMenuNav: "在更多菜单中上下移动",
+        festChineseNewYear: "农历新年",
+        festTanglung: "唐流失 · 中秋节",
+        festHariRaya: "开斋节",
+        festDeepavali: "屠妖节",
+        festGawai: "丰收节 · 达雅节",
+        festChristmas: "圣诞节",
+        festVesakDay: "佛诞",
+        festThaipusam: "大宝森节",
         themeModeLight: "淺色",
         themeModeDark: "深色",
         themeTitle: "节日主题配色 / Festival Theme",
@@ -2256,6 +2905,7 @@
         navTestSound: "试音",
         navSoundOn: "音效: 开",
         navSoundOff: "音效: 关",
+        navMore: "更多",
         navFullscreen: "全屏",
         navReset: "重置",
         fairTitle: "抽獎可驗證性",
@@ -2285,6 +2935,24 @@
         onBlacklist: "{n} 位於作廢／黑名單中，請先從回收站復原。",
         clipboardBlocked: "無法存取剪貼簿，請手動複製",
         ticketAdded: "已加入票號 #{n}。",
+        announceDrawn: "已抽出 {n} 位幸运儿：{list}。",
+        announceVip: "贵宾号码：{n}。",
+        announceSingle: "已抽出票號 #{n}。",
+        batchDrawn: "已成功抽出 {n} 位幸运儿！",
+        batchNoRound: "尚无抽签批次记录",
+        batchRoundOf: "本批号码",
+        batchRoundStale: "该批次已被后续操作修改，无法整批重抽",
+        btnRedrawBatch: "整批重抽",
+        btnBatchHistory: "历史记录",
+        roundHistoryTitle: "抽签批次记录",
+        roundCount: "{n} 个号码",
+        redrawBatchTitle: "整批重抽确认",
+        redrawBatchBody: "将把这 {n} 个号码退回奖池并重新抽出：{list}。已领取的奖品会被释放，此操作可用「撤销」恢复。",
+        redrawBatchDone: "已整批退回，正在重新抽取…",
+        redrawBatchPending: "重抽中",
+        undoNothingToDo: "该号码已不在名单中，无需撤销",
+        undoStale: "名单已变动，无法撤销上一次录入",
+        manualEntryUndone: "已撤销票號 #{n} 的手动录入",
         fairCopy: "複製紀錄",
         fairCopied: "驗證紀錄已複製。",
         fairClosed: "已關閉驗證視窗。",
@@ -2440,6 +3108,28 @@
         themeLabel: "Tema",
         themeGroupLight: "Tema Cerah · Light",
         themeGroupDark: "Tema Gelap · Dark",
+        themeGroupFest: "Tema Festivals",
+        exitConfirm: "Undian sedang berjalan. Sahkan keluar?",
+        exitConfirmTitle: "Sahkan keluar?",
+        exitConfirmBody: "Undian ini belum selesai dan ada kerja belum disimpan. Meninggalkan halaman ini akan hilang keadaan semasa.",
+        exitConfirmLeave: "Keluar sahaja",
+        btnProjClean: "Paparan Bersih",
+        btnProjCleanExit: "Keluar Bersih",
+        navShortcuts: "Pintasan",
+        shortcutTitle: "Pintasan Papan Kekunci",
+        shortcutLegend: "Buka/tutup senarai ini",
+        shortcutLegendAlt: "Buka/tutup senarai ini",
+        shortcutDismiss: "Tutup-dialog atau menu semasa",
+        shortcutEnter: "Sahkan masuk manual / buka tiket",
+        shortcutMenuNav: "Bergerak atas/bawah dalam menu",
+        festChineseNewYear: "Tahun Baru Cina",
+        festTanglung: "Tanglung / Mid-Autumn",
+        festHariRaya: "Hari Raya",
+        festDeepavali: "Deepavali",
+        festGawai: "Gawai",
+        festChristmas: "Krismas",
+        festVesakDay: "Vesak Day",
+        festThaipusam: "Thaipusam",
         themeModeLight: "Cerah",
         themeModeDark: "Gelap",
         themeTitle: "Tema Festival / Festival Theme",
@@ -2454,6 +3144,7 @@
         navTestSound: "Uji Bunyi",
         navSoundOn: "Bunyi: Hidup",
         navSoundOff: "Bunyi: Bisu",
+        navMore: "Lagi",
         navFullscreen: "Skrin Penuh",
         navReset: "Tetapkan Semula",
         fairTitle: "Keadilinan undian",
@@ -2483,6 +3174,24 @@
         onBlacklist: "{n} ada dalam senarai dibatalkan / blacklist — pulihkannya daripada tong kitar semula dahulu.",
         clipboardBlocked: "Papan keratan tidak boleh diakses, sila salin secara manual",
         ticketAdded: "Nombor tiket #{n} telah ditambah.",
+        announceDrawn: "{n} pemenang telah dicabut: {list}.",
+        announceVip: "Nombor VIP: {n}.",
+        announceSingle: "Tiket #{n} telah dicabut.",
+        batchDrawn: "{n} Pemenang berjaya dicabut!",
+        batchNoRound: "Belum ada rekodUndian",
+        batchRoundOf: "Kumpulan ini",
+        batchRoundStale: "Kumpulan ini telah diubah oleh operasi kemudian dan tidak boleh dicabut semula",
+        btnRedrawBatch: "Cabut Semula",
+        btnBatchHistory: "Sejarah",
+        roundHistoryTitle: "Rekod Undian",
+        roundCount: "{n} nombor",
+        redrawBatchTitle: "Sahkan Cabut Semula",
+        redrawBatchBody: "整整 {n} nombor ini akan dikembalikan ke kolam dan dicabut semula: {list}. Hadiah yang sudah dituntut akan dilepaskan; tindakan ini boleh dibatalkan.",
+        redrawBatchDone: "Kumpulan dikembalikan, sedang mencabut semula…",
+        redrawBatchPending: "Cabut semula",
+        undoNothingToDo: "Nombor itu tiada lagi dalam senarai",
+        undoStale: "Senarai telah berubah, tidak boleh membatalkanemasukan terakhir",
+        manualEntryUndone: "Masukan manual tiket #{n} telah dibatalkan",
         fairCopy: "Salin rekod",
         fairCopied: "Rekod pengesahan disalin.",
         fairClosed: "Tetingkap pengesahan ditutup.",
@@ -2638,6 +3347,28 @@
         themeLabel: "Theme",
         themeGroupLight: "Light themes",
         themeGroupDark: "Dark themes",
+        themeGroupFest: "Festival themes",
+        exitConfirm: "Draw in progress. Confirm exit?",
+        exitConfirmTitle: "Confirm exit?",
+        exitConfirmBody: "This draw is not finished and there is unsaved work. Leaving the page will lose the current state.",
+        exitConfirmLeave: "Leave anyway",
+        btnProjClean: "Clean View",
+        btnProjCleanExit: "Exit Clean View",
+        navShortcuts: "Shortcuts",
+        shortcutTitle: "Keyboard shortcuts",
+        shortcutLegend: "Open/close this list",
+        shortcutLegendAlt: "Open/close this list",
+        shortcutDismiss: "Dismiss the open dialog or menu",
+        shortcutEnter: "Confirm manual entry / open a ticket",
+        shortcutMenuNav: "Move up/down the More menu",
+        festChineseNewYear: "Chinese New Year",
+        festTanglung: "Tanglung / Mid-Autumn",
+        festHariRaya: "Hari Raya",
+        festDeepavali: "Deepavali",
+        festGawai: "Gawai",
+        festChristmas: "Christmas",
+        festVesakDay: "Vesak Day",
+        festThaipusam: "Thaipusam",
         themeModeLight: "Light",
         themeModeDark: "Dark",
         themeTitle: "Festival Theme / Festival Theme",
@@ -2652,6 +3383,7 @@
         navTestSound: "Test Sound",
         navSoundOn: "Audio: On",
         navSoundOff: "Audio: Muted",
+        navMore: "More",
         navFullscreen: "Fullscreen",
         navReset: "Reset All",
         fairTitle: "Draw verifiability",
@@ -2681,6 +3413,24 @@
         onBlacklist: "{n} is on the void / blacklist list — restore it from the recycle bin first.",
         clipboardBlocked: "The clipboard is not available; please copy manually",
         ticketAdded: "Ticket #{n} added.",
+        announceDrawn: "{n} winners drawn: {list}.",
+        announceVip: "VIP number: {n}.",
+        announceSingle: "Ticket #{n} drawn.",
+        batchDrawn: "{n} Winners Drawn!",
+        batchNoRound: "No draws recorded yet",
+        batchRoundOf: "This batch",
+        batchRoundStale: "This batch was changed by a later action and can no longer be re-drawn as one",
+        btnRedrawBatch: "Re-draw Batch",
+        btnBatchHistory: "History",
+        roundHistoryTitle: "Draw History",
+        roundCount: "{n} numbers",
+        redrawBatchTitle: "Re-draw this batch?",
+        redrawBatchBody: "{n} numbers go back into the pool and are drawn again: {list}. Any prize already claimed is released. This can be undone.",
+        redrawBatchDone: "Batch returned to the pool, re-drawing…",
+        redrawBatchPending: "Re-drawing",
+        undoNothingToDo: "That number is no longer on the list",
+        undoStale: "The list has changed since that entry, so it cannot be undone",
+        manualEntryUndone: "Manual entry for ticket #{n} undone",
         fairCopy: "Copy record",
         fairCopied: "Verification record copied.",
         fairClosed: "Verification window closed.",
@@ -2822,221 +3572,413 @@
         mode: "light",
         name: "靛藍 · Indigo",
         colors: {
-          '--accent': '#4f46e5', '--accent-rgb': '79, 70, 229',
+          '--accent': '#4f54e2', '--accent-rgb': '79, 84, 226',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#3f38b7', '--accent-strong-rgb': '63, 56, 183',
-          '--accent-deep': '#36309c',
-          '--accent-bright': '#9e99f1', '--accent-bright-rgb': '158, 153, 241'
+          '--accent-strong': '#362ebc', '--accent-strong-rgb': '54, 46, 188',
+          '--accent-deep': '#2a10a6',
+          '--accent-bright': '#a6b5ff', '--accent-bright-rgb': '166, 181, 255'
         }
       },
       blue: {
         mode: "light",
         name: "寶石藍 · Blue",
         colors: {
-          '--accent': '#2563eb', '--accent-rgb': '37, 99, 235',
+          '--accent': '#006cc4', '--accent-rgb': '0, 108, 196',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#1e4fbc', '--accent-strong-rgb': '30, 79, 188',
-          '--accent-deep': '#1943a0',
-          '--accent-bright': '#87a9f4', '--accent-bright-rgb': '135, 169, 244'
+          '--accent-strong': '#004d8f', '--accent-strong-rgb': '0, 77, 143',
+          '--accent-deep': '#003c72',
+          '--accent-bright': '#86bfff', '--accent-bright-rgb': '134, 191, 255'
         }
       },
       sky: {
         mode: "light",
         name: "晴空 · Sky",
         colors: {
-          '--accent': '#0275b0', '--accent-rgb': '2, 117, 176',
+          '--accent': '#00769f', '--accent-rgb': '0, 118, 159',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#015d8d', '--accent-strong-rgb': '1, 93, 141',
-          '--accent-deep': '#014f78',
-          '--accent-bright': '#74b3d4', '--accent-bright-rgb': '116, 179, 212'
+          '--accent-strong': '#005474', '--accent-strong-rgb': '0, 84, 116',
+          '--accent-deep': '#00425b',
+          '--accent-bright': '#54c9ff', '--accent-bright-rgb': '84, 201, 255'
         }
       },
       cyan: {
         mode: "light",
         name: "青藍 · Cyan",
         colors: {
-          '--accent': '#0e7490', '--accent-rgb': '14, 116, 144',
+          '--accent': '#00798e', '--accent-rgb': '0, 121, 142',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#0b5d73', '--accent-strong-rgb': '11, 93, 115',
-          '--accent-deep': '#0a4f62',
-          '--accent-bright': '#7ab3c2', '--accent-bright-rgb': '122, 179, 194'
+          '--accent-strong': '#005766', '--accent-strong-rgb': '0, 87, 102',
+          '--accent-deep': '#004450',
+          '--accent-bright': '#00d0f2', '--accent-bright-rgb': '0, 208, 242'
         }
       },
       teal: {
         mode: "light",
         name: "松綠 · Teal",
         colors: {
-          '--accent': '#0f766e', '--accent-rgb': '15, 118, 110',
+          '--accent': '#007c7c', '--accent-rgb': '0, 124, 124',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#0c5e58', '--accent-strong-rgb': '12, 94, 88',
-          '--accent-deep': '#0a504b',
-          '--accent-bright': '#7bb4af', '--accent-bright-rgb': '123, 180, 175'
+          '--accent-strong': '#005959', '--accent-strong-rgb': '0, 89, 89',
+          '--accent-deep': '#004646',
+          '--accent-bright': '#00d5d5', '--accent-bright-rgb': '0, 213, 213'
         }
       },
       emerald: {
         mode: "light",
         name: "翡翠 · Emerald",
         colors: {
-          '--accent': '#047857', '--accent-rgb': '4, 120, 87',
+          '--accent': '#00805b', '--accent-rgb': '0, 128, 91',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#036046', '--accent-strong-rgb': '3, 96, 70',
-          '--accent-deep': '#03523b',
-          '--accent-bright': '#75b5a3', '--accent-bright-rgb': '117, 181, 163'
+          '--accent-strong': '#005c41', '--accent-strong-rgb': '0, 92, 65',
+          '--accent-deep': '#004832',
+          '--accent-bright': '#00dba0', '--accent-bright-rgb': '0, 219, 160'
         }
       },
       green: {
         mode: "light",
         name: "草綠 · Green",
         colors: {
-          '--accent': '#4d7c0f', '--accent-rgb': '77, 124, 15',
+          '--accent': '#008232', '--accent-rgb': '0, 130, 50',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#3e630c', '--accent-strong-rgb': '62, 99, 12',
-          '--accent-deep': '#34540a',
-          '--accent-bright': '#9db77b', '--accent-bright-rgb': '157, 183, 123'
+          '--accent-strong': '#005e21', '--accent-strong-rgb': '0, 94, 33',
+          '--accent-deep': '#004a18',
+          '--accent-bright': '#45dc6b', '--accent-bright-rgb': '69, 220, 107'
         }
       },
       lime: {
         mode: "light",
         name: "橄欖 · Lime",
         colors: {
-          '--accent': '#4d7c0a', '--accent-rgb': '77, 124, 10',
+          '--accent': '#547a00', '--accent-rgb': '84, 122, 0',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#3d6308', '--accent-strong-rgb': '61, 99, 8',
-          '--accent-deep': '#345407',
-          '--accent-bright': '#9db778', '--accent-bright-rgb': '157, 183, 120'
+          '--accent-strong': '#3b5800', '--accent-strong-rgb': '59, 88, 0',
+          '--accent-deep': '#2d4400',
+          '--accent-bright': '#93d200', '--accent-bright-rgb': '147, 210, 0'
         }
       },
       amber: {
         mode: "light",
         name: "琥珀 · Amber",
         colors: {
-          '--accent': '#b45309', '--accent-rgb': '180, 83, 9',
+          '--accent': '#916100', '--accent-rgb': '145, 97, 0',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#904207', '--accent-strong-rgb': '144, 66, 7',
-          '--accent-deep': '#7a3806',
-          '--accent-bright': '#d6a078', '--accent-bright-rgb': '214, 160, 120'
+          '--accent-strong': '#694500', '--accent-strong-rgb': '105, 69, 0',
+          '--accent-deep': '#533500',
+          '--accent-bright': '#f8a800', '--accent-bright-rgb': '248, 168, 0'
         }
       },
       orange: {
         mode: "light",
         name: "橘橙 · Orange",
         colors: {
-          '--accent': '#c2410c', '--accent-rgb': '194, 65, 12',
+          '--accent': '#a75000', '--accent-rgb': '167, 80, 0',
           '--accent-contrast': '#ffffff',
-          '--accent-strong': '#9b340a', '--accent-strong-rgb': '155, 52, 10',
-          '--accent-deep': '#842c08',
-          '--accent-bright': '#dd9779', '--accent-bright-rgb': '221, 151, 121'
+          '--accent-strong': '#7a3800', '--accent-strong-rgb': '122, 56, 0',
+          '--accent-deep': '#602a00',
+          '--accent-bright': '#ffa063', '--accent-bright-rgb': '255, 160, 99'
         }
       },
       red: {
         mode: "dark",
         name: "正紅 · Red",
         colors: {
-          '--accent': '#f87171', '--accent-rgb': '248, 113, 113',
+          '--accent': '#ff6459', '--accent-rgb': '255, 100, 89',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#f98282', '--accent-strong-rgb': '249, 130, 130',
-          '--accent-deep': '#e96a6a',
-          '--accent-bright': '#f97c7c', '--accent-bright-rgb': '249, 124, 124'
+          '--accent-strong': '#ff988d', '--accent-strong-rgb': '255, 152, 141',
+          '--accent-deep': '#ec3f3a',
+          '--accent-bright': '#ffa398', '--accent-bright-rgb': '255, 163, 152'
         }
       },
       rose: {
         mode: "dark",
         name: "玫紅 · Rose",
         colors: {
-          '--accent': '#fb7185', '--accent-rgb': '251, 113, 133',
+          '--accent': '#ff5c87', '--accent-rgb': '255, 92, 135',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#fb8294', '--accent-strong-rgb': '251, 130, 148',
-          '--accent-deep': '#ec6a7d',
-          '--accent-bright': '#fb7c8f', '--accent-bright-rgb': '251, 124, 143'
+          '--accent-strong': '#ff94a9', '--accent-strong-rgb': '255, 148, 169',
+          '--accent-deep': '#e83b6f',
+          '--accent-bright': '#ff9fb1', '--accent-bright-rgb': '255, 159, 177'
         }
       },
       pink: {
         mode: "dark",
         name: "桃粉 · Pink",
         colors: {
-          '--accent': '#f472b6', '--accent-rgb': '244, 114, 182',
+          '--accent': '#f85ab0', '--accent-rgb': '248, 90, 176',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#f583bf', '--accent-strong-rgb': '245, 131, 191',
-          '--accent-deep': '#e56bab',
-          '--accent-bright': '#f57dbc', '--accent-bright-rgb': '245, 125, 188'
+          '--accent-strong': '#ff8fc6', '--accent-strong-rgb': '255, 143, 198',
+          '--accent-deep': '#dd4099',
+          '--accent-bright': '#ff9bcb', '--accent-bright-rgb': '255, 155, 203'
         }
       },
       fuchsia: {
         mode: "dark",
         name: "紫紅 · Fuchsia",
         colors: {
-          '--accent': '#e879f9', '--accent-rgb': '232, 121, 249',
+          '--accent': '#e065df', '--accent-rgb': '224, 101, 223',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#eb89fa', '--accent-strong-rgb': '235, 137, 250',
-          '--accent-deep': '#da72ea',
-          '--accent-bright': '#ea84f9', '--accent-bright-rgb': '234, 132, 249'
+          '--accent-strong': '#fe81fc', '--accent-strong-rgb': '254, 129, 252',
+          '--accent-deep': '#c74cc6',
+          '--accent-bright': '#ff8efc', '--accent-bright-rgb': '255, 142, 252'
         }
       },
       purple: {
         mode: "dark",
         name: "葡萄紫 · Purple",
         colors: {
-          '--accent': '#c084fc', '--accent-rgb': '192, 132, 252',
+          '--accent': '#bc78ff', '--accent-rgb': '188, 120, 255',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#c893fc', '--accent-strong-rgb': '200, 147, 252',
-          '--accent-deep': '#b47ced',
-          '--accent-bright': '#c58efc', '--accent-bright-rgb': '197, 142, 252'
+          '--accent-strong': '#cda2ff', '--accent-strong-rgb': '205, 162, 255',
+          '--accent-deep': '#a65ceb',
+          '--accent-bright': '#d2abff', '--accent-bright-rgb': '210, 171, 255'
         }
       },
       violet: {
         mode: "dark",
         name: "靛紫 · Violet",
         colors: {
-          '--accent': '#a78bfa', '--accent-rgb': '167, 139, 250',
+          '--accent': '#9b8aff', '--accent-rgb': '155, 138, 255',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#b299fb', '--accent-strong-rgb': '178, 153, 251',
-          '--accent-deep': '#9d83eb',
-          '--accent-bright': '#ae94fa', '--accent-bright-rgb': '174, 148, 250'
+          '--accent-strong': '#b5adff', '--accent-strong-rgb': '181, 173, 255',
+          '--accent-deep': '#8669fc',
+          '--accent-bright': '#bcb5ff', '--accent-bright-rgb': '188, 181, 255'
         }
       },
       slate: {
         mode: "dark",
         name: "石板藍 · Slate",
         colors: {
-          '--accent': '#93c5fd', '--accent-rgb': '147, 197, 253',
+          '--accent': '#48a4f5', '--accent-rgb': '72, 164, 245',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#a0ccfd', '--accent-strong-rgb': '160, 204, 253',
-          '--accent-deep': '#8ab9ee',
-          '--accent-bright': '#9ccafd', '--accent-bright-rgb': '156, 202, 253'
+          '--accent-strong': '#7bbfff', '--accent-strong-rgb': '123, 191, 255',
+          '--accent-deep': '#2d8ddb',
+          '--accent-bright': '#89c5ff', '--accent-bright-rgb': '137, 197, 255'
         }
       },
       graphite: {
         mode: "dark",
         name: "石墨 · Graphite",
         colors: {
-          '--accent': '#cbd5e1', '--accent-rgb': '203, 213, 225',
+          '--accent': '#90a1b0', '--accent-rgb': '144, 161, 176',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#d1dae5', '--accent-strong-rgb': '209, 218, 229',
-          '--accent-deep': '#bfc8d4',
-          '--accent-bright': '#cfd8e3', '--accent-bright-rgb': '207, 216, 227'
+          '--accent-strong': '#aabbcb', '--accent-strong-rgb': '170, 187, 203',
+          '--accent-deep': '#798a99',
+          '--accent-bright': '#b0c2d1', '--accent-bright-rgb': '176, 194, 209'
         }
       },
       steel: {
         mode: "dark",
         name: "鋼青 · Steel",
         colors: {
-          '--accent': '#67e8f9', '--accent-rgb': '103, 232, 249',
+          '--accent': '#3eacd7', '--accent-rgb': '62, 172, 215',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#79ebfa', '--accent-strong-rgb': '121, 235, 250',
-          '--accent-deep': '#61daea',
-          '--accent-bright': '#73eaf9', '--accent-bright-rgb': '115, 234, 249'
+          '--accent-strong': '#5dc7f3', '--accent-strong-rgb': '93, 199, 243',
+          '--accent-deep': '#1c94be',
+          '--accent-bright': '#64cefa', '--accent-bright-rgb': '100, 206, 250'
         }
       },
       mocha: {
         mode: "dark",
         name: "摩卡 · Mocha",
         colors: {
-          '--accent': '#e3b778', '--accent-rgb': '227, 183, 120',
+          '--accent': '#c89251', '--accent-rgb': '200, 146, 81',
           '--accent-contrast': '#0b0d10',
-          '--accent-strong': '#e6c088', '--accent-strong-rgb': '230, 192, 136',
-          '--accent-deep': '#d5ac71',
-          '--accent-bright': '#e5bd83', '--accent-bright-rgb': '229, 189, 131'
+          '--accent-strong': '#e4ad6c', '--accent-strong-rgb': '228, 173, 108',
+          '--accent-deep': '#b07c39',
+          '--accent-bright': '#ebb372', '--accent-bright-rgb': '235, 179, 114'
         }
+      },
+      cnyRed: {
+        mode: "light",
+        name: "新春红 · CNY Red",
+        colors: {
+          '--accent': '#cc000c', '--accent-rgb': '204, 0, 12',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#970006', '--accent-strong-rgb': '151, 0, 6',
+          '--accent-deep': '#780003',
+          '--accent-bright': '#ff9386', '--accent-bright-rgb': '255, 147, 134'
+        },
+        fest: "chineseNewYear"
+      },
+      cnyNight: {
+        mode: "dark",
+        name: "新春夜 · CNY Night",
+        colors: {
+          '--accent': '#f24e56', '--accent-rgb': '242, 78, 86',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#ff7d7d', '--accent-strong-rgb': '255, 125, 125',
+          '--accent-deep': '#e7444d',
+          '--accent-bright': '#ff8987', '--accent-bright-rgb': '255, 137, 135'
+        },
+        fest: "chineseNewYear"
+      },
+      tanglung: {
+        mode: "light",
+        name: "提灯金 · Tanglung",
+        colors: {
+          '--accent': '#846600', '--accent-rgb': '132, 102, 0',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#614900', '--accent-strong-rgb': '97, 73, 0',
+          '--accent-deep': '#4c3900',
+          '--accent-bright': '#dead00', '--accent-bright-rgb': '222, 173, 0'
+        },
+        fest: "tanglung"
+      },
+      tanglungNight: {
+        mode: "dark",
+        name: "月夜 · Moonlit",
+        colors: {
+          '--accent': '#b88500', '--accent-rgb': '184, 133, 0',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#d89e00', '--accent-strong-rgb': '216, 158, 0',
+          '--accent-deep': '#ac7d00',
+          '--accent-bright': '#e0a400', '--accent-bright-rgb': '224, 164, 0'
+        },
+        fest: "tanglung"
+      },
+      hariRaya: {
+        mode: "light",
+        name: "斋节青 · Hari Raya",
+        colors: {
+          '--accent': '#00786f', '--accent-rgb': '0, 120, 111',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#005750', '--accent-strong-rgb': '0, 87, 80',
+          '--accent-deep': '#00433e',
+          '--accent-bright': '#00ccbe', '--accent-bright-rgb': '0, 204, 190'
+        },
+        fest: "hariRaya"
+      },
+      hariRayaNight: {
+        mode: "dark",
+        name: "斋夜 · Raya Night",
+        colors: {
+          '--accent': '#00a39d', '--accent-rgb': '0, 163, 157',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#1dc0b9', '--accent-strong-rgb': '29, 192, 185',
+          '--accent-deep': '#009993',
+          '--accent-bright': '#2bc6bf', '--accent-bright-rgb': '43, 198, 191'
+        },
+        fest: "hariRaya"
+      },
+      deepavali: {
+        mode: "light",
+        name: "灯节紫 · Deepavali",
+        colors: {
+          '--accent': '#8254c3', '--accent-rgb': '130, 84, 195',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#6434a1', '--accent-strong-rgb': '100, 52, 161',
+          '--accent-deep': '#531e8c',
+          '--accent-bright': '#c8aaff', '--accent-bright-rgb': '200, 170, 255'
+        },
+        fest: "deepavali"
+      },
+      deepavaliNight: {
+        mode: "dark",
+        name: "灯火夜 · Deepavali Night",
+        colors: {
+          '--accent': '#b477d8', '--accent-rgb': '180, 119, 216',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#cf91f4', '--accent-strong-rgb': '207, 145, 244',
+          '--accent-deep': '#ab6ece',
+          '--accent-bright': '#d698fb', '--accent-bright-rgb': '214, 152, 251'
+        },
+        fest: "deepavali"
+      },
+      gawai: {
+        mode: "light",
+        name: "丰收橙 · Gawai",
+        colors: {
+          '--accent': '#ae4c00', '--accent-rgb': '174, 76, 0',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#813600', '--accent-strong-rgb': '129, 54, 0',
+          '--accent-deep': '#672900',
+          '--accent-bright': '#ff9a64', '--accent-bright-rgb': '255, 154, 100'
+        },
+        fest: "gawai"
+      },
+      gawaiNight: {
+        mode: "dark",
+        name: "竹夜 · Gawai Night",
+        colors: {
+          '--accent': '#e5602b', '--accent-rgb': '229, 96, 43',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#ff7f51', '--accent-strong-rgb': '255, 127, 81',
+          '--accent-deep': '#db561f',
+          '--accent-bright': '#ff8b61', '--accent-bright-rgb': '255, 139, 97'
+        },
+        fest: "gawai"
+      },
+      christmas: {
+        mode: "light",
+        name: "冬青绿 · Christmas",
+        colors: {
+          '--accent': '#008131', '--accent-rgb': '0, 129, 49',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#005e21', '--accent-strong-rgb': '0, 94, 33',
+          '--accent-deep': '#004a18',
+          '--accent-bright': '#58d172', '--accent-bright-rgb': '88, 209, 114'
+        },
+        fest: "christmas"
+      },
+      christmasNight: {
+        mode: "dark",
+        name: "雪夜 · Christmas Night",
+        colors: {
+          '--accent': '#40a84a', '--accent-rgb': '64, 168, 74',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#5dc364', '--accent-strong-rgb': '93, 195, 100',
+          '--accent-deep': '#359f41',
+          '--accent-bright': '#64ca6a', '--accent-bright-rgb': '100, 202, 106'
+        },
+        fest: "christmas"
+      },
+      vesak: {
+        mode: "light",
+        name: "卫塞金 · Vesak",
+        colors: {
+          '--accent': '#9b5f00', '--accent-rgb': '155, 95, 0',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#734500', '--accent-strong-rgb': '115, 69, 0',
+          '--accent-deep': '#5c3600',
+          '--accent-bright': '#fba32c', '--accent-bright-rgb': '251, 163, 44'
+        },
+        fest: "vesakDay"
+      },
+      vesakNight: {
+        mode: "dark",
+        name: "卫塞夜 · Vesak Night",
+        colors: {
+          '--accent': '#cb7817', '--accent-rgb': '203, 120, 23',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#e8923c', '--accent-strong-rgb': '232, 146, 60',
+          '--accent-deep': '#c16f00',
+          '--accent-bright': '#ef9943', '--accent-bright-rgb': '239, 153, 67'
+        },
+        fest: "vesakDay"
+      },
+      thaipusam: {
+        mode: "light",
+        name: "大宝森红 · Thaipusam",
+        colors: {
+          '--accent': '#bd257b', '--accent-rgb': '189, 37, 123',
+          '--accent-contrast': '#ffffff',
+          '--accent-strong': '#93005b', '--accent-strong-rgb': '147, 0, 91',
+          '--accent-deep': '#760048',
+          '--accent-bright': '#ff8fc3', '--accent-bright-rgb': '255, 143, 195'
+        },
+        fest: "thaipusam"
+      },
+      thaipusamNight: {
+        mode: "dark",
+        name: "大宝森夜 · Thaipusam Night",
+        colors: {
+          '--accent': '#d85cab', '--accent-rgb': '216, 92, 171',
+          '--accent-contrast': '#0b0d10',
+          '--accent-strong': '#f677c6', '--accent-strong-rgb': '246, 119, 198',
+          '--accent-deep': '#ce52a2',
+          '--accent-bright': '#fd7dcd', '--accent-bright-rgb': '253, 125, 205'
+        },
+        fest: "thaipusam"
       }
     };
 
@@ -3090,6 +4032,7 @@
         return;
       }
       applyTheme(id);
+      saveDisplayPrefs();
       saveAndBroadcast();
       {
         const t = I18N[currentLang];
@@ -3103,6 +4046,130 @@
     function toggleThemeModal(show) {
       document.getElementById('themeModal').style.display = show ? 'flex' : 'none';
       if (show) updateThemePickerUI();
+    }
+
+    /* Overflow menu for the top bar. Fourteen controls in one strip is a wall
+       of text; the six an operator touches mid-draw stay on the bar and the
+       setup and recovery actions live behind one trigger.
+
+       The rows are the same elements that used to sit in the bar, only
+       relocated, so every id, handler and i18n key they rely on still
+       resolves. Nothing here re-implements an action. */
+    const MORE_MENU_FADE_MS = 200;
+
+    function isMoreMenuOpen() {
+      const panel = document.getElementById('moreMenuPanel');
+      // Keyed on the class, not on `hidden`. During the fade-out the panel is
+      // still un-hidden, and a probe that said "open" for those 200ms would let
+      // a second Escape queue a second hide and make the trigger's own toggle
+      // count from the wrong state.
+      return !!panel && panel.classList.contains('is-open');
+    }
+
+    function toggleMoreMenu(force) {
+      const panel = document.getElementById('moreMenuPanel');
+      const btn = document.getElementById('moreMenuBtn');
+      if (!panel || !btn) return;
+      const open = typeof force === 'boolean' ? force : !isMoreMenuOpen();
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) {
+        panel.hidden = false;
+        // One frame with the panel laid out but still transparent, so the
+        // browser has an "off" state to transition away from. Without this
+        // the panel paints straight to its final state and never fades.
+        void panel.offsetWidth;
+        panel.classList.add('is-open');
+        return;
+      }
+      panel.classList.remove('is-open');
+      // Nothing to fade, so do not leave a dead invisible panel sitting on
+      // top of the page for the length of the fade.
+      if (prefersReducedMotion()) {
+        panel.hidden = true;
+        return;
+      }
+      setTimeout(() => {
+        // A reopen inside the fade-out window must not be undone by this.
+        if (!panel.classList.contains('is-open')) panel.hidden = true;
+      }, MORE_MENU_FADE_MS);
+    }
+
+    function closeMoreMenu(restoreFocus) {
+      if (!isMoreMenuOpen()) return;
+      toggleMoreMenu(false);
+      if (!restoreFocus) return;
+      const btn = document.getElementById('moreMenuBtn');
+      if (btn) {
+        try { btn.focus({ preventScroll: true }); } catch (e) { btn.focus(); }
+      }
+    }
+
+    function moreMenuRows() {
+      const panel = document.getElementById('moreMenuPanel');
+      if (!panel) return [];
+      // offsetParent is null for every node in a headless document, so a row
+      // counts as available unless viewer mode explicitly took it away.
+      return [...panel.querySelectorAll('.more-menu-item')]
+        .filter((row) => row.style.display !== 'none' && !row.disabled);
+    }
+
+    function setupMoreMenu() {
+      const panel = document.getElementById('moreMenuPanel');
+      const btn = document.getElementById('moreMenuBtn');
+      if (!panel || !btn) return;
+
+      // Activating any row closes the menu. Every row either opens a dialog
+      // that then owns the screen, or performs the action outright and
+      // leaves the bar as it was.
+      panel.addEventListener('click', (e) => {
+        if (e.target.closest && e.target.closest('.more-menu-item')) toggleMoreMenu(false);
+      });
+
+      // A click anywhere else is the operator saying they want something else.
+      document.addEventListener('click', (e) => {
+        if (!isMoreMenuOpen()) return;
+        if (e.target.closest && e.target.closest('#moreMenu')) return;
+        toggleMoreMenu(false);
+      });
+
+      // The panel can open upward if the bar is near the bottom of a short
+      // window; pinning it to the top would push it off-screen entirely.
+      panel.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        const rows = moreMenuRows();
+        if (rows.length === 0) return;
+        e.preventDefault();
+        const at = rows.indexOf(document.activeElement);
+        const next = e.key === 'ArrowDown'
+          ? (at + 1) % rows.length
+          : (at - 1 + rows.length) % rows.length;
+        rows[next].focus();
+      });
+
+      // Down-arrow from the trigger opens the menu and lands on the first row,
+      // so the whole bar is reachable without a pointer.
+      btn.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+        e.preventDefault();
+        if (!isMoreMenuOpen()) toggleMoreMenu(true);
+        const rows = moreMenuRows();
+        if (rows.length === 0) return;
+        (e.key === 'ArrowDown' ? rows[0] : rows[rows.length - 1]).focus();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !isMoreMenuOpen()) return;
+        // A dialog already on top owns Escape; leave it alone.
+        const dialogOpen = [...document.querySelectorAll('.modal-backdrop')]
+          .some((m) => m.style.display === 'flex');
+        if (dialogOpen) return;
+        e.preventDefault();
+        closeMoreMenu(true);
+      });
+
+      // Losing the window (a resize, a projection tab taking over) leaves the
+      // panel stranded mid-transition with no trigger to close it.
+      window.addEventListener('resize', () => { if (isMoreMenuOpen()) toggleMoreMenu(false); });
     }
 
     /* Reads the neutral scale for a mode straight from the stylesheet, so the
@@ -3123,22 +4190,16 @@
       return out;
     }
 
-    function updateThemePickerUI() {
-      const grid = document.getElementById('themeGrid');
-      if (!grid) return;
-      const t = I18N[currentLang];
-      const html = ['light', 'dark'].map(mode => {
-        const n = readModeNeutrals(mode);
-        const ids = Object.keys(THEMES).filter(id => THEMES[id].mode === mode);
-        if (!ids.length) return '';
-        const heading = mode === 'light' ? t.themeGroupLight : t.themeGroupDark;
-        const cards = ids.map(id => {
-          const th = THEMES[id];
-          const active = id === currentTheme ? ' active' : '';
-          const c = th.colors;
-          // Preview the theme as it will actually look: that mode's neutrals
-          // behind this theme's accent ramp.
-          return `
+    /* One swatch, previewed against the neutrals its own mode will use. The
+       festival variants are not "darker festival" and "lighter festival"
+       siblings any more than the base themes are, so each card is resolved
+       from its own mode rather than from the section it happens to sit in. */
+    function themeSwatchCard(id) {
+      const th = THEMES[id];
+      const n = readModeNeutrals(th.mode);
+      const c = th.colors;
+      const active = id === currentTheme ? ' active' : '';
+      return `
           <button type="button" class="theme-swatch${active}" onclick="setTheme('${id}')" title="${th.name}"
                aria-pressed="${active ? 'true' : 'false'}"
                style="background:${n.bg}; border-color:${n.border};">
@@ -3150,16 +4211,93 @@
             </div>
             <div class="theme-swatch-name" style="color:${n.text};">${th.name}</div>
           </button>`;
-        }).join('');
-        return `<div class="theme-group">
+    }
+
+    function themeGroup(title, ids) {
+      if (!ids.length) return '';
+      // The heading is chrome, so it wears whatever the operator is looking at
+      // right now rather than the mode of the themes underneath it.
+      const n = readModeNeutrals(document.documentElement.getAttribute('data-mode') || 'light');
+      return `<div class="theme-group">
             <div class="theme-group-title" style="color:${n.text}; background:${n.surface}; border-color:${n.border};">
               <span class="theme-group-dot" style="background:${n.surface}; border-color:${n.border};"></span>
-              ${heading}
+              ${title}
             </div>
-            <div class="theme-group-grid">${cards}</div>
+            <div class="theme-group-grid">${ids.map(themeSwatchCard).join('')}</div>
           </div>`;
+    }
+
+    function updateThemePickerUI() {
+      const grid = document.getElementById('themeGrid');
+      if (!grid) return;
+      const t = I18N[currentLang];
+      const ids = Object.keys(THEMES);
+      // Festivals get their own section. An operator setting up for Chinese New
+      // Year is not choosing between twenty hues, they are looking for "the red
+      // one", and burying that under a flat alphabetical list is what made the
+      // picker feel like a lot of work for what should be a one-tap change.
+      const baseIds = ids.filter(id => !THEMES[id].fest);
+      const html = ['light', 'dark'].map(mode =>
+        themeGroup(
+          mode === 'light' ? t.themeGroupLight : t.themeGroupDark,
+          baseIds.filter(id => THEMES[id].mode === mode)
+        )
+      ).join('');
+
+      /* Festivals first, and one heading per festival. An operator setting up
+         for Chinese New Year is not choosing between sixteen swatches, they
+         are looking for "the red one" -- so each festival gets its own short
+         row, and its light and dark variants sit side by side within it, which
+         makes the light/dark choice a glance rather than a scroll.
+
+         The order below is the order the festivals were asked for, which is also
+         the calendar order an operator sets up for: new year, mid-autumn, then
+         the rest. First-appearance order in THEMES is the source of truth, so a
+         new festival only has to be added to the palette to show up here. */
+      const festOrder = [...new Set(ids.filter(id => THEMES[id].fest).map(id => THEMES[id].fest))];
+      const festHtml = festOrder.map(fest => {
+        const members = ids.filter(id => THEMES[id].fest === fest);
+        // Fall back to the generic heading rather than rendering an empty
+        // section if a festival is ever added before it gets a translation.
+        const heading = t['fest' + fest.charAt(0).toUpperCase() + fest.slice(1)] || t.themeGroupFest;
+        return themeGroup(heading, members);
       }).join('');
-      grid.innerHTML = html;
+
+      grid.innerHTML = festHtml + html;
+    }
+
+    function saveDisplayPrefs() {
+      try {
+        localStorage.setItem(PREFS_KEY, JSON.stringify({ lang: currentLang, theme: currentTheme }));
+      } catch (e) { /* private mode / quota: the synced blob still carries both */ }
+    }
+
+    /* Returns true when it had something to apply. Called before the first
+       paint; a corrupt or foreign value is ignored rather than thrown on. */
+    function loadDisplayPrefs() {
+      let raw = null;
+      try { raw = localStorage.getItem(PREFS_KEY); } catch (e) { return false; }
+      if (!raw) return false;
+      let prefs;
+      try { prefs = JSON.parse(raw); } catch (e) { return false; }
+      if (!prefs || typeof prefs !== 'object') return false;
+
+      let touched = false;
+      if (prefs.lang && I18N[prefs.lang] && prefs.lang !== currentLang) {
+        currentLang = prefs.lang;
+        touched = true;
+      }
+      const themeId = resolveThemeId(prefs.theme);
+      if (themeId && THEMES[prefs.theme] && prefs.theme !== currentTheme) {
+        applyTheme(prefs.theme);
+        touched = true;
+      }
+      if (touched) {
+        document.documentElement.lang = { BC: 'zh-Hans', BM: 'ms', BI: 'en' }[currentLang] || 'zh-Hans';
+        const sel = document.getElementById('langSelect');
+        if (sel) sel.value = currentLang;
+      }
+      return touched;
     }
 
     function changeLanguage(lang) {
@@ -3167,6 +4305,7 @@
       document.documentElement.lang = { BC: 'zh-Hans', BM: 'ms', BI: 'en' }[lang] || 'zh-Hans';
       document.getElementById('langSelect').value = lang;
       applyLanguageUI();
+      saveDisplayPrefs();
       if (!isViewerMode) saveAndBroadcast();
     }
 
@@ -3180,6 +4319,13 @@
         const key = el.getAttribute('data-i18n-title');
         if (t[key]) el.title = t[key];
       });
+      // An icon-only control has no visible text for a screen reader to fall
+      // back on, so its name has to come from somewhere explicit. Setting the
+      // attribute rather than the text keeps the glyph in place.
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label');
+        if (t[key]) el.setAttribute('aria-label', t[key]);
+      });
 
       const allBrandTitles = new Set(Object.values(I18N).map(i => i.brandTitle.trim()));
       const allBrandSubs = new Set(Object.values(I18N).map(i => i.brandSub.trim()));
@@ -3188,8 +4334,13 @@
       const curMain = mainTitleEl.innerText.trim();
       const curSub = subTitleEl.innerText.trim();
 
-      if (!allBrandTitles.has(curMain)) customMainTitle = mainTitleEl.innerText;
-      if (!allBrandSubs.has(curSub)) customSubTitle = subTitleEl.innerText;
+      // Compare AND capture the trimmed text. The markup wraps the default
+      // subtitle across several indented lines, so innerText carries that
+      // whitespace while the dictionary values are trimmed; capturing the raw
+      // value made the app record its own default title as a custom one, which
+      // then counted as unsaved work on a session nobody had touched.
+      if (!allBrandTitles.has(curMain)) customMainTitle = curMain;
+      if (!allBrandSubs.has(curSub)) customSubTitle = curSub;
 
       if (customMainTitle === null) {
         mainTitleEl.innerText = t.brandTitle;
@@ -3206,6 +4357,10 @@
       const bgBtn = document.getElementById('projBgBtn');
       if (bgBtn) {
         bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
+      }
+      const cleanBtn = document.getElementById('projCleanBtn');
+      if (cleanBtn) {
+        cleanBtn.textContent = isProjClean() ? t.btnProjCleanExit : t.btnProjClean;
       }
 
       updateProjHideClaimedBtn();
@@ -3344,6 +4499,28 @@
       }
     }
 
+    /* An AudioContext starts suspended and only unlocks inside a user gesture.
+       Constructing and resuming it lazily, on the same click that is supposed
+       to fire the gong, puts that work between the operator and the sound they
+       are listening for -- which is exactly when it cannot be missed. Doing it
+       once on the first gesture of any kind means the context is already warm
+       by the time anything is drawn.
+
+       The gong is synthesised from oscillators rather than a fetched sample, so
+       there is no asset to preload here; the unlock is the whole cost. */
+    function primeAudioOnFirstGesture() {
+      if (typeof window.addEventListener !== 'function') return;
+      const prime = () => {
+        try { initAudio(); } catch (e) { /* no audio device: not fatal */ }
+        window.removeEventListener('pointerdown', prime, true);
+        window.removeEventListener('keydown', prime, true);
+        window.removeEventListener('touchstart', prime, true);
+      };
+      window.addEventListener('pointerdown', prime, true);
+      window.addEventListener('keydown', prime, true);
+      window.addEventListener('touchstart', prime, true);
+    }
+
     function playTick() {
       if (!soundOn) return;
       initAudio();
@@ -3411,10 +4588,31 @@
       showToast("音响测试正常！");
     }
 
+    /* Announce a result to assistive tech. The toast already says the same
+       thing on screen, but a toast is a visual event: a screen reader user
+       gets nothing from it. Everything that changes who won has to call this
+       or it is invisible to them. */
+    function announceDraw(key, replacements) {
+      const el = document.getElementById('drawAnnounce');
+      if (!el) return;
+      const t = I18N[currentLang];
+      let text = t[key] || '';
+      for (const [token, value] of Object.entries(replacements || {})) {
+        text = text.replace(token, value);
+      }
+      // Re-setting identical text does not re-announce, and the same number can
+      // legitimately be drawn twice (a redraw replaces in place), so a nudge
+      // keeps the region honest.
+      if (el.textContent === text) el.textContent = '';
+      el.textContent = text;
+    }
+
     function toggleSound() {
       soundOn = !soundOn;
       const t = I18N[currentLang];
-      document.getElementById('soundBtn').textContent = soundOn ? t.navSoundOn : t.navSoundOff;
+      // The label lives in an inner span so the speaker icon survives; writing
+      // textContent on the button would delete it with the old text.
+      document.getElementById('soundLabel').textContent = soundOn ? t.navSoundOn : t.navSoundOff;
     }
 
     function sanitizeList(raw) {
@@ -4013,6 +5211,8 @@
         poolStart: Number(poolStart),
         poolEnd: Number(poolEnd),
         voidAuditLogs: sanitizeList(voidAuditLogs),
+        drawRounds: drawRounds.map(r => ({ id: r.id, startIndex: r.startIndex, tickets: r.tickets.slice(), time: r.time })),
+        drawRoundSeq: Number(drawRoundSeq) || 0,
         filterActive: Boolean(filterActive),
         filterStartVal: filterStartVal !== null ? Number(filterStartVal) : null,
         filterEndVal: filterEndVal !== null ? Number(filterEndVal) : null,
@@ -4091,6 +5291,7 @@
       claimedWinners = sanitizeList(d.claimedWinners);
       recycleBin = sanitizeList(d.recycleBin);
       voidAuditLogs = sanitizeList(d.voidAuditLogs);
+      applyRoundsData(d.drawRounds, d.drawRoundSeq);
 
       if (d.poolStart !== undefined || d.poolEnd !== undefined) {
         const range = normalizePoolRange(
@@ -4303,14 +5504,20 @@
         vipRollEvent = null;
         if (!isViewerMode) saveAndBroadcast();
       }
-      const btns = document.querySelectorAll('.tab-btn');
-      btns[0].classList.toggle('active', tab === 'batch');
-      btns[1].classList.toggle('active', tab === 'vip');
-      btns[2].classList.toggle('active', tab === 'manual');
-
-      document.getElementById('batchPanel').classList.toggle('active', tab === 'batch');
-      document.getElementById('vipPanel').classList.toggle('active', tab === 'vip');
-      document.getElementById('manualPanel').classList.toggle('active', tab === 'manual');
+      const tabs = [
+        ['batch', document.getElementById('tabBatchBtn'), document.getElementById('batchPanel')],
+        ['vip', document.getElementById('tabVipBtn'), document.getElementById('vipPanel')],
+        ['manual', document.getElementById('tabManualBtn'), document.getElementById('manualPanel')]
+      ];
+      for (const [name, btn, panel] of tabs) {
+        const on = tab === name;
+        btn.classList.toggle('active', on);
+        panel.classList.toggle('active', on);
+        // The active class is a visual cue only; this is what tells a screen
+        // reader which of the three modes it is actually looking at.
+        if (on) btn.setAttribute('aria-current', 'true');
+        else btn.removeAttribute('aria-current');
+      }
 
       if (tab === 'manual' && !isViewerMode) {
         setTimeout(() => document.getElementById('manualTicketInput').focus(), 50);
@@ -4332,7 +5539,9 @@
       // fixes seed + pool + count in time; the reveal makes the derivation
       // reproducible afterwards.
       const batch = fairDrawFrom(candidates, count);
+      const startIndex = winners.length;
       for (const picked of batch) winners.push(picked);
+      const round = recordRound(batch, startIndex);
 
       const grid = document.getElementById('batchGrid');
       grid.innerHTML = '';
@@ -4340,19 +5549,288 @@
       batch.forEach((num, i) => {
         const div = document.createElement('div');
         div.className = 'number-tag';
-        const seqNum = winners.length - batch.length + i + 1;
+        const seqNum = startIndex + i + 1;
         div.innerHTML = `
           <div class="sub-seq">${t.prizeItemPrefix.replace('{seq}', seqNum)}</div>
           <div class="main-num">${esc(num)}</div>
         `;
         grid.appendChild(div);
       });
+      // The grid is a fixed 5x2 whose stagger is keyed to nth-child(1..10), so
+      // the action row is a sibling of it rather than a child.
+      showBatchActions(round.id);
 
       playFestiveGong();
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(currentLang === 'BM' ? '10 Pemenang berjaya dicabut!' : (currentLang === 'BI' ? '10 Winners Drawn!' : '已成功抽出 10 位幸运儿！'));
+      showToast(t.batchDrawn.replace('{n}', String(batch.length)),
+        false,
+        { label: t.toastRedrawBatch, duration: 10000, onClick: () => redrawRound(round.id) });
+      announceDraw('announceDrawn', {
+        '{n}': String(batch.length),
+        '{list}': batch.map((num) => `#${num}`).join(', ')
+      });
+    }
+
+    /* Round bookkeeping ---------------------------------------------------- */
+
+    // Keep the trail short. An event is an audit record, not a transcript.
+    const MAX_ROUNDS = 50;
+    function recordRound(tickets, startIndex) {
+      drawRoundSeq += 1;
+      const round = {
+        id: drawRoundSeq,
+        startIndex,
+        tickets: tickets.slice(),
+        time: new Date().toLocaleTimeString()
+      };
+      drawRounds.push(round);
+      if (drawRounds.length > MAX_ROUNDS) drawRounds.splice(0, drawRounds.length - MAX_ROUNDS);
+      return round;
+    }
+
+    // A round survives a reload only if it still describes reality. Winners are
+    // edited in place elsewhere (redraw a slot, recycle a ticket, undo), so
+    // anything that no longer lines up with the current winners array is
+    // history we must not offer to "restore".
+    /* Rounds arrive over the network from another device, so every field is
+       checked before it can influence a redraw: the tickets have to be real
+       4-digit strings inside the pool, and startIndex has to be an integer the
+       winners array can actually be sliced at. Anything else is dropped. */
+    function applyRoundsData(raw, seq) {
+      drawRounds = [];
+      drawRoundSeq = 0;
+      if (Array.isArray(raw)) {
+        for (const r of raw.slice(0, MAX_ROUNDS)) {
+          if (!r || !Array.isArray(r.tickets)) continue;
+          const tickets = r.tickets.filter((n) => typeof n === 'string' && /^\d{4}$/.test(n));
+          if (!tickets.length) continue;
+          const startIndex = Number(r.startIndex);
+          if (!Number.isInteger(startIndex) || startIndex < 0) continue;
+          drawRounds.push({ id: Number(r.id) || 0, startIndex, tickets, time: String(r.time || '') });
+        }
+      }
+      // Ids only have to be unique within this device's history, and they key
+      // the onclick that triggers a redraw.
+      const seen = new Set();
+      drawRounds.forEach((r) => {
+        if (seen.has(r.id)) r.id = (r.id || 0) + 1;
+        seen.add(r.id);
+        if (r.id > drawRoundSeq) drawRoundSeq = r.id;
+      });
+      if (Number.isInteger(Number(seq)) && Number(seq) > drawRoundSeq) drawRoundSeq = Number(seq);
+      // Drop anything that no longer lines up with the winners we just loaded.
+      drawRounds = drawRounds.filter((r) => currentRound(r));
+    }
+
+    function currentRound(round) {
+      if (!round || !Array.isArray(round.tickets) || !round.tickets.length) return null;
+      if (!Number.isInteger(round.startIndex) || round.startIndex < 0) return null;
+      const slice = winners.slice(round.startIndex, round.startIndex + round.tickets.length);
+      if (slice.length !== round.tickets.length) return null;
+      return slice.join(',') === round.tickets.join(',') ? round : null;
+    }
+
+    function latestRound() {
+      for (let i = drawRounds.length - 1; i >= 0; i -= 1) {
+        const ok = currentRound(drawRounds[i]);
+        if (ok) return ok;
+      }
+      return null;
+    }
+
+    function renderBatchActions() {
+      const el = document.getElementById('batchActions');
+      if (!el) return;
+      const round = latestRound();
+      const t = I18N[currentLang];
+      if (!round) {
+        el.innerHTML = `<div class="batch-actions-empty" data-i18n="batchNoRound">${esc(t.batchNoRound)}</div>`;
+        return;
+      }
+      el.innerHTML = `
+        <span class="batch-round-label" data-i18n="batchRoundOf">${esc(t.batchRoundOf)}</span>
+        <span class="batch-round-tickets">${round.tickets.map((n) => `<span class="batch-round-chip">${esc(n)}</span>`).join('')}</span>
+        <button type="button" class="btn-batch-redraw" id="batchRedrawBtn" onclick="redrawLatestRound()">${esc(t.btnRedrawBatch)}</button>
+        <button type="button" class="btn-batch-history" id="batchHistoryBtn" onclick="toggleRoundModal(true)">${esc(t.btnBatchHistory)}</button>
+      `;
+    }
+
+    function showBatchActions(roundId) {
+      const round = drawRounds.find((r) => r.id === roundId);
+      if (round) renderBatchActions();
+    }
+
+    function redrawLatestRound() {
+      const round = latestRound();
+      if (round) redrawRound(round.id);
+    }
+
+    /* Take a whole batch back and draw it again.
+
+       These tickets are RETURNED to the pool, not retired to the recycle bin.
+       getAvailablePool() excludes everything in recycleBin, so a ticket sent
+       there can never be drawn again -- which would make this a "void these ten
+       and draw ten different ones" button wearing the name of a re-draw, and
+       would contradict what the confirmation dialog tells the operator. Simply
+       clearing them out of `winners` puts them back in the pool, so the same
+       numbers are legitimately eligible again.
+
+       The swap is still recorded in the void log: the sequence numbers these
+       occupied are released and then re-awarded, and that has to be auditable
+       even though the ticket itself survives. Winners already claimed for a
+       prize are unclaimed too, because the prize is being handed out again. */
+    async function redrawRound(roundId) {
+      if (isViewerMode) return;
+      const round = currentRound(drawRounds.find((r) => r.id === roundId));
+      if (!round) return showToast(I18N[currentLang].batchRoundStale, true);
+
+      const t = I18N[currentLang];
+      const ok = await confirmDialog({
+        title: t.redrawBatchTitle,
+        body: t.redrawBatchBody.replace('{n}', String(round.tickets.length)).replace('{list}', round.tickets.join(', ')),
+        okLabel: t.btnRedrawBatch,
+        cancelLabel: t.confirmCancel
+      });
+      if (!ok) return;
+
+      const snapshot = snapshotForUndo();
+      for (let i = 0; i < round.tickets.length; i += 1) {
+        const ticket = round.tickets[i];
+        const idx = round.startIndex + i;
+        if (winners[idx] !== ticket) continue;
+        const cIdx = claimedWinners.indexOf(ticket);
+        if (cIdx !== -1) claimedWinners.splice(cIdx, 1);
+        // newNum is filled in by the draw that follows; until then the log has
+        // to say the slot is being re-awarded rather than leave a blank.
+        voidAuditLogs.unshift({
+          seq: idx + 1,
+          oldNum: ticket,
+          newNum: t.redrawBatchPending,
+          time: new Date().toLocaleTimeString()
+        });
+        winners[idx] = null;
+      }
+      // Collapse the holes left by the swap, so seq numbers stay contiguous.
+      winners = winners.filter((w) => w !== null);
+      // Every remaining round's startIndex shifts by however many were removed
+      // before it; leaving them stale would make the history look at the wrong
+      // slice of winners.
+      reindexRounds();
+      drawRounds = drawRounds.filter((r) => r.id !== round.id);
+
+      stopVipRollAnimation();
+      updateUI();
+      renderBatchActions();
+      saveAndBroadcast();
+      showToast(t.redrawBatchDone, false, {
+        label: t.toastUndo,
+        duration: 10000,
+        onClick: () => {
+          restoreFromUndo(snapshot);
+          renderBatchActions();
+        }
+      });
+      drawTen();
+    }
+
+    /* Every keyboard shortcut in the app, in one list.
+
+       Declared as data rather than hand-written markup so the legend cannot
+       drift away from the bindings: the list is rendered from the same table
+       the handler consults, and the displayed key is derived from the combo. */
+    const SHORTCUTS = [
+      { keys: ['Alt', 'M'], id: 'navMore' },
+      { keys: ['Alt', 'K'], id: 'shortcutLegend' },
+      { keys: ['Shift', '?'], id: 'shortcutLegendAlt' },
+      { keys: ['Space'], id: 'vipSpaceHint' },
+      { keys: ['Esc'], id: 'shortcutDismiss' },
+      { keys: ['Enter'], id: 'shortcutEnter' },
+      { keys: ['↑', '↓'], id: 'shortcutMenuNav' }
+    ];
+
+    function isShortcutModalOpen() {
+      const el = document.getElementById('shortcutModal');
+      return !!el && el.style.display === 'flex';
+    }
+
+    function toggleShortcutModal(show) {
+      const modal = document.getElementById('shortcutModal');
+      if (!modal) return;
+      const open = show === undefined ? !isShortcutModalOpen() : Boolean(show);
+      if (open) renderShortcutList();
+      modal.style.display = open ? 'flex' : 'none';
+    }
+
+    function renderShortcutList() {
+      const list = document.getElementById('shortcutList');
+      if (!list) return;
+      const t = I18N[currentLang];
+      list.innerHTML = SHORTCUTS.map((sc) => {
+        const label = t[sc.id] || sc.id;
+        const keys = sc.keys.map((k) => `<kbd class="shortcut-key">${esc(k)}</kbd>`).join('<span class="shortcut-plus" aria-hidden="true">+</span>');
+        // The key names are read out as well as shown, so the row is usable
+        // with a screen reader and not just as a picture of letters.
+        const spoken = sc.keys.map((k) => `${esc(k)}`).join(' plus ');
+        return `
+          <div class="shortcut-row">
+            <dt class="shortcut-keys" aria-label="${spoken}">${keys}</dt>
+            <dd class="shortcut-desc">${esc(label)}</dd>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleRoundModal(show) {
+      const modal = document.getElementById('roundModal');
+      if (!modal) return;
+      if (show) renderRoundList();
+      modal.style.display = show ? 'flex' : 'none';
+      if (show) {
+        const box = document.getElementById('roundModalBox');
+        if (box && box.focus) box.focus();
+      }
+    }
+
+    function renderRoundList() {
+      const list = document.getElementById('roundList');
+      if (!list) return;
+      const t = I18N[currentLang];
+      // Oldest first: a draw history reads as a log, not a feed.
+      const rounds = drawRounds.slice().sort((a, b) => a.startIndex - b.startIndex);
+      if (!rounds.length) {
+        list.innerHTML = `<p class="round-empty" data-i18n="batchNoRound">${esc(t.batchNoRound)}</p>`;
+        return;
+      }
+      list.innerHTML = rounds.map((r) => {
+        const live = currentRound(r);
+        const firstSeq = r.startIndex + 1;
+        const lastSeq = r.startIndex + r.tickets.length;
+        const seqLabel = firstSeq === lastSeq ? `#${firstSeq}` : `#${firstSeq}-${lastSeq}`;
+        return `
+          <div class="round-row${live ? '' : ' stale'}">
+            <div class="round-row-head">
+              <span class="round-seq">${esc(seqLabel)}</span>
+              <span class="round-count">${esc(t.roundCount.replace('{n}', String(r.tickets.length)))}</span>
+              <span class="round-time">${esc(r.time)}</span>
+            </div>
+            <div class="round-tickets">${r.tickets.map((n) => `<span class="round-chip">${esc(n)}</span>`).join('')}</div>
+            <div class="round-row-foot">
+              ${live
+                ? `<button type="button" class="btn-round-redraw" onclick="redrawRound(${Number(r.id)})">${esc(t.btnRedrawBatch)}</button>`
+                : `<span class="round-stale-note" data-i18n="batchRoundStale">${esc(t.batchRoundStale)}</span>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function reindexRounds() {
+      drawRounds = drawRounds.filter(r => r && Array.isArray(r.tickets) && r.tickets.length);
+      drawRounds.forEach((r) => { r.startIndex = winners.indexOf(r.tickets[0]); });
+      drawRounds = drawRounds.filter((r) => r.startIndex >= 0);
+      drawRounds.sort((a, b) => a.startIndex - b.startIndex);
     }
 
     // MODE 2: VIP ROLLER
@@ -4415,6 +5893,7 @@
       updateUI();
       saveAndBroadcast();
       showToast(picked);
+      announceDraw('announceVip', { '{n}': picked });
       stopVipRollAnimation(picked);
     }
 
@@ -4564,13 +6043,58 @@
         return;
       }
 
+      // A mistyped ticket is the most common error in this panel, and a 4-digit
+      // entry that is already on screen looks exactly like a good one. The undo
+      // has to be cheap enough to leave lying around, so this is the plain
+      // pre-push list rather than a full event snapshot: undoing an entry must
+      // not also roll back the filter, the theme, or the language.
+      const beforeEntry = winners.slice();
+      const beforeClaimed = claimedWinners.slice();
+      const beforeAudit = voidAuditLogs.length;
+      const beforeRounds = drawRounds.map(r => ({ id: r.id, startIndex: r.startIndex, tickets: r.tickets.slice(), time: r.time }));
+      const beforeRoundSeq = drawRoundSeq;
+
       winners.push(val);
       input.value = '';
       playFestiveGong();
       triggerConfetti();
       updateUI();
       saveAndBroadcast();
-      showToast(t.ticketAdded.replace('{n}', val));
+      showToast(t.ticketAdded.replace('{n}', val), false, {
+        label: t.toastUndo,
+        duration: 10000,
+        onClick: () => undoManualEntry(val, beforeEntry, beforeClaimed, beforeAudit, beforeRounds, beforeRoundSeq)
+      });
+      announceDraw('announceSingle', { '{n}': val });
+    }
+
+    /* Take back a single manual entry.
+
+       Only the tail of each list is restored, never a wholesale replacement:
+       anything that happened between the entry and the click on Undo has to
+       survive, or the undo would silently discard a later, deliberate draw. */
+    function undoManualEntry(ticket, beforeEntry, beforeClaimed, beforeAudit, beforeRounds, beforeRoundSeq) {
+      if (isViewerMode) return;
+      const idx = winners.indexOf(ticket);
+      if (idx === -1) return showToast(I18N[currentLang].undoNothingToDo, true);
+
+      // A later edit already moved this ticket on; undoing now would clobber it.
+      if (beforeEntry.length !== winners.length - 1) {
+        return showToast(I18N[currentLang].undoStale, true);
+      }
+
+      winners.splice(idx, 1);
+      claimedWinners = beforeClaimed.slice();
+      voidAuditLogs.splice(beforeAudit);
+      drawRounds = beforeRounds;
+      drawRoundSeq = beforeRoundSeq;
+      reindexRounds();
+
+      updateUI();
+      renderBatchActions();
+      saveAndBroadcast();
+      showToast(I18N[currentLang].manualEntryUndone.replace('{n}', ticket));
+      announceDraw('announceSingle', { '{n}': ticket });
     }
 
     function drawSingleManual() {
@@ -4588,6 +6112,7 @@
       updateUI();
       saveAndBroadcast();
       showToast(I18N[currentLang].replacementDrawn.replace('{ticket}', picked));
+      announceDraw('announceSingle', { '{n}': picked });
     }
 
     async function promptRedrawSlot(ticketNum, index) {
@@ -4783,6 +6308,7 @@
     }
 
     function exportRangeCSV() {
+      const t = I18N[currentLang];
       const filtered = getFilteredWinnersList();
       if (filtered.length === 0) return showToast(t.emptyRange, true);
       let csv = "Prize Sequence,Ticket Number,Claimed Status\n";
@@ -4843,6 +6369,7 @@
     }
 
     function triggerSpotlightFromSearch() {
+      const t = I18N[currentLang];
       const val = document.getElementById('searchInput').value.trim();
       if (!val) return showToast(t.needTicketNumber, true);
       const idx = winners.indexOf(val.padStart(4, '0'));
@@ -4936,12 +6463,14 @@
       isSuspenseMode = !isSuspenseMode;
       const btn = document.getElementById('suspenseBtn');
       btn.classList.toggle('active', isSuspenseMode);
-      btn.textContent = isSuspenseMode ? I18N[currentLang].navSuspenseOn : I18N[currentLang].navSuspenseOff;
+      document.getElementById('suspenseLabel').textContent =
+        isSuspenseMode ? I18N[currentLang].navSuspenseOn : I18N[currentLang].navSuspenseOff;
       updateUI();
       saveAndBroadcast();
     }
 
     function copyEmceeScript() {
+      const t = I18N[currentLang];
       if (winners.length === 0) return showToast(t.noWinnersYet, true);
       const filtered = getFilteredWinnersList();
       const listStr = filtered.map(i => `#${i.seq}:【${i.num}】`).join(', ');
@@ -5100,6 +6629,7 @@
 
     function uploadBackupJSON(event) {
       if (isViewerMode) return;
+      const t = I18N[currentLang];
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -5256,6 +6786,9 @@
       }
 
       renderScrollers();
+      // Absent from a projection window; renderBatchActions no-ops when the
+      // panel is not on the page.
+      renderBatchActions();
       maybeAutoStartProjTimer();
     }
 
@@ -5324,7 +6857,8 @@
       }
     }
 
-    function closeProjectionMode() {
+    async function closeProjectionMode() {
+      if (!(await confirmExitIfSessionOpen())) return;
       const url = new URL(window.location.origin + window.location.pathname);
       window.location.href = url.toString();
     }
@@ -5336,6 +6870,45 @@
       const bgBtn = document.getElementById('projBgBtn');
       const t = I18N[currentLang];
       bgBtn.textContent = isTrans ? t.btnToggleBgSolid : t.btnToggleBgTrans;
+    }
+
+    /* Clean mode: strip the projector down to just the stage.
+
+       Two separate problems it solves. Live, an operator setting up for an
+       event has toolbar buttons, timer chips and focus rings sitting on the
+       screen the audience is looking at. And for a photo or a print, every
+       visible control is something to crop out afterwards. Both are solved by
+       hiding the chrome, which is why the toolbar also disappears -- it is
+       chrome. Restore it with Escape, or the same shortcut that opened it, so
+       the mode can never be a one-way door with no keyboard route out. */
+    const PROJ_CLEAN_KEY = 'tanglung_proj_clean';
+
+    function isProjClean() {
+      return document.getElementById('projectorView').classList.contains('clean-mode');
+    }
+
+    function applyProjClean(clean) {
+      projClean = Boolean(clean);
+      const view = document.getElementById('projectorView');
+      if (view) view.classList.toggle('clean-mode', projClean);
+      const btn = document.getElementById('projCleanBtn');
+      const t = I18N[currentLang];
+      if (btn) btn.textContent = projClean ? t.btnProjCleanExit : t.btnProjClean;
+      if (btn && btn.setAttribute) btn.setAttribute('aria-pressed', projClean ? 'true' : 'false');
+      try {
+        if (projClean) localStorage.setItem(PROJ_CLEAN_KEY, '1');
+        else localStorage.removeItem(PROJ_CLEAN_KEY);
+      } catch (e) { /* storage disabled: the mode still works for this session */ }
+    }
+
+    function toggleProjClean() {
+      applyProjClean(!isProjClean());
+    }
+
+    function loadProjClean() {
+      try {
+        if (localStorage.getItem(PROJ_CLEAN_KEY) === '1') applyProjClean(true);
+      } catch (e) { /* ignore */ }
     }
 
     function updateProjHideClaimedBtn() {
@@ -5538,6 +7111,7 @@
     }
 
     function openPiPBarPopup() {
+      const t = I18N[currentLang];
       const url = new URL(window.location.origin + window.location.pathname);
       url.searchParams.set('pipbar', 'true');
       url.searchParams.set('viewer', 'true');
@@ -5549,6 +7123,7 @@
     }
 
     function exportCSV() {
+      const t = I18N[currentLang];
       if (winners.length === 0) return showToast(t.noWinners, true);
       let csv = "Prize Sequence,Ticket Number,Claimed Status\n";
       winners.forEach((w, idx) => {
@@ -5569,6 +7144,8 @@
         claimedWinners: claimedWinners.slice(),
         recycleBin: recycleBin.slice(),
         voidAuditLogs: voidAuditLogs.slice(),
+        drawRounds: drawRounds.map(r => ({ id: r.id, startIndex: r.startIndex, tickets: r.tickets.slice(), time: r.time })),
+        drawRoundSeq,
         filterActive, filterStartVal, filterEndVal, filterType,
         isSuspenseMode, vipRollEvent, appliedVipRollKey,
         poolStart, poolEnd, maxPrizes,
@@ -5589,6 +7166,11 @@
       claimedWinners = snap.claimedWinners.slice();
       recycleBin = snap.recycleBin.slice();
       voidAuditLogs = snap.voidAuditLogs.slice();
+      // Rounds are restored without re-validating against the snapshot's own
+      // winners: the two come from the same moment, so they agree by
+      // construction. currentRound() still gates whether a redraw is offered.
+      drawRounds = (snap.drawRounds || []).map(r => ({ id: r.id, startIndex: r.startIndex, tickets: r.tickets.slice(), time: r.time }));
+      drawRoundSeq = snap.drawRoundSeq || 0;
       filterActive = snap.filterActive;
       filterStartVal = snap.filterStartVal;
       filterEndVal = snap.filterEndVal;
@@ -5645,6 +7227,8 @@
       claimedWinners = [];
       recycleBin = [];
       voidAuditLogs = [];
+      drawRounds = [];
+      drawRoundSeq = 0;
       customMainTitle = null;
       customSubTitle = null;
       filterActive = false;
@@ -5762,12 +7346,55 @@
       render();
     }
 
+    /* Is there work in flight that only exists in this tab?
+
+       The old guard asked a single question -- "are there some winners but not
+       all of them?" -- which missed every state that has no winners at all yet
+       still costs the operator real work if it is lost. A rolling VIP number
+       that was never stopped, a custom event title, an emergency-exclusion
+       list, a claim timer counting down. A viewer is deliberately excluded:
+       the projection window gets closed and reopened all evening, and being
+       nagged every time would train people to dismiss the prompt. */
+    function sessionHasUncommittedWork() {
+      if (isViewerMode) return false;
+      if (winners.length > 0 && winners.length < maxPrizes) return true;
+      if (isRolling) return true;
+      if (customMainTitle !== null || customSubTitle !== null) return true;
+      // The crisis exclusion list and the retired tickets of a slot redraw are
+      // both held in the recycle bin.
+      if (recycleBin.length > 0) return true;
+      // claimTimeRemaining is seeded to 10 and only rewritten by
+      // startClaimTimer, so the counter alone is true on a cold boot; the
+      // running interval is what marks a claim actually in progress.
+      if (claimTimerInterval) return true;
+      // A draw that filled every prize is finished work, not work in flight,
+      // and so is a session that has never started.
+      return false;
+    }
+
     window.addEventListener('beforeunload', (e) => {
-      if (!isViewerMode && winners.length > 0 && winners.length < maxPrizes) {
-        e.preventDefault();
-        e.returnValue = 'Draw in progress. Confirm exit?';
-      }
+      if (!sessionHasUncommittedWork()) return;
+      e.preventDefault();
+      // Browsers ignore this string and print their own wording, but a string
+      // is still required for the prompt to appear at all in modern Chrome and
+      // Firefox, and it is what older engines and assistive tech do read.
+      e.returnValue = I18N[currentLang].exitConfirm || 'Draw in progress. Confirm exit?';
     });
+
+    /* The same question, asked before the app itself throws work away. Every
+       in-app exit is a full page navigation, and losing a half-finished draw to
+       a misclick on "back to operator view" is exactly what this feature is
+       meant to catch. */
+    function confirmExitIfSessionOpen() {
+      if (!sessionHasUncommittedWork()) return true;
+      return confirmDialog({
+        title: I18N[currentLang].exitConfirmTitle,
+        body: I18N[currentLang].exitConfirmBody,
+        okLabel: I18N[currentLang].exitConfirmLeave,
+        cancelLabel: I18N[currentLang].confirmCancel,
+        danger: true
+      });
+    }
 
     window.addEventListener('keydown', (e) => {
       // A dialog owns the keyboard while it is open; the spacebar roll shortcut
@@ -5800,17 +7427,61 @@
         }
         return;
       }
+      // A shortcut must never fire while the operator is typing. Alt-modified
+      // chords are exempt from the text-entry veto because no browser or IME
+      // uses plain Alt+<letter> as a text shortcut, and suppressing them would
+      // make the menu unreachable without a mouse.
+      if (isTypingTarget(e.target) && !e.altKey) return;
+
+      // Overflow menu: Alt+M, and the same chord closes it again.
+      /* Escape backs out of clean mode first: hiding the toolbar is exactly
+         the case where the operator needs one reliable way to get it back. */
+      if (e.key === 'Escape' && isProjClean()) {
+        e.preventDefault();
+        applyProjClean(false);
+        return;
+      }
+
+      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'm' || e.key === 'M')) {
+        e.preventDefault();
+        toggleMoreMenu();
+        return;
+      }
+
+      // Shortcut legend: Alt+K, and Shift+? for the muscle-memory route.
+      if ((e.altKey && !e.ctrlKey && !e.metaKey && (e.key === 'k' || e.key === 'K'))
+        || (e.shiftKey && e.key === '?')) {
+        e.preventDefault();
+        toggleShortcutModal(!isShortcutModalOpen());
+        return;
+      }
+
+      /* Space belongs to the focused control when there is one. A focused
+         button already turns Space into a click, and stealing it would make
+         Space activate nothing but the VIP roll. */
       if (e.code === 'Space' && document.getElementById('vipPanel').classList.contains('active')) {
-        const el = document.activeElement;
-        const activeTag = el ? el.tagName.toLowerCase() : '';
-        const isTextEntry = activeTag === 'input' || activeTag === 'textarea'
-          || activeTag === 'select' || activeTag === 'button' || (el && el.isContentEditable);
-        if (!isTextEntry) {
+        // activeElement, not e.target: the event's target is whatever node it
+        // was dispatched on, which is `document` for a key event on the page,
+        // so reading it would never see the focused button at all.
+        const focus = document.activeElement;
+        if (!isTypingTarget(focus) && !isButtonTarget(focus)) {
           e.preventDefault();
           toggleVip();
         }
       }
     });
+
+    function isTypingTarget(el) {
+      if (!el) return false;
+      const tag = el.tagName ? el.tagName.toLowerCase() : '';
+      return tag === 'input' || tag === 'textarea' || tag === 'select'
+        || el.isContentEditable === true;
+    }
+
+    function isButtonTarget(el) {
+      if (!el) return false;
+      return el.tagName && el.tagName.toLowerCase() === 'button';
+    }
 
     window.addEventListener('resize', () => {
       renderScrollers();
@@ -5871,6 +7542,9 @@
 
     // BOOTSTRAP LIFECYCLE
     renderBuildStamp();
+    // Language and theme first, so the very first frame is already correct
+    // instead of flashing the defaults and correcting itself a moment later.
+    loadDisplayPrefs();
     if (!load()) {
       updateUI();
     }
@@ -5878,7 +7552,10 @@
     checkPipBarModeFromURL();
     maybeAutoStartProjTimer();
     loadProjTimerFont();
+    loadProjClean();
     setupFirebaseConnection();
+    setupMoreMenu();
+    primeAudioOnFirstGesture();
     applyLanguageUI();
     requestAnimationFrame(animateScrollers);
   </script>
