@@ -145,6 +145,18 @@
       --font-num: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo,
         Consolas, "Liberation Mono", monospace;
 
+      /* Display type. This deliberately does NOT pull a webfont: the app runs
+         on a venue laptop at a night event, often offline, and every label is
+         CJK, which no Latin display face covers anyway. What the display type
+         actually needed was optical tracking, not a new family -- so the
+         hierarchy is built from tracking and weight over the existing stack,
+         which costs nothing, loads instantly, and cannot flash unstyled. */
+      --font-display: var(--font-sans);
+      /* Tracking tightens as type gets larger, which is how a display size is
+         made to read as deliberate rather than merely big. */
+      --tracking-display: -0.02em;
+      --tracking-display-lg: -0.035em;
+
       --fs-xs: clamp(0.72rem, 0.69rem + 0.15vw, 0.8rem);
       --fs-sm: clamp(0.8rem, 0.77rem + 0.15vw, 0.9rem);
       --fs-md: clamp(0.9rem, 0.87rem + 0.15vw, 1rem);
@@ -208,11 +220,113 @@
       color: inherit;
     }
 
+    /* One focus ring for the whole app, replacing the per-component
+       :focus-visible rules that had drifted apart from each other. The ring is
+       two layers: a solid accent outline, which carries the 3:1 non-text
+       contrast requirement and survives forced-colors mode where box-shadow is
+       dropped entirely, and a soft accent bloom just outside it so the focused
+       control reads as lit rather than merely outlined. --accent-ring is
+       theme-derived, so the glow retints with the palette in all 36 themes.
+
+       No border-radius is set here. Each component keeps its own shape, which
+       is what makes a pill button still look like a pill button while
+       focused. The clean-mode rule further down clears both layers, since a
+       projector reduced to the stage should have no keyboard chrome. */
     :focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 3px solid var(--accent);
       outline-offset: 2px;
-      border-radius: var(--r-sm);
+      box-shadow: 0 0 0 5px var(--accent-ring);
     }
+
+    /* ===================================================================
+       Atmosphere
+       -------------------------------------------------------------------
+       One layer, four surfaces. The console, the projector, the desktop bar
+       and the remote all render the same document, so a single pseudo-element
+       on <body> reaches all of them without any per-surface duplication --
+       which is also what keeps them from drifting apart over time.
+
+       Two rules govern everything below:
+         1. It must never sit between the operator and a number. The layer is
+            pointer-events:none and it paints behind the content, so no
+            control can be mis-clicked because of it.
+         2. It must never cost contrast. Every tint is derived from
+            --accent-rgb at 3-5%, and it is painted on the page background,
+            never between text and its surface.
+       =================================================================== */
+
+    /* The ambient wash. A soft accent bloom behind the page, tinted by
+       whatever theme is live. It is drawn with a blurred solid rather than a
+       radial-gradient on purpose: the stylesheet carries a standing rule
+       that the interface has no gradients in it (tests/themes.test.mjs
+       asserts zero), because a gradient on a token-driven surface is how a
+       theme ends up washing out a number. filter: blur() on a flat fill
+       gives the same falloff without putting a gradient anywhere near a
+       background token. */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -18vmax;
+      left: -10vmax;
+      width: 62vmax;
+      height: 62vmax;
+      z-index: -1;
+      pointer-events: none;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.05;
+      filter: blur(90px);
+    }
+
+    /* Both layers sit at z-index -1, which places them above the page
+       background and below every in-flow element. That is the whole trick:
+       the app's own stacking (modals at 10050+, the stage at 10000, the
+       floating bar at 20000) is left completely untouched, so there is no
+       way for a decorative overlay to end up over a number, a dialog, or
+       the projector. */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 140px 140px;
+    }
+
+    /* The stage surfaces get the same grain, declared inside their own rules
+       further down as a background-image rather than as an overlay. That
+       distinction is the whole safety argument: an overlay would sit on top of
+       the numbers, whereas a background-image sits behind them, inside the
+       same --stage-bg fill, and therefore cannot alter the contrast of a
+       single digit. The projector and the desktop bar are the two surfaces a
+       room reads from, so they get texture with no measurable cost to
+       legibility. It has to live in those rules rather than here, because
+       `background: var(--stage-bg)` is a shorthand and would reset the image. */
+
+    /* The ambient wash is deliberately NOT repeated on the stage. A bloom
+       behind a number on a projector lifts the black floor, and the stage is
+       already the one surface the room reads at distance.
+
+       Transparent mode then sets `background: transparent !important`, which
+       drops the grain image with it. That is the correct outcome rather than
+       an accident: a see-through screen composited over video must not carry
+       a texture. Clean mode keeps the grain, because a screenshot of a clean
+       stage is meant to look like the stage. */
+
+    @media print {
+      body::before,
+      body::after {
+        display: none !important;
+      }
+    }
+
+    /* Nothing in this layer animates, so nothing in it needs a
+       prefers-reduced-motion opt-out. The grain is a still texture and the
+       wash is a static blur. That is deliberate: the atmosphere is the one
+       part of a "premium" treatment that should not be the part that costs a
+       user their motion preference. */
 
     @media (prefers-reduced-motion: reduce) {
       *,
@@ -402,11 +516,17 @@
       font-weight: 800;
       color: var(--accent);
       letter-spacing: -0.015em; text-shadow: none;
-      outline: none;
       border-bottom: 1px dashed transparent;
       transition: border-color 0.2s;
     }
     .brand-title:hover, .brand-title:focus {
+      border-bottom: 1px dashed var(--accent);
+    }
+    /* These two are contenteditable, so they take keyboard focus like any
+       other control. The dashed underline is the hover affordance; it is too
+       thin to be the only focus signal, so the shared :focus-visible ring
+       applies here as well. */
+    .brand-title:focus-visible, .brand-subtitle:focus-visible {
       border-bottom: 1px dashed var(--accent);
     }
 
@@ -414,7 +534,6 @@
       font-size: var(--fs-xs);
       color: var(--text-3);
       letter-spacing: 0.04em;
-      outline: none;
     }
     .brand-subtitle, .build-stamp {
       transition: color var(--dur-2) var(--ease-out);
@@ -458,19 +577,22 @@
       user-select: none;
       white-space: nowrap;
       transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
-        transform var(--dur-1) var(--ease-out);
+        transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     }
+    /* A theme-derived glow, not a fixed one. rgba(var(--accent-rgb), ...) is
+       how the app already tints surfaces, so the bloom retints with the
+       palette in all 36 themes instead of being a grey shadow that fights a
+       dark theme. box-shadow (not filter: drop-shadow) because it does not
+       force a new rendering layer on every hover, and it leaves the text
+       itself perfectly sharp. */
     .stat-badge:hover {
       border-color: var(--border-strong);
       transform: translateY(-1px);
+      box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.14);
     }
     .stat-badge:active {
       transform: translateY(0) scale(0.97);
       transition-duration: 90ms;
-    }
-    .stat-badge:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
     }
     .stat-badge strong {
       color: var(--accent);
@@ -503,7 +625,6 @@
       border-radius: 6px;
       font-size: 0.82rem;
       cursor: pointer;
-      outline: none;
     }
 
     .icon-btn {
@@ -1167,7 +1288,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      letter-spacing: 0.06em;
+      /* Tabular figures carry the whole width of a 4-digit ticket, so the
+         positive tracking this used to carry would have opened a visible gap
+         between the digits. Negative tracking closes the number up. */
+      letter-spacing: var(--tracking-display);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       box-shadow: inset 0 0 25px rgba(var(--accent-strong-rgb), 0.2), var(--sh-2);
@@ -1215,7 +1339,6 @@
       font-weight: 800;
       border: 2px solid var(--accent);
       border-radius: var(--r-sm);
-      outline: none;
       background: var(--surface-input); color: var(--accent); box-shadow: inset 0 1px 2px rgba(16, 18, 24, 0.06);
     }
 
@@ -1286,7 +1409,6 @@
       font-variant-numeric: tabular-nums;
       font-size: var(--fs-xs);
       text-align: center;
-      outline: none;
     }
     .filter-input:hover {
       border-color: var(--accent);
@@ -1300,7 +1422,6 @@
       border-radius: var(--r-sm);
       font-size: var(--fs-xs);
       font-weight: 700;
-      outline: none;
       cursor: pointer;
       flex: 1;
       min-width: 120px;
@@ -1373,7 +1494,6 @@
       flex: 1;
       padding: 6px 8px;
       background: var(--surface-input); border: 1px solid var(--border); color: var(--text); border-radius: var(--r-sm);
-      outline: none;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       letter-spacing: 0.08em;
@@ -1416,25 +1536,20 @@
       -webkit-appearance: none;
       appearance: none;
       transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
-        transform var(--dur-1) var(--ease-out);
+        transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     }
 
+    /* The same accent-derived bloom as the stat badge, at the alpha this card
+       already uses for its own hover fill (0.2) so the glow and the tint read
+       as one effect rather than a shadow pasted onto a colour change. */
     .billboard-card:hover {
       background: rgba(var(--accent-rgb), 0.2);
       transform: translateX(2px);
+      box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.18);
     }
     .billboard-card:active {
       transform: translateX(2px) scale(0.98);
       transition-duration: 90ms;
-    }
-
-    /* The card is the only element in the grid, so its focus ring is the sole
-       keyboard affordance. The grid uses a gap, not negative margins, so the
-       outline needs no offset compensation to stay fully visible. */
-    .billboard-card:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
-      border-radius: var(--r-sm);
     }
 
     .billboard-card.claimed {
@@ -1578,7 +1693,6 @@
       font-variant-numeric: tabular-nums;
       font-size: var(--fs-lg);
       text-align: center;
-      outline: none;
       transition: border-color 0.15s;
     }
     .pool-field input:hover {
@@ -1723,6 +1837,7 @@
       color: var(--accent);
       font-size: var(--fs-2xl);
       font-weight: 700;
+      font-family: var(--font-display);
       letter-spacing: 0.06em;
       margin-bottom: var(--sp-2);
     }
@@ -1730,7 +1845,7 @@
     .spotlight-num {
       font-size: clamp(3.5rem, 8vw, 5rem);
       font-weight: 800;
-      color: var(--accent); letter-spacing: 0.02em; font-family: var(--font-num); font-variant-numeric: tabular-nums; text-shadow: none;
+      color: var(--accent); letter-spacing: var(--tracking-display); font-family: var(--font-num); font-variant-numeric: tabular-nums; text-shadow: none;
       margin: 10px 0;
       line-height: 1;
     }
@@ -1772,12 +1887,18 @@
       color: var(--accent);
     }
 
+    /* The stage carries the same film grain as the console, as a background
+       image inside its own fill rather than as an overlay on top of it, so it
+       cannot sit between the room and a number. `background` is a shorthand
+       here, so the image has to be declared alongside it. */
     #projectorView {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 10000;
       background: var(--stage-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 140px 140px;
   color: var(--stage-text);
       flex-direction: column;
       pointer-events: auto;
@@ -1816,6 +1937,7 @@
     #projectorView.clean-mode :focus-visible,
     #projectorView.clean-mode :hover {
       outline: none !important;
+      box-shadow: none !important;
     }
 
     /* Print / screenshot: paper has no projector chrome and no viewport-sized
@@ -1845,6 +1967,8 @@
         inset: auto !important;
         height: auto !important;
         min-height: 0 !important;
+        /* Shorthand on purpose: it also resets background-image, which drops
+           the film grain. A printed stage should be ink, not texture. */
         background: var(--stage-bg) !important;
         z-index: auto !important;
       }
@@ -2025,6 +2149,9 @@
       font-weight: 800;
       font-size: clamp(4rem, 14vw, 10rem);
       line-height: 1;
+      /* The headline of the whole app, read from the back of a hall. The
+         digits are tabular and 4-across, so they are tracked tight. */
+      letter-spacing: var(--tracking-display-lg);
       color: var(--accent);
       background: var(--surface-1);
       border: 2px solid var(--accent);
@@ -2102,12 +2229,17 @@
       position: relative;
     }
 
+    /* The floating bar gets the grain for the same reason as the projector:
+       it is a surface the room reads, so it gets texture as a background
+       layer inside its own fill, never as an overlay. */
     #pipBarView {
       display: none;
       position: fixed;
       inset: 0;
       z-index: 20000;
       background: var(--stage-bg);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+      background-size: 140px 140px;
   color: var(--stage-text);
     }
     #pipBarView .pip-single-row-body {
@@ -2219,10 +2351,6 @@
     .theme-swatch:active {
       transform: translateY(-1px) scale(0.98);
       transition-duration: 90ms;
-    }
-    .theme-swatch:focus-visible {
-      outline: 3px solid var(--accent);
-      outline-offset: 2px;
     }
     .theme-swatch.active {
       border-color: var(--accent);
