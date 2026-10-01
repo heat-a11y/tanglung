@@ -2036,16 +2036,19 @@ describe('Destructive actions are visibly red and legible', () => {
   });
 
   it('pairs footer actions to one shape', () => {
-    // .action-btn is --r-pill (999px) and .icon-btn is --r-sm (6px); mixing
-    // them in one footer rendered a pill next to a rectangle.
+    // A Cancel and an Apply in one row must not disagree on shape. This used to
+    // need a .modal-footer override because .action-btn was --r-pill and
+    // .icon-btn was --r-sm, which rendered a pill next to a rectangle. Both
+    // are now --r-sm, so the base classes agree and the override is gone.
+    //
+    // The invariant is the rendering, not the mechanism, so this asserts the
+    // two things that can actually break it: the base classes must still share
+    // a radius, and a footer-scoped rule must never re-introduce a mismatch.
+    // Asserting the old mechanism instead would have pinned a pill that the
+    // restyle deliberately removed.
     const css = INDEX_HTML.match(/<style id="mainStyles">([\s\S]*?)<\/style>/)[1];
-    assert.match(css, /\.modal-footer \.icon-btn\s*\{[\s\S]*?border-radius:\s*var\(--r-pill\)/,
-      'the secondary footer button does not adopt the primary shape');
-    // The underlying classes still disagree, which is exactly why the footer
-    // needs its own rule: if someone drops the .modal-footer scope the pair
-    // silently splits back into a 999px pill and a 6px rectangle.
-    // Read each base rule on its own; a lazy cross-rule match would pick up the
-    // .modal-footer override and make the two look identical.
+    // Read each base rule on its own; a lazy cross-rule match would pick up a
+    // footer override and make two disagreeing classes look identical.
     const radiusOf = (selector) => {
       for (const m of css.matchAll(/^([^{}\n]+)\{([^}]*)\}/gm)) {
         if (m[1].trim() !== selector) continue;
@@ -2056,16 +2059,25 @@ describe('Destructive actions are visibly red and legible', () => {
     };
     const actionRadius = radiusOf('.action-btn');
     const iconRadius = radiusOf('.icon-btn');
-    assert.equal(actionRadius, 'var(--r-pill)', `action-btn radius is ${actionRadius}`);
-    assert.equal(iconRadius, 'var(--r-sm)', `icon-btn radius is ${iconRadius}`);
-    assert.notEqual(actionRadius, iconRadius,
-      'if the base shapes now match, the .modal-footer override is dead code');
+    assert.ok(actionRadius, '.action-btn has no base border-radius to compare');
+    assert.ok(iconRadius, '.icon-btn has no base border-radius to compare');
+    assert.equal(actionRadius, iconRadius,
+      `footer pair would disagree: .action-btn is ${actionRadius}, .icon-btn is ${iconRadius}`);
+
+    // A footer rule that sets a radius is fine only if it sets the same one the
+    // bases share; anything else re-splits the pair inside the footer.
+    for (const m of css.matchAll(/\.modal-footer [^{]*\{([^}]*)\}/g)) {
+      const r = m[1].match(/border-radius:\s*([^;]+);/);
+      if (!r) continue;
+      assert.equal(r[1].trim(), actionRadius,
+        `a .modal-footer rule sets ${r[1].trim()}, which re-splits the pair`);
+    }
 
     const footers = [...INDEX_HTML.matchAll(/<div class="modal-footer">([\s\S]*?)<\/div>/g)];
     assert.ok(footers.length >= 1, 'no modal footer found to audit');
     for (const [body] of footers) {
-      // A footer may legitimately use both classes; the scoped rule is what
-      // makes them agree, so just assert every button carries a shape class.
+      // Every footer button still has to carry one of the two shape classes,
+      // otherwise nothing is anchoring its geometry to the scale at all.
       const buttons = [...body.matchAll(/<button[^>]*class="([^"]+)"/g)].map((m) => m[1]);
       assert.ok(buttons.length >= 2, 'a footer should hold a cancel and an apply');
       for (const cls of buttons) {
