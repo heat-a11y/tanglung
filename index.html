@@ -42,9 +42,19 @@
       --surface-rgb: 255, 255, 255;
       --on-status: #ffffff;
       --result-ink: #0b0d10;
-      --success: #0e703d;
-      --success-strong: #0c6236;
-      --success-soft: #d2e2d9;
+      /* A fresher, more emerald success. The old #0e703d was a flat bottle
+         green that read as "disabled" next to the accent, which matters on the
+         winners board where green and the accent sit side by side. This is a
+         jade-leaning emerald instead, and it is deliberately darker than the
+         value that would look prettiest in isolation: --success is used as a
+         solid fill under white ink, so it has to clear 4.5:1 against white,
+         and --success-soft has to stay dark enough to read as a chip against
+         a white card (1.33:1) while --success still clears 4.5:1 on top of
+         it. Those three constraints together pin this ramp; the contrast
+         audit enforces all of them in every one of the 36 themes. */
+      --success: #00723a;
+      --success-strong: #005a2e;
+      --success-soft: #c4e6da;
       --warning: #9f4a09;
       --warning-soft: #e9decd;
       --danger: #ba271b;
@@ -52,8 +62,8 @@
       --danger-soft: #e9dad8;
       --info: #175acf;
       --info-soft: #d6ddea;
-      --success-rgb: 14, 112, 61;
-      --success-strong-rgb: 12, 98, 54;
+      --success-rgb: 0, 114, 58;
+      --success-strong-rgb: 0, 90, 46;
       --warning-rgb: 159, 74, 9;
       --danger-rgb: 186, 39, 27;
       --danger-strong-rgb: 164, 34, 24;
@@ -82,9 +92,12 @@
       --surface-rgb: 20, 23, 28;
       --on-status: #0b0d10;
       --result-ink: #f4f7fa;
-      --success: #4ade80;
-      --success-strong: #60e28f;
-      --success-soft: #24442e;
+      /* Dark mode gets a brighter, mintier green than light mode on purpose:
+         the same hex that clears 5:1 on white would glare on a near-black
+         stage. 10:1 on the stage ink, 6:1 on its own tint. */
+      --success: #34d38a;
+      --success-strong: #22c77c;
+      --success-soft: #1f3f2f;
       --warning: #fbbf24;
       --warning-soft: #4e3c15;
       --danger: #f87171;
@@ -92,8 +105,8 @@
       --danger-soft: #4d2623;
       --info: #60a5fa;
       --info-soft: #1e3552;
-      --success-rgb: 74, 222, 128;
-      --success-strong-rgb: 96, 226, 143;
+      --success-rgb: 52, 211, 138;
+      --success-strong-rgb: 34, 199, 124;
       --warning-rgb: 251, 191, 36;
       --danger-rgb: 248, 113, 113;
       --danger-strong-rgb: 249, 130, 130;
@@ -134,7 +147,10 @@
       --stage-border: #333b46;
       --stage-text: #f7f9fb;
       --stage-text-2: #a9b3c0;
-      --scrim: rgba(11, 13, 16, 0.45);
+      /* Deeper than the old 0.45. A scrim at 45% leaves the page behind the
+         dialog legible enough to compete with it, and a modal you can read
+         the console through is not a modal. */
+      --scrim: rgba(11, 13, 16, 0.62);
       --strip-font: 1.35rem;
 
       /* Typography: one sans stack for every script, one tabular stack for
@@ -171,11 +187,14 @@
       --sp-5: 24px;
       --sp-6: 32px;
 
-      /* Corners are generous by current standards: 8px on a control, 16px on a
-         panel. The old 6px/8px/12px read as 2015-era. */
-      --r-sm: 8px;
-      --r-md: 10px;
-      --r-lg: 16px;
+      /* Corners. The scale runs continuously rather than in three steps, so a
+         card and the control sitting on it differ by a hairline instead of by
+         a visible notch, which is most of what separates "panel with rounded
+         corners" from a considered surface. */
+      --r-sm: 10px;
+      --r-md: 14px;
+      --r-lg: 20px;
+      --r-xl: 28px;
       --r-pill: 999px;
 
       /* Motion. Every transition in the app is one of these three durations on
@@ -190,11 +209,16 @@
       --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
       --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
 
-      /* Two-layer shadows: a tight contact shadow plus a wide ambient one.
-         Neither a light nor a dark base needs a single heavy drop. */
-      --sh-1: 0 1px 2px rgba(16, 18, 24, 0.06), 0 1px 1px rgba(16, 18, 24, 0.04);
-      --sh-2: 0 2px 4px rgba(16, 18, 24, 0.04), 0 4px 12px rgba(16, 18, 24, 0.07);
-      --sh-3: 0 4px 8px rgba(16, 18, 24, 0.04), 0 12px 32px rgba(16, 18, 24, 0.11);
+      /* Three-layer shadows: a hairline contact, a mid spread, and a wide
+         ambient that carries the surface. Every layer is very low alpha,
+         because the thing that makes a shadow look expensive is the softness
+         of the largest layer, not the darkness of any of them. */
+      --sh-1: 0 1px 2px rgba(16, 18, 24, 0.05), 0 1px 1px rgba(16, 18, 24, 0.03);
+      --sh-2: 0 2px 4px rgba(16, 18, 24, 0.03), 0 6px 16px rgba(16, 18, 24, 0.06);
+      --sh-3: 0 4px 8px rgba(16, 18, 24, 0.03), 0 16px 40px rgba(16, 18, 24, 0.09);
+      /* The stage, the projector and a modal all sit above the page, so they
+         get a deeper, more diffuse drop than a card. */
+      --sh-4: 0 8px 16px rgba(16, 18, 24, 0.04), 0 32px 80px rgba(16, 18, 24, 0.12);
       --focus-ring: 0 0 0 3px var(--accent-ring);
     }
 
@@ -408,9 +432,19 @@
       max-width: 480px;
     }
 
+    /* One shadow, declared once. This rule carried both --sh-2 and --sh-3 on
+       separate lines, so the second silently won and the first was dead
+       weight in the file. */
     .toast {
-      background: var(--surface-1); border: 1px solid var(--border); border-left: 3px solid var(--accent); color: var(--text); padding: 10px 18px; box-shadow: var(--sh-2);
-      border-radius: var(--r-sm);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      /* The accent rail is what tells the operator the message is about the
+         draw rather than the connection, so it stays even though the rest of
+         the surface went quiet. */
+      border-left: 3px solid var(--accent);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: var(--r-md);
       font-size: var(--fs-sm);
       font-weight: 600;
       box-shadow: var(--sh-3);
@@ -487,13 +521,19 @@
       to { opacity: 1; transform: none; }
     }
 
+    /* The bar is a header, not a panel. It carries a hairline rather than a
+       2px accent rule: a coloured bar across the top of every screen competes
+       with the stage for attention, and the accent already owns the stage
+       border and the draw button. Keeping it neutral is what lets the accent
+       mean "this is live" instead of "this is the app's favourite colour". */
     .top-bar {
       min-height: 68px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 14px;
-      border-bottom: 2px solid var(--accent); background: var(--surface-1); box-shadow: var(--sh-1);
+      padding: 10px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-1);
       position: relative;
       z-index: 10;
       flex-wrap: wrap;
@@ -567,10 +607,12 @@
       flex-wrap: wrap;
     }
 
+    /* A reading, not a control. Flat fill, no border, and tabular figures so
+       a counter ticking in the corner does not shuffle its own width. */
     .stat-badge {
-      background: var(--surface-3);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
-      padding: 5px 10px;
+      padding: 6px 12px;
       border-radius: var(--r-pill);
       font-size: var(--fs-xs);
       color: var(--text);
@@ -633,13 +675,19 @@
       justify-content: center;
       gap: 6px;
       line-height: 1.3;
-      background: rgba(var(--accent-rgb), 0.12);
-      border: 1px solid var(--border-strong);
+      /* A quiet chip, not an accent chip. There are a dozen of these in the
+         toolbar and an earlier version tinted every one of them with the
+         accent, which meant the accent was no longer a signal for anything --
+         it was just the toolbar's colour. Neutral at rest, accent on hover:
+         the colour now means "you can act on this". Every theme's accent
+         clears 4.5:1 on --surface-1, which the contrast audit checks. */
+      background: var(--surface-1);
+      border: 1px solid var(--border);
       color: var(--accent);
-      padding: 6px 10px;
+      padding: 8px 12px;
       border-radius: var(--r-sm);
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 600;
       font-size: var(--fs-sm);
       white-space: nowrap;
       /* One transition list for the whole control, so a press never reads as
@@ -652,8 +700,9 @@
         transform var(--dur-1) var(--ease-out);
     }
     .icon-btn:hover:not(:disabled) {
-      background: rgba(var(--accent-rgb), 0.24);
-      border-color: var(--accent);
+      background: var(--surface-2);
+      border-color: var(--border-strong);
+      color: var(--accent-strong);
       transform: translateY(-1px);
       box-shadow: var(--sh-1);
     }
@@ -809,12 +858,15 @@
       color: var(--on-status);
     }
 
+    /* Two columns, and the gutter is what separates them. The stage takes the
+       slack because that is where the draw happens; the board is a fixed-ish
+       column because a list of names should not reflow as it grows. */
     .viewport-grid {
       flex: 1;
       display: grid;
       grid-template-columns: minmax(420px, 1fr) minmax(340px, 460px);
-      gap: 12px;
-      padding: 12px;
+      gap: var(--sp-4);
+      padding: var(--sp-4);
       min-height: 0;
       position: relative;
       z-index: 2;
@@ -832,29 +884,113 @@
       .billboard-column { order: 2; min-height: 400px; }
     }
 
+    /* Tablet and phone. The stage stops being a fixed-height viewport here and
+       becomes a document, because a nested scroll region inside a page that
+       already scrolls is the single worst thing to hand someone on a phone.
+       Touch targets go to 44px at the same time, which is the WCAG 2.5.5
+       floor and roughly a fingertip. */
+    @media (max-width: 768px) {
+      .top-bar {
+        padding: var(--sp-3);
+        gap: var(--sp-2);
+      }
+      .viewport-grid {
+        padding: var(--sp-3);
+        gap: var(--sp-3);
+      }
+      .main-stage {
+        padding: var(--sp-3);
+        min-height: 0;
+      }
+      /* Every control in the flow, not just the primary ones. A 32px button is
+         usable with a mouse and unusable with a thumb. */
+      .icon-btn,
+      .action-btn,
+      .tab-btn,
+      .theme-swatch,
+      .stat-badge,
+      .billboard-card {
+        min-height: 44px;
+      }
+      .action-btn {
+        width: 100%;
+        padding: 14px 20px;
+      }
+      .batch-actions,
+      .manual-actions,
+      .recycle-actions,
+      .modal-footer {
+        flex-wrap: wrap;
+      }
+      .batch-actions > *,
+      .manual-actions > * {
+        flex: 1 1 160px;
+      }
+      .modal-box {
+        max-height: 92vh;
+        padding: var(--sp-3);
+      }
+      .toast-container {
+        top: 12px;
+        width: calc(100% - 24px);
+      }
+      .toast {
+        padding: 12px 14px;
+      }
+      /* The board's rows are the most-tapped thing on the whole page on a
+         phone, since claiming a name is done by touch. */
+      .billboard-card {
+        padding: 10px 12px;
+      }
+      .column-banner {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+      }
+    }
+
+    /* The narrowest phones: the winners grid drops to two columns, which the
+       680px query already handles, and the filter row stops trying to sit on
+       one line. */
+    @media (max-width: 480px) {
+      .viewport-grid { padding: var(--sp-2); }
+      .tab-btn {
+        font-size: var(--fs-xs);
+        padding: 10px 4px;
+      }
+      .pool-field-grid { grid-template-columns: 1fr; }
+    }
+
+    /* The board is a quiet sibling of the stage, not a second stage. It gets a
+       hairline and a soft drop and no accent, so the eye lands on the draw
+       first and reads the winners second. The old inset accent glow on this
+       panel was the reason the two columns felt equally loud. */
     .traditional-frame {
-      background: rgba(var(--surface-rgb), 0.92);
-      border: 1px solid var(--border-strong);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
       border-radius: var(--r-lg);
-      box-shadow: var(--sh-3), inset 0 0 10px rgba(var(--accent-rgb), 0.12);
+      box-shadow: var(--sh-2);
       position: relative;
       display: flex;
       flex-direction: column;
       min-height: 0;
     }
 
+    /* A heading, not a badge. Uppercase-equivalent tracking on a short CJK
+       string, generous side padding, and no drop shadow: the fill alone has
+       to do the work, so the text is set in the theme's contrast ink rather
+       than an arbitrary white. */
     .column-banner {
       background: var(--accent);
       color: var(--accent-contrast);
       font-weight: 700;
-      padding: 8px;
+      padding: 12px 16px;
       text-align: center;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       font-size: var(--fs-sm);
-      box-shadow: var(--sh-1);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: baseline;
       gap: 6px;
       flex-shrink: 0;
     }
@@ -871,15 +1007,19 @@
       cursor: pointer;
     }
 
+    /* The stage is the one surface that is allowed to be loud, because it is
+       the thing the room looks at. A 2px accent frame plus a deep drop is how
+       it earns that: the accent is used exactly once, on the thing that
+       matters, instead of being spread across every panel as a hairline. */
     .main-stage {
       background: var(--surface-result);
       color: var(--text);
       border: 2px solid var(--accent);
-      border-radius: var(--r-lg);
+      border-radius: var(--r-xl);
       display: flex;
       flex-direction: column;
-      padding: var(--sp-4);
-      box-shadow: var(--sh-3);
+      padding: var(--sp-5);
+      box-shadow: var(--sh-4);
       position: relative;
       min-height: 0;
     }
@@ -897,31 +1037,46 @@
       flex-shrink: 0;
     }
 
+    /* A segmented control, not three buttons. The track is one surface and the
+       active segment is a filled pill inside it, so the group reads as a single
+       control with three positions rather than three competing buttons. This
+       is the one place in the app where a filled accent is right even at rest,
+       because the active mode is the operator's current context. */
     .tab-group {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       justify-content: center;
-      margin-bottom: var(--sp-3);
+      margin-bottom: var(--sp-4);
+      padding: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      align-self: center;
+      max-width: 100%;
       flex-shrink: 0;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 9px 6px;
+      padding: 9px 18px;
       font-size: var(--fs-sm);
-      font-weight: 700;
-      border: 1px solid var(--accent);
-      background: var(--surface-1);
-      color: var(--accent);
-      border-radius: var(--r-sm);
+      font-weight: 600;
+      /* Transparent at rest: the segmented track supplies the surface, and an
+         outline here would draw a box inside a box. */
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-2);
+      border-radius: var(--r-pill);
       cursor: pointer;
+      white-space: nowrap;
       transition: background var(--dur-2) var(--ease-out),
         color var(--dur-2) var(--ease-out),
         box-shadow var(--dur-2) var(--ease-out),
         transform var(--dur-1) var(--ease-out);
     }
     .tab-btn:hover:not(.active) {
-      background: rgba(var(--accent-rgb), 0.08);
+      background: var(--surface-3);
+      color: var(--text);
     }
     .tab-btn:active:not(.active) {
       transform: scale(0.98);
@@ -931,7 +1086,7 @@
     .tab-btn.active {
       background: var(--accent);
       color: var(--accent-contrast);
-      box-shadow: var(--sh-2);
+      box-shadow: var(--sh-1);
     }
 
     .panel {
@@ -952,12 +1107,16 @@
       color: var(--accent-contrast);
       font-weight: 800;
       font-size: clamp(1.05rem, 2vw, 1.3rem);
-      border: 1px solid transparent; padding: 12px 32px;
+      border: 1px solid transparent;
+      padding: 16px 44px;
       border-radius: var(--r-pill);
       cursor: pointer;
-      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 6px 16px rgba(var(--accent-rgb), 0.22);
-      margin-bottom: var(--sp-3);
-      letter-spacing: 0.05em;
+      /* The one saturated shadow in the app, and it is on the one control the
+         operator is reaching for when the room is dark. The accent-derived
+         bloom means it retints with the festival theme. */
+      box-shadow: 0 2px 4px rgba(16, 18, 24, 0.08), 0 8px 24px rgba(var(--accent-rgb), 0.28);
+      margin-bottom: var(--sp-4);
+      letter-spacing: 0.02em;
       transition: transform var(--dur-2) var(--ease-out),
         box-shadow var(--dur-2) var(--ease-out),
         background var(--dur-1) var(--ease-out);
@@ -1001,9 +1160,13 @@
       }
     }
 
+    /* The ten cards are the payoff of the whole screen, so they get the
+       strongest surface in the app: a filled card, a soft lift, and a radius
+       a step above the controls. The stagger is what makes the batch feel
+       dealt rather than pasted. */
     .number-tag {
-      background: var(--surface-result);
-      border: 2px solid var(--accent-strong);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
       border-radius: var(--r-md);
       display: flex;
       flex-direction: column;
@@ -1013,7 +1176,7 @@
          holds the first keyframe, so it waits off-screen instead of sitting
          visible and then jumping. */
       animation: dealIn var(--dur-3) var(--ease-spring) backwards;
-      box-shadow: var(--sh-1);
+      box-shadow: var(--sh-2);
       position: relative;
       padding: 6px;
       min-height: 60px;
@@ -1294,7 +1457,11 @@
       letter-spacing: var(--tracking-display);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
-      box-shadow: inset 0 0 25px rgba(var(--accent-strong-rgb), 0.2), var(--sh-2);
+      /* The 25px inset accent glow came from a lit-sign look and it fought the
+         digits: a soft light behind a number raises the local background and
+         eats exactly the contrast the number depends on. A hairline frame and
+         a real drop shadow give the same lift with none of that cost. */
+      box-shadow: var(--sh-2);
       margin-bottom: var(--sp-4);
       line-height: 1;
     }
@@ -1430,11 +1597,13 @@
       border-color: var(--accent);
     }
 
+    /* Secondary controls in the filter row: neutral like .icon-btn, so the
+       filled accent is left to the active preset chip. */
     .filter-btn {
-      background: rgba(var(--accent-rgb), 0.18);
-      border: 1px solid var(--border-strong);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
       color: var(--accent);
-      padding: 4px 8px;
+      padding: 6px 10px;
       border-radius: var(--r-sm);
       font-size: var(--fs-xs);
       font-weight: 700;
@@ -1514,8 +1683,12 @@
       align-content: start;
     }
 
+    /* A winner row is a line of text, not a button, so it earns its emphasis
+       from the number's weight rather than from a surface. Hairline border,
+       no fill, and a transparent background at rest: the grid then reads as a
+       list, and only the row under the pointer lights up. */
     .billboard-card {
-      background: var(--surface-1);
+      background: transparent;
       color: var(--text);
       border: 1px solid var(--border-subtle);
       padding: 6px 8px;
@@ -1607,18 +1780,22 @@
       animation: fadeIn var(--dur-2) var(--ease-out);
     }
 
+    /* A dialog is the topmost thing on the screen, so it takes the deepest
+       shadow in the scale and a radius larger than any panel. The entrance
+       overshoots slightly and settles, which is what separates a dialog from a
+       card that merely got bigger. */
     .modal-box {
-      background: var(--surface-2);
-      border: 1px solid var(--border-strong);
-      border-radius: var(--r-lg);
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
       width: 100%;
       max-width: 600px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
-      padding: var(--sp-4);
+      padding: var(--sp-5);
       color: var(--text);
-      box-shadow: var(--sh-3);
+      box-shadow: var(--sh-4);
       animation: riseIn var(--dur-3) var(--ease-spring);
     }
 
@@ -1631,10 +1808,13 @@
       padding-bottom: var(--sp-2);
       margin-bottom: var(--sp-3);
     }
+    /* A dialog title is a heading, so it gets display tracking and a heavier
+       weight than a label. The old 0.03em positive tracking was set for Latin
+       caps and does nothing for CJK, where it just loosens the line. */
     .modal-header h3 {
       font-size: var(--fs-lg);
       font-weight: 700;
-      letter-spacing: 0.03em;
+      letter-spacing: var(--tracking-display);
     }
 
     .modal-list {
@@ -1825,9 +2005,13 @@
       padding: 12px;
     }
 
+    /* The claim card is the one moment a member sees on their own phone, so it
+       is the one surface that gets the deepest shadow and the largest radius
+       in the app. It floats above the audience view and reads as a card
+       handed to them rather than a page that loaded. */
     .spotlight-card {
-      background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-lg); padding: clamp(20px, 4vw, 36px); text-align: center; color: var(--text);
-      box-shadow: var(--sh-3);
+      background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-xl); padding: clamp(24px, 5vw, 44px); text-align: center; color: var(--text);
+      box-shadow: var(--sh-4);
       animation: popIn 0.3s ease;
       max-width: 480px;
       width: 100%;
@@ -1838,8 +2022,8 @@
       font-size: var(--fs-2xl);
       font-weight: 700;
       font-family: var(--font-display);
-      letter-spacing: 0.06em;
-      margin-bottom: var(--sp-2);
+      letter-spacing: var(--tracking-display);
+      margin-bottom: var(--sp-3);
     }
 
     .spotlight-num {
@@ -2300,17 +2484,19 @@
 
     /* Light and dark are separate sections so the split is obvious instead of
        being a flat list where half the swatches look incompatible. */
+    /* Section headings in the picker. Tracking up, weight down, and no fill:
+       a heading is a label for the row beneath it, and boxing every section
+       made a list of twenty themes look like a table of contents. */
     .theme-group-title {
       display: flex;
       align-items: center;
       gap: var(--sp-2);
       font-size: var(--fs-xs);
-      font-weight: 700;
-      letter-spacing: 0.06em;
+      font-weight: 500;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      padding: 6px 10px;
-      border: 1px solid;
-      border-radius: var(--r-sm);
+      padding: var(--sp-4) 2px var(--sp-2);
+      border: 0;
     }
     .theme-group-dot {
       width: 12px;
@@ -2357,22 +2543,27 @@
       box-shadow: 0 0 0 1px var(--accent), var(--sh-2);
     }
 
+    /* The swatch previews the whole accent ramp as one object, so the four
+       steps read as a single colour sample rather than four unrelated chips.
+       Only the top step is full width; the rest step down, which makes the
+       ramp legible at 60px without a label. */
     .theme-swatch-bars {
       display: flex;
       flex-direction: column;
-      gap: 3px;
       border-radius: var(--r-sm);
       overflow: hidden;
+      box-shadow: var(--sh-1);
     }
     .theme-swatch-bars div {
-      height: 10px;
+      height: 14px;
     }
     .theme-swatch-name {
       font-size: var(--fs-xs);
-      font-weight: 900;
+      font-weight: 600;
       color: var(--text-2);
       text-align: center;
       white-space: nowrap;
+      letter-spacing: 0.01em;
     }
   </style>
 </head>
@@ -2797,7 +2988,10 @@
 
       <!-- 3. RIGHT COLUMN: MASTER BILLBOARD WITH RANGE FILTER -->
       <div class="traditional-frame billboard-column">
-        <div class="column-banner" style="background: linear-gradient(90deg, var(--success-strong) 0%, var(--success) 50%, var(--success-strong) 100%); color:var(--on-status);">
+        <!-- The board header takes the accent, not the success green. Green
+             means "claimed" in this app, and spending a full bar of it on a
+             heading made the most static element on the page the loudest. -->
+        <div class="column-banner" style="background: var(--accent); color: var(--accent-contrast);">
           <span data-i18n="bbBanner">中奖公布栏</span> (<span id="bbFilteredCount">0</span>/<span id="bbMaxCount">110</span>)
         </div>
 
@@ -4347,10 +4541,7 @@
       // right now rather than the mode of the themes underneath it.
       const n = readModeNeutrals(document.documentElement.getAttribute('data-mode') || 'light');
       return `<div class="theme-group">
-            <div class="theme-group-title" style="color:${n.text}; background:${n.surface}; border-color:${n.border};">
-              <span class="theme-group-dot" style="background:${n.surface}; border-color:${n.border};"></span>
-              ${title}
-            </div>
+            <div class="theme-group-title" style="color:${n.text};">${title}</div>
             <div class="theme-group-grid">${ids.map(themeSwatchCard).join('')}</div>
           </div>`;
     }
@@ -6052,7 +6243,11 @@
       vipRollStartTs = Date.now();
       const btn = document.getElementById('vipToggleBtn');
       btn.textContent = I18N[currentLang].btnStopRoll;
-      btn.style.background = "linear-gradient(135deg, var(--danger) 0%, var(--danger-strong) 100%)";
+      // Solid --danger-strong, not a gradient, so the stop state is a hard
+      // colour change. A gradient meant the button never looked like a
+      // different button from the resting accent, which is the one signal
+      // that tells the operator the roll is live.
+      btn.style.background = "var(--danger-strong)";
       // Dark mode's danger is a light red, so a literal #fff here would be the
       // same near-invisible white the other inline chips had.
       btn.style.color = "var(--on-status)";
@@ -6880,13 +7075,20 @@
       const ribbon = document.getElementById('pacingRibbon');
       if (winners.length >= (maxPrizes - 10) && winners.length < maxPrizes) {
         ribbon.textContent = t.pacingGrand;
-        ribbon.style.background = "linear-gradient(90deg, var(--danger-strong) 0%, var(--danger) 50%, var(--danger-strong) 100%)";
+        // Solid fills, not gradients. A gradient across a status ribbon reads
+        // as decoration on top of a state change, when the point of the ribbon
+        // is that the state is legible from the back of the room. The strong
+        // step carries each one so the ink stays above 4.5:1 in both modes.
+        ribbon.style.background = "var(--danger-strong)";
+        ribbon.style.color = "var(--on-status)";
       } else if (winners.length >= maxPrizes) {
         ribbon.textContent = t.pacingDone.replace('{quota}', maxPrizes);
-        ribbon.style.background = "linear-gradient(90deg, var(--success-strong) 0%, var(--success) 50%, var(--success-strong) 100%)";
+        ribbon.style.background = "var(--success-strong)";
+        ribbon.style.color = "var(--on-status)";
       } else {
         ribbon.textContent = t.pacingConsolation.replace('{quota}', Math.max(0, maxPrizes - 10));
-        ribbon.style.background = "linear-gradient(90deg, var(--accent-strong) 0%, var(--accent) 50%, var(--accent-strong) 100%)";
+        ribbon.style.background = "var(--accent-strong)";
+        ribbon.style.color = "var(--on-status)";
       }
 
       const exhausted = winners.length >= maxPrizes || available.length === 0;
@@ -7654,7 +7856,15 @@
       if (!pin) return;
       let ok = false;
       try {
-        ok = (await sha256Hex(pin)) === HOST_PIN_HASH;
+        // sha256HexSync, not the old async crypto.subtle version. e674794
+        // replaced that helper for the fairness code and left this call site
+        // pointing at a function that no longer existed, so the ReferenceError
+        // was caught here and reported as a wrong PIN -- no password could
+        // ever open master view. The sync helper is also the right choice on
+        // its own terms: crypto.subtle only exists in a secure context, so over
+        // plain http on a LAN address (how a laptop reaches a projector at a
+        // venue) it would have been undefined and failed the same way.
+        ok = sha256HexSync(pin) === HOST_PIN_HASH;
       } catch (e) {
         showToast(I18N[currentLang].hostWrong, true);
         return;
