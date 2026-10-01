@@ -178,7 +178,7 @@
       --fs-md: clamp(0.9rem, 0.87rem + 0.15vw, 1rem);
       --fs-lg: clamp(1rem, 0.96rem + 0.2vw, 1.15rem);
       --fs-xl: clamp(1.1rem, 1rem + 0.5vw, 1.4rem);
-      --fs-2xl: clamp(1.35rem, 1.15rem + 1vw, 2rem);
+      --fs-2xl: clamp(1.6rem, 1.3rem + 1.2vw, 2.4rem);
 
       --sp-1: 4px;
       --sp-2: 8px;
@@ -187,14 +187,17 @@
       --sp-5: 24px;
       --sp-6: 32px;
 
-      /* Corners. The scale runs continuously rather than in three steps, so a
-         card and the control sitting on it differ by a hairline instead of by
-         a visible notch, which is most of what separates "panel with rounded
-         corners" from a considered surface. */
-      --r-sm: 10px;
-      --r-md: 14px;
-      --r-lg: 20px;
-      --r-xl: 28px;
+      /* Corners. Four steps, each a doubling-ish increment, starting tighter.
+         A small radius on controls is what separates a contemporary interface
+         from a soft one: rounded-everything is a house style that dates fast,
+         because it implies the surfaces are cushions rather than panels. The
+         pill survives only where the shape carries meaning -- a chip, a
+         status dot, a segmented segment -- not on a primary button, where it
+         is purely decorative. */
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 14px;
+      --r-xl: 20px;
       --r-pill: 999px;
 
       /* Motion. Every transition in the app is one of these three durations on
@@ -461,7 +464,7 @@
       background: var(--surface-2);
       color: var(--accent);
       font: inherit;
-      font-weight: 800;
+      font-weight: 700;
       cursor: pointer;
       white-space: nowrap;
     }
@@ -553,7 +556,7 @@
 
     .brand-title {
       font-size: var(--fs-xl);
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent);
       letter-spacing: -0.015em; text-shadow: none;
       border-bottom: 1px dashed transparent;
@@ -621,19 +624,16 @@
       transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out),
         transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     }
-    /* A theme-derived glow, not a fixed one. rgba(var(--accent-rgb), ...) is
-       how the app already tints surfaces, so the bloom retints with the
-       palette in all 36 themes instead of being a grey shadow that fights a
-       dark theme. box-shadow (not filter: drop-shadow) because it does not
-       force a new rendering layer on every hover, and it leaves the text
-       itself perfectly sharp. */
+    /* Hover is a border and surface change, nothing more. A tinted glow on
+       every hoverable surface is the habit that makes an interface read as
+       generated: the accent gets applied a second time in shadow form, so the
+       same colour is arguing with itself. */
     .stat-badge:hover {
       border-color: var(--border-strong);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 10px rgba(var(--accent-rgb), 0.14);
+      background: var(--surface-2);
     }
     .stat-badge:active {
-      transform: translateY(0) scale(0.97);
+      transform: scale(0.98);
       transition-duration: 90ms;
     }
     .stat-badge strong {
@@ -653,18 +653,19 @@
 
     .top-actions {
       display: flex;
-      gap: 5px;
+      gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+      row-gap: 6px;
     }
 
     .lang-select {
       background: var(--surface-input);
       border: 1.5px solid var(--accent);
       color: var(--accent);
-      font-weight: 900;
+      font-weight: 700;
       padding: 4px 7px;
-      border-radius: 6px;
+      border-radius: var(--r-sm);
       font-size: 0.82rem;
       cursor: pointer;
     }
@@ -703,14 +704,11 @@
       background: var(--surface-2);
       border-color: var(--border-strong);
       color: var(--accent-strong);
-      transform: translateY(-1px);
-      box-shadow: var(--sh-1);
     }
     /* The press is deliberately under 150ms. Anything slower stops feeling
        connected to the finger and starts feeling like a lag. */
     .icon-btn:active:not(:disabled) {
-      transform: translateY(0) scale(0.96);
-      box-shadow: none;
+      transform: scale(0.995);
       transition-duration: 90ms;
     }
     .icon-btn:disabled,
@@ -760,7 +758,7 @@
       border-radius: var(--r-md);
       box-shadow: var(--sh-3);
       opacity: 0;
-      transform: translateY(-6px) scale(0.97);
+      transform: translateY(-4px) scale(0.98);
       transform-origin: top right;
       pointer-events: none;
       transition: opacity var(--dur-2) var(--ease-out),
@@ -1024,16 +1022,20 @@
       min-height: 0;
     }
 
+    /* A context line, not a badge. It used to be a filled pill, which put a
+       third accent mass above the tab track and made the top of the stage the
+       loudest thing on a screen whose job is to show a number. Now it reads as
+       a quiet caption: accent text, no fill, no box. */
     .pacing-ribbon {
       text-align: center;
-      font-weight: 700;
-      color: var(--accent-contrast);
-      background: var(--accent);
-      border-radius: var(--r-pill);
+      font-weight: 600;
+      color: var(--accent);
+      background: transparent;
+      border-radius: var(--r-sm);
       margin-bottom: var(--sp-3);
-      padding: 6px 14px;
+      padding: 4px 10px;
       font-size: var(--fs-sm);
-      letter-spacing: 0.04em;
+      letter-spacing: 0;
       flex-shrink: 0;
     }
 
@@ -1044,13 +1046,13 @@
        because the active mode is the operator's current context. */
     .tab-group {
       display: flex;
-      gap: 4px;
+      gap: 2px;
       justify-content: center;
       margin-bottom: var(--sp-4);
-      padding: 4px;
+      padding: 3px;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: var(--r-pill);
+      border-radius: var(--r-md);
       align-self: center;
       max-width: 100%;
       flex-shrink: 0;
@@ -1066,7 +1068,7 @@
       border: 1px solid transparent;
       background: transparent;
       color: var(--text-2);
-      border-radius: var(--r-pill);
+      border-radius: var(--r-sm);
       cursor: pointer;
       white-space: nowrap;
       transition: background var(--dur-2) var(--ease-out),
@@ -1105,32 +1107,37 @@
     .action-btn {
       background: var(--accent);
       color: var(--accent-contrast);
-      font-weight: 800;
-      font-size: clamp(1.05rem, 2vw, 1.3rem);
+      font-weight: 700;
+      font-size: var(--fs-lg);
       border: 1px solid transparent;
-      padding: 16px 44px;
-      border-radius: var(--r-pill);
+      padding: 15px 32px;
+      /* A rectangular control with a small radius, not a pill. The pill shape
+         on a wide primary button is a dated silhouette; the corner radius was
+         doing decorative work the control's size already does. */
+      border-radius: var(--r-sm);
       cursor: pointer;
-      /* The one saturated shadow in the app, and it is on the one control the
-         operator is reaching for when the room is dark. The accent-derived
-         bloom means it retints with the festival theme. */
-      box-shadow: 0 2px 4px rgba(16, 18, 24, 0.08), 0 8px 24px rgba(var(--accent-rgb), 0.28);
+      /* Depth from a neutral shadow, not an accent bloom. A saturated glow
+         under the button re-tints the accent colour twice over -- once in the
+         fill, once in the halo -- which is what made the accent read as loud
+         rather than confident. */
+      box-shadow: var(--sh-2);
       margin-bottom: var(--sp-4);
-      letter-spacing: 0.02em;
-      transition: transform var(--dur-2) var(--ease-out),
-        box-shadow var(--dur-2) var(--ease-out),
-        background var(--dur-1) var(--ease-out);
+      letter-spacing: 0;
+      /* Only the properties that actually change. Transitioning transform and
+         box-shadow together is what gave the control its floaty landing. */
+      transition: background var(--dur-1) var(--ease-out),
+        border-color var(--dur-1) var(--ease-out);
       flex-shrink: 0;
     }
     .action-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 14px 28px rgba(var(--accent-rgb), 0.3);
+      background: var(--accent-strong);
+      border-color: var(--accent-strong);
     }
     /* The draw button is pressed in a dark hall, often without looking. A
        visible squeeze is the only confirmation the press registered. */
     .action-btn:active:not(:disabled) {
-      transform: translateY(0) scale(0.975);
-      box-shadow: 0 1px 2px rgba(16, 18, 24, 0.08), 0 4px 10px rgba(var(--accent-rgb), 0.2);
+      transform: scale(0.99);
+      box-shadow: var(--sh-1);
       transition-duration: 90ms;
     }
     .action-btn:disabled {
@@ -1338,7 +1345,7 @@
     .round-seq {
       font-family: var(--font-num);
       font-size: 0.9rem;
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent-strong);
     }
 
@@ -1425,7 +1432,7 @@
 
     .number-tag .main-num {
       font-size: clamp(1.5rem, 2.8vw, 2.1rem);
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent);
       letter-spacing: 0.04em;
       font-family: var(--font-num);
@@ -1440,7 +1447,7 @@
 
     .vip-display {
       font-size: clamp(3.6rem, 8vw, 5.8rem);
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent);
       background: var(--surface-result);
       border: 4px solid var(--accent);
@@ -1471,12 +1478,12 @@
       border-color: var(--success);
       animation: vipSlotPulse 0.4s ease infinite alternate;
     }
-    @keyframes vipSlotPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 3px var(--accent-glow); } 50% { transform: scale(1.015); box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0.05); } }
+    @keyframes vipSlotPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px rgba(var(--success-rgb), 0.25); } 50% { transform: scale(1.01); box-shadow: 0 0 0 6px rgba(var(--success-rgb), 0.12); } }
 
     .manual-card {
       background: var(--surface-result);
       border: 2px dashed var(--accent-strong);
-      border-radius: 12px;
+      border-radius: var(--r-md);
       padding: 16px;
       width: 100%;
       max-width: 480px;
@@ -1503,7 +1510,7 @@
       font-variant-numeric: tabular-nums;
       text-align: center;
       letter-spacing: 0.08em;
-      font-weight: 800;
+      font-weight: 700;
       border: 2px solid var(--accent);
       border-radius: var(--r-sm);
       background: var(--surface-input); color: var(--accent); box-shadow: inset 0 1px 2px rgba(16, 18, 24, 0.06);
@@ -1522,8 +1529,8 @@
       border: none;
       padding: 10px;
       font-size: var(--fs-sm);
-      font-weight: 900;
-      border-radius: 6px;
+      font-weight: 700;
+      border-radius: var(--r-sm);
       cursor: pointer;
       transition: background 0.2s;
     }
@@ -1538,8 +1545,8 @@
       border: none;
       padding: 10px;
       font-size: var(--fs-sm);
-      font-weight: 900;
-      border-radius: 6px;
+      font-weight: 700;
+      border-radius: var(--r-sm);
       cursor: pointer;
       transition: background 0.2s;
     }
@@ -1712,13 +1719,12 @@
         transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
     }
 
-    /* The same accent-derived bloom as the stat badge, at the alpha this card
-       already uses for its own hover fill (0.2) so the glow and the tint read
-       as one effect rather than a shadow pasted onto a colour change. */
+    /* The row indents on hover instead of glowing. A 2px nudge is enough to
+       track a pointer across a list of ten names, and it keeps the accent
+       confined to the fill rather than duplicating it underneath. */
     .billboard-card:hover {
       background: rgba(var(--accent-rgb), 0.2);
       transform: translateX(2px);
-      box-shadow: 0 2px 12px rgba(var(--accent-rgb), 0.18);
     }
     .billboard-card:active {
       transform: translateX(2px) scale(0.98);
@@ -1745,7 +1751,7 @@
     }
     .billboard-card .bb-num {
       color: var(--accent);
-      font-weight: 800;
+      font-weight: 700;
       font-size: var(--fs-lg);
     }
     .billboard-card.highlight .bb-num,
@@ -1753,7 +1759,7 @@
       color: var(--accent-contrast) !important;
     }
     .billboard-card.highlight .bb-num {
-      font-weight: 800;
+      font-weight: 700;
     }
 
     .stage-footer {
@@ -1835,14 +1841,11 @@
     }
 
     /* Paired footer actions: a Cancel and an Apply sitting in one row must not
-       disagree on shape. .action-btn is --r-pill and .icon-btn is --r-sm, so a
-       footer that mixes them renders a 999px pill next to a 6px rectangle. The
-       secondary button in a footer adopts the primary's shape. */
-    .modal-footer .icon-btn {
-      border-radius: var(--r-pill);
-      padding: 10px 22px;
-      font-size: 0.9rem;
-    }
+       disagree on shape. .action-btn and .icon-btn now share --r-sm, so the
+       pair agrees without a footer-specific override; the rule here only
+       balances their padding and size so a footer's two buttons are visually
+       matched regardless of which class each one uses. */
+    .modal-footer .icon-btn,
     .modal-footer .action-btn {
       padding: 10px 22px;
       font-size: 0.9rem;
@@ -1912,7 +1915,7 @@
       background: var(--surface-1);
       border-left: 4px solid var(--accent);
       padding: 8px 12px;
-      border-radius: 6px;
+      border-radius: var(--r-sm);
       font-size: var(--fs-sm);
       display: flex;
       justify-content: space-between;
@@ -1946,7 +1949,7 @@
     .p2p-status-tag {
       display: inline-block;
       padding: 3px 8px;
-      border-radius: 4px;
+      border-radius: var(--r-sm);
       font-size: var(--fs-xs);
       font-weight: bold;
       margin-top: 4px;
@@ -2028,7 +2031,7 @@
 
     .spotlight-num {
       font-size: clamp(3.5rem, 8vw, 5rem);
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent); letter-spacing: var(--tracking-display); font-family: var(--font-num); font-variant-numeric: tabular-nums; text-shadow: none;
       margin: 10px 0;
       line-height: 1;
@@ -2261,7 +2264,7 @@
     }
     .proj-grid-card .pg-num {
       font-size: clamp(1.6rem, 3.4vw, 2.4rem);
-      font-weight: 800;
+      font-weight: 700;
       color: var(--accent-bright);
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
@@ -2330,7 +2333,7 @@
     .proj-vip-slot .proj-vip-num {
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
-      font-weight: 800;
+      font-weight: 700;
       font-size: clamp(4rem, 14vw, 10rem);
       line-height: 1;
       /* The headline of the whole app, read from the back of a hall. The
@@ -2360,7 +2363,7 @@
     }
     .proj-timer-chip .proj-timer-digits-inline {
       color: var(--accent-bright);
-      font-weight: 800;
+      font-weight: 700;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       font-size: var(--proj-timer-font, 2.8rem);
@@ -2459,7 +2462,7 @@
     .proj-card .p-num {
       color: var(--accent-bright);
       font-size: calc(var(--strip-font, 1.35rem) * 1.35);
-      font-weight: 800;
+      font-weight: 700;
       font-family: var(--font-num);
       font-variant-numeric: tabular-nums;
       letter-spacing: 0.04em;
@@ -2530,12 +2533,11 @@
         box-shadow var(--dur-2) var(--ease-out);
     }
     .theme-swatch:hover {
-      transform: translateY(-3px);
       border-color: var(--border-strong);
-      box-shadow: var(--sh-2);
+      background: var(--surface-2);
     }
     .theme-swatch:active {
-      transform: translateY(-1px) scale(0.98);
+      transform: scale(0.995);
       transition-duration: 90ms;
     }
     .theme-swatch.active {
@@ -2779,15 +2781,15 @@
         <button class="icon-btn" onclick="toggleCrisisModal(false)" aria-label="Close"><svg class="icon-glyph" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg></button>
       </div>
       <div style="display:flex; flex-direction:column; gap:14px; padding:6px 0;">
-        <div style="background:var(--surface-2); padding:10px; border-radius:8px;">
+        <div style="background:var(--surface-2); padding:10px; border-radius:var(--r-md);">
           <strong data-i18n="blacklistLabel">临时剔除黑名单号码 (提前离场/失票):</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--surface-input); border:1px solid var(--accent); color:var(--text); border-radius:4px; font-family: var(--font-num);">
+            <input type="text" id="blacklistInput" placeholder="0312" maxlength="4" oninput="this.value=this.value.replace(/\\D/g,'')" style="flex:1; padding:6px 10px; background:var(--surface-input); border:1px solid var(--accent); color:var(--text); border-radius:var(--r-sm); font-family: var(--font-num);">
             <button class="icon-btn" onclick="excludeBlacklistTicket()" data-i18n="btnExclude">剔除出池</button>
           </div>
         </div>
 
-        <div style="background:var(--surface-2); padding:10px; border-radius:8px;">
+        <div style="background:var(--surface-2); padding:10px; border-radius:var(--r-md);">
           <strong data-i18n="backupLabel">应急备份与热导入 (防电脑彻底死机):</strong>
           <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
             <button class="icon-btn" onclick="downloadBackupJSON()" data-i18n="btnDownloadJson">下载完整状态 JSON</button>
@@ -2796,7 +2798,7 @@
           </div>
         </div>
 
-        <div style="background:var(--surface-2); padding:10px; border-radius:8px;">
+        <div style="background:var(--surface-2); padding:10px; border-radius:var(--r-md);">
           <strong data-i18n="sponsorLabel">赞助商突击加码:</strong>
           <div style="display:flex; gap:8px; margin-top:8px;">
             <button class="icon-btn" onclick="quickAddPrizes(1)">+1</button>
